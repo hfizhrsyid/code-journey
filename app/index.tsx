@@ -1,14 +1,9 @@
 import { Text, View } from "react-native";
+import { styles } from "../styles/index";
 
 export default function Index() {
   return (
-    <View
-      style={{
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-      }}
-    >
+    <View style={styles.container}>
       <Text>Halooo! coba</Text>
     </View>
   );
