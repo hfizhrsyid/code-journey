@@ -1,40 +1,34 @@
-import { RootStackParamList } from "@/app/navigator";
-import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { styles } from "@/styles/bottomNav";
+import { router, usePathname } from "expo-router";
 import { Image, TouchableOpacity, View } from "react-native";
-import { styles } from '../styles/bottomNav';
 
-type BottomNavProps<T extends keyof RootStackParamList> = {
-  navigation: NativeStackNavigationProp<RootStackParamList, T>;
-  current: T;
-}
+export default function BottomNav() {
+  const current = usePathname();
 
-const BottomNav = <T extends keyof RootStackParamList>({ navigation, current }: BottomNavProps<T>) => {
-  return(
+  return (
     <View style={styles.container}>
-      <TouchableOpacity onPress={() => navigation.navigate('Path')}>
+      <TouchableOpacity onPress={() => router.push("/main/path")}>
         <Image
-          source={require('../assets/images/path.png')}
-          style={styles.imagePath} 
+          source={require("../assets/images/path.png")}
+          style={styles.imagePath}
         />
       </TouchableOpacity>
 
-      <TouchableOpacity onPress={() => navigation.navigate('Dashboard')}>
+      <TouchableOpacity onPress={() => router.push("/main/dashboard")}>
         <View style={styles.homeButton}>
           <Image
-            source={require('../assets/images/dashboard.png')}
-            style={styles.imageDashboard} 
+            source={require("../assets/images/dashboard.png")}
+            style={styles.imageDashboard}
           />
         </View>
       </TouchableOpacity>
 
-      <TouchableOpacity onPress={() => navigation.navigate('Profile')}>
+      <TouchableOpacity onPress={() => router.push("/main/profile")}>
         <Image
-          source={require('../assets/images/profile.png')}
-          style={styles.imageProfile} 
+          source={require("../assets/images/profile.png")}
+          style={styles.imageProfile}
         />
       </TouchableOpacity>
     </View>
   );
-};
-
-export default BottomNav;
+}

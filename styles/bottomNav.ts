@@ -9,6 +9,12 @@ export const styles = StyleSheet.create({
     height: 63,
     borderTopLeftRadius: 25,
     borderTopRightRadius: 25,
+
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    zIndex: 10,
   },
 
   homeButton: {
