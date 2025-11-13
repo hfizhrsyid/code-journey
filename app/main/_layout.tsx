@@ -6,7 +6,6 @@ export default function MainLayout() {
   return (
     <View style={{ flex: 1 }}>
       <Stack screenOptions={{ headerShown: false }} />
-      
       <BottomNav />
     </View>
   );
