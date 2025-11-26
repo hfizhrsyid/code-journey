@@ -11,7 +11,7 @@ const MultipleChoice = () => {
             <View style={styles.card}>
                 <Text style={styles.cardTitle}>A. Example 1</Text>
             </View>
-            <BottomNav/>
+            <BottomNav />
         </View>
     )
 }

@@ -7,7 +7,7 @@ export default function BottomNav() {
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity onPress={() => router.push("/main/path")}>
+      <TouchableOpacity onPress={() => router.push("/main/pathPage")}>
         <Image
           source={require("../assets/images/path.png")}
           style={styles.imagePath}
