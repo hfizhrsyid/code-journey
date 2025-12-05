@@ -1,12 +1,12 @@
 import { StyleSheet } from "react-native";
 
 const COLORS = {
-  background: "#1A232E", // Biru tua gelap
-  card: "#FFFFFF", // Putih untuk kartu
-  primaryButton: "#4A90E2", // Biru terang untuk tombol utama
-  text: "#FFFFFF", // Putih untuk teks umum
-  headerText: "#FFFFFF", // Putih untuk teks header
-  secondaryButton: "transparent", // Transparan untuk tombol Run/Selanjutnya
+  background: "#1A232E", 
+  card: "#FFFFFF", 
+  primaryButton: "#4A90E2", 
+  text: "#FFFFFF", 
+  headerText: "#FFFFFF", 
+  secondaryButton: "transparent", 
 };
 
 export const styles = StyleSheet.create({
@@ -19,10 +19,9 @@ export const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   scrollContent: {
-    paddingBottom: 20, // Memberi ruang di bagian bawah ScrollView
+    paddingBottom: 20, 
   },
 
-  // Header Styles
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -46,7 +45,6 @@ export const styles = StyleSheet.create({
     fontSize: 14,
   },
 
-  // Card Styles
   card: {
     backgroundColor: COLORS.card,
     borderRadius: 10,
@@ -64,14 +62,13 @@ export const styles = StyleSheet.create({
   cardText: {
     fontSize: 16,
     lineHeight: 24,
-    color: "#333", // Teks kartu lebih gelap
+    color: "#333",
   },
 
-  // Input Styles
   inputCard: {
     backgroundColor: COLORS.card,
     borderRadius: 10,
-    minHeight: 200, // Memberi tinggi minimum untuk area input
+    minHeight: 200,
     padding: 15,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
@@ -79,24 +76,22 @@ export const styles = StyleSheet.create({
     shadowRadius: 3.84,
     elevation: 5,
   },
+
   textInput: {
-    flex: 1, // Mengisi ruang yang tersedia di dalam inputCard
+    flex: 1, 
     fontSize: 16,
     color: "#333",
-    // Tidak perlu border karena sudah diatur oleh card
+    borderWidth: 0,
+    borderColor: "#fff",
+    outlineColor: 'transparent',
   },
 
-  // Footer/Tombol Styles
   footer: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     paddingVertical: 15,
-    borderTopColor: "rgba(255, 255, 255, 0.1)", // Garis pemisah opsional
-    // position: 'absolute', // Bisa pakai absolute jika ingin selalu di bawah
-    // bottom: 0,
-    // left: 20,
-    // right: 20,
+    borderTopColor: "rgba(255, 255, 255, 0.1)",
   },
   runButton: {
     paddingHorizontal: 25,
@@ -140,7 +135,7 @@ export const styles = StyleSheet.create({
     alignItems: "center",
   },
   statusText: {
-    color: "#FFFFFF", // Teks tab tetap putih
+    color: "#FFFFFF", 
     fontSize: 14,
     marginRight: 4,
   },
@@ -155,23 +150,13 @@ export const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   outputCard: {
-    // DIKOREKSI: Warna latar belakang putih solid
     backgroundColor: "#FFFFFF",
     borderRadius: 10,
-
-    // Hapus border radius atas agar menempel dengan tab
-
     padding: 15,
     minHeight: 180,
-
-    // Margin horizontal disesuaikan
-
-    // Menggeser ke atas agar menempel pada tab gelap
     marginTop: 0,
-
-    // Tambahkan border atas tipis yang terlihat di screenshot
     borderTopWidth: 1,
-    borderTopColor: "#FFFFFF", // Border putih agar menyatu
+    borderTopColor: "#FFFFFF",
 
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
@@ -180,7 +165,6 @@ export const styles = StyleSheet.create({
     elevation: 5,
   },
   outputText: {
-    // DIKOREKSI: Teks output menjadi gelap karena latar belakang putih
     color: "#999",
     fontSize: 14,
     fontFamily: "monospace",
