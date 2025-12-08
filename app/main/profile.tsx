@@ -196,7 +196,7 @@ export default function Profile() {
                 </ScrollView>
             </View>
             
-            <Pressable style={styles.logoutButton} onPress={() => router.replace("/login")}>
+            <Pressable style={styles.logoutButton} onPress={() => router.replace("../login")}>
                 <Text style={styles.textButton}>Logout</Text>
             </Pressable>
         </View>
