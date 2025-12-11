@@ -1,5 +1,6 @@
 import { styles } from "@/styles/pathPage";
 import { FontAwesome } from "@expo/vector-icons";
+import { useLocalSearchParams } from "expo-router";
 import { useMemo, useState } from "react";
 import { Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -50,6 +51,9 @@ const initialLevels: LevelItem[] = Array.from({ length: 10 }).map((_, i) => ({
 }));
 
 export default function PathPage() {
+  const params = useLocalSearchParams(); 
+  console.log("pathPage params:", params);
+  const id = params.id ? Number(params.id) : null;
   const [levels, setLevels] = useState(initialLevels);
 
   const totalHeight = useMemo(
@@ -96,6 +100,7 @@ export default function PathPage() {
     <SafeAreaView style={styles.safe}>
       <View style={{ flex: 1, position: "relative" }}>
         <Text style={styles.header}>CodeJourney</Text>
+        <Text>Ini halaman materi untuk ID: {id}</Text>
 
         <ScrollView
           showsVerticalScrollIndicator={false}
@@ -205,7 +210,7 @@ export default function PathPage() {
                 {/* NODE */}
                 <TouchableOpacity
                   onPress={() => handlePress(node)}
-                  activeOpacity={0.85}
+                  activeOpacity={1}
                   style={{
                     position: "absolute",
                     left: timeline + (idx % 2 === 0 ? -70 : 70) - radius,
@@ -221,9 +226,9 @@ export default function PathPage() {
                     ]}
                   >
                     {node.status === "done" ? (
-                      <FontAwesome name="check" size={20} color="#fff" />
+                      <FontAwesome name="check" size={23} color="#286292" />
                     ) : node.status === "locked" ? (
-                      <FontAwesome name="lock" size={18} color="#fff" />
+                      <FontAwesome name="lock" size={23} color="#286292" />
                     ) : (
                       <Text style={styles.nodeNumber}>{node.id}</Text>
                     )}

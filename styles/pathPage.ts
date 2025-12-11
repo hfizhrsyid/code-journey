@@ -4,7 +4,7 @@ import { StyleSheet } from "react-native";
 export const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: "#0f2130",
+    backgroundColor: "#1A233A",
   },
 
   container: {
@@ -51,23 +51,25 @@ export const styles = StyleSheet.create({
     width: radius * 2,
     height: radius * 2,
     borderRadius: radius,
-    backgroundColor: "#375b7a",
+    borderColor: "#286292",
+    borderWidth: 3,
+    backgroundColor: "#B0C4DE",
     alignItems: "center",
     justifyContent: "center",
   },
 
   nodeNumber: {
-    color: "#fff",
-    fontSize: 16,
+    color: "#286292",
+    fontSize: 20,
     fontWeight: "700",
   },
 
   nodeDone: {
-    backgroundColor: "#4CAF50",
+    backgroundColor: "#B0C4DE",
   },
 
   nodeLocked: {
-    backgroundColor: "#607D8B",
+    backgroundColor: "#B0C4DE",
   },
 
   cardImage: {
