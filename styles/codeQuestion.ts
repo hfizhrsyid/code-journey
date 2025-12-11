@@ -1,43 +1,44 @@
 import { StyleSheet } from "react-native";
 
 const COLORS = {
-  background: "#1A232E", 
-  card: "#FFFFFF", 
-  primaryButton: "#4A90E2", 
-  text: "#FFFFFF", 
-  headerText: "#FFFFFF", 
-  secondaryButton: "transparent", 
+  background: "#1A233A",
+  card: "#FFFFFF",
+  primaryButton: "#3b82f6",
+  text: "#FFFFFF",
+  headerText: "#FFFFFF",
+  secondaryButton: "transparent",
 };
 
 export const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#1A232E",
+    backgroundColor: "#1A233A",
   },
   container: {
     flex: 1,
-    paddingHorizontal: 20,
+    paddingHorizontal: 24,
   },
   scrollContent: {
-    paddingBottom: 20, 
+    paddingBottom: 20,
   },
 
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingVertical: 15,
+    paddingVertical: 30,
+    paddingTop: 50,
   },
   headerText: {
-    fontSize: 22,
-    fontWeight: "bold",
+    fontSize: 20,
+    fontWeight: "600",
     color: COLORS.headerText,
   },
   primaryButton: {
     backgroundColor: COLORS.primaryButton,
-    paddingHorizontal: 15,
+    paddingHorizontal: 16,
     paddingVertical: 8,
-    borderRadius: 5,
+    borderRadius: 8,
   },
   primaryButtonText: {
     color: COLORS.text,
@@ -78,12 +79,12 @@ export const styles = StyleSheet.create({
   },
 
   textInput: {
-    flex: 1, 
+    flex: 1,
     fontSize: 16,
     color: "#333",
     borderWidth: 0,
     borderColor: "#fff",
-    outlineColor: 'transparent',
+    outlineColor: "transparent",
   },
 
   footer: {
@@ -115,27 +116,35 @@ export const styles = StyleSheet.create({
   statusContainerWrapper: {
     minHeight: 40,
     backgroundColor: "transparent",
+    /* naikkan container supaya pill overlap ke outputCard */
+    marginLeft: 24,
+    marginRight: 24,
+    flexDirection: "row",
   },
   statusContainer: {
     flexDirection: "row",
     flexWrap: "wrap",
     alignItems: "center",
-    paddingLeft: 5,
-    marginTop: 10,
+    paddingLeft: 0,
+    marginTop: 0,
+    marginBottom: 0,
   },
   statusPill: {
     flexDirection: "row",
-    borderTopLeftRadius: 8,
-    borderTopRightRadius: 8,
+    alignItems: "center",
+    marginTop: 10,
+    marginRight: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    /* beri radius atas dan flat bawah supaya menyatu dengan card */
+    borderTopLeftRadius: 10,
+    borderTopRightRadius: 10,
     borderBottomLeftRadius: 0,
     borderBottomRightRadius: 0,
-
-    paddingHorizontal: 15,
-    paddingVertical: 10,
-    alignItems: "center",
+    backgroundColor: "#263043",
   },
   statusText: {
-    color: "#FFFFFF", 
+    color: "#FFFFFF",
     fontSize: 14,
     marginRight: 4,
   },
@@ -143,21 +152,17 @@ export const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "bold",
   },
-  placeholderText: {
-    color: "#999",
-    fontStyle: "italic",
-    fontSize: 14,
-    paddingHorizontal: 20,
-  },
+
+  /* outputCard: tarik ke atas sedikit supaya pill tampak menempel */
   outputCard: {
     backgroundColor: "#FFFFFF",
     borderRadius: 10,
     padding: 15,
+    paddingTop: 28, // beri ruang di dalam supaya teks tidak tertutup pill
     minHeight: 180,
-    marginTop: 0,
+    marginTop: -10, // tarik ke atas supaya pill overlap
     borderTopWidth: 1,
     borderTopColor: "#FFFFFF",
-
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -167,7 +172,7 @@ export const styles = StyleSheet.create({
   outputText: {
     color: "#999",
     fontSize: 14,
-    fontFamily: "monospace",
+    // fontFamily: "monospace",
     lineHeight: 20,
   },
 });
