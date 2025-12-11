@@ -15,6 +15,8 @@ interface LevelItem {
   status: LevelStatus;
   imgLeft: any;
   imgRight: any;
+  imgLeftSize?: { width: number; height: number };
+  imgRightSize?: { width: number; height: number };
 }
 
 //gambar
@@ -42,7 +44,9 @@ const initialLevels: LevelItem[] = Array.from({ length: 10 }).map((_, i) => ({
   title: `Level ${i + 1}`,
   status: i === 0 ? "open" : i <= 1 ? "done" : "locked",
   imgLeft: imageLeft[i % imageLeft.length],
-  imgRight: imageRight[i % imageRight.length]
+  imgRight: imageRight[i % imageRight.length],
+  imgLeftSize: { width: 110, height: 70 },
+  imgRightSize: { width: 90, height: 90 }
 }));
 
 export default function PathPage() {
@@ -141,6 +145,12 @@ export default function PathPage() {
             const extraOffset = imageOnRight && idx === 0 ? -1 : 0;
             const imageTop = baseImageTop + extraOffset;
 
+            const imgSizeLeft = idx === 4 
+              ? { width: 120, height: 120 } : { };
+            
+            const imgSizeRight = idx === 3 && 4
+              ? { width: 120, height: 120 } : { };
+
             return (
               <View key={node.id} style={[styles.row, { height: spacing, position: "relative" }]}>
                 {/* Left image */}
@@ -160,7 +170,7 @@ export default function PathPage() {
                 >
                   {!imageOnRight ? (
                     <View style={[styles.cardImage, { height: CARD_H }]}>
-                      <Image source={node.imgLeft} style={ styles.imgLeft }/>
+                      <Image source={node.imgLeft} style={[styles.imgLeft, imgSizeLeft]} resizeMode="contain"/>
                     </View>
                   ) : null}
                 </View>
@@ -184,7 +194,7 @@ export default function PathPage() {
                 >
                   {imageOnRight ? (
                     <View style={[styles.cardImage, { height: CARD_H }]}>
-                      <Image source={node.imgRight} style={ styles.imgRight }/>
+                      <Image source={node.imgRight} style={[styles.imgRight, imgSizeRight]} resizeMode="contain"/>
                     </View>
                   ) : null }
                 </View>

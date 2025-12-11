@@ -80,13 +80,13 @@ export const styles = StyleSheet.create({
   },
 
   imgLeft: {
-    width: 145,
-    height: 145,
+    width: 120,
+    height: 100,
   },
 
   imgRight: {
-    width: 120,
-    height: 120,
+    width: 110,
+    height: 110,
   },
 
   emoji: { fontSize: 36 },
