@@ -4,7 +4,7 @@ import { useEffect } from "react";
 export default function Index() {
   useEffect(() => {
     const timer = setTimeout(() => {
-      router.replace("/splashScreen" as any);
+      router.replace("/main/dashboard" as any);
     }, 0);
     return () => clearTimeout(timer);
   }, []);

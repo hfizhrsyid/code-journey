@@ -32,6 +32,8 @@ export default function CodingQuestion() {
       { id: 1, name: "Testcase 1", input: [1, "2", 3, true, 4, -5], expected: 3, actualSimulated: 4, passedSimulated: false },
       { id: 2, name: "Testcase 2", input: ["hello", 100, 50.5, 0, false, 99], expected: 3 },
       { id: 3, name: "Testcase 3", input: [1, 2, "3", false], expected: 2 },
+      { id: 4, name: "Testcase 4", input: [1, 2, "3", false], expected: 2 },
+      { id: 5, name: "Testcase 5", input: [1, 2, "3", false], expected: 2 },
     ];
 
     const results: TestResult[] = cases.map((testCase) => {
@@ -100,25 +102,18 @@ export default function CodingQuestion() {
 
         <ScrollView contentContainerStyle={styles.scrollContent}>
           <View style={styles.card}>
-            <Text style={styles.cardText}>
-              Tulislah program Python untuk menampilkan semua bilangan ganjil dari 1 sampai 15 menggunakan for loop.
-            </Text>
-            
+            <Text style={styles.cardText}>Tulislah program Python untuk menampilkan semua bilangan ganjil dari 1 sampai 15 menggunakan for loop.</Text>
           </View>
 
           <View style={styles.inputCard}>
             <TextInput style={styles.textInput} placeholder="Ketikkan Jawabanmu di sini..." placeholderTextColor="#999" multiline textAlignVertical="top" value={answer} onChangeText={setAnswer} />
           </View>
 
-          <View style={styles.statusContainerWrapper}>
-            {testResults.length > 0 ? (
-              <View style={styles.statusContainer}>
-                {testResults.map((result) => (
-                  <TestcaseStatus key={result.id} id={result.id} name={result.name} passed={result.passed} isSelected={selectedTestId === result.id} onPress={setSelectedTestId} />
-                ))}
-              </View>
-            ) : null}
-          </View>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ flexGrow: 1 }} style={{ marginVertical: 10 }}>
+            {testResults.map((result) => (
+              <TestcaseStatus key={result.id} id={result.id} name={result.name} passed={result.passed} isSelected={selectedTestId === result.id} onPress={setSelectedTestId} />
+            ))}
+          </ScrollView>
 
           <View style={styles.outputCard}>
             <ScrollView>
