@@ -27,17 +27,17 @@ export const styles = StyleSheet.create({
   },
 
   imagePath: {
-    width: 25,
-    height: 22,
+    width: 30,
+    height: 25,
   },
 
   imageProfile: {
-    width: 23,
-    height: 27,
+    width: 26,
+    height: 28,
   },
 
   imageDashboard: {
     width: 30,
-    height: 30,
+    height: 32,
   },
 });
