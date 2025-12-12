@@ -1,10 +1,13 @@
 import json
 from groq import Groq
 from django.conf import settings
-from typing import Dict, Any
+from typing import Dict, Any, List, Tuple
 import logging
 import random
 from .models import Question
+from concurrent.futures import ThreadPoolExecutor, as_completed
+import time
+from functools import lru_cache
 
 logger = logging.getLogger(__name__)
 client = Groq(api_key=settings.GROQ_API_KEY)
@@ -124,7 +127,21 @@ def ai_validate_answer(user_answer: str, correct_answer: Any, question_text: str
     Use the Groq LLM to judge whether a user's answer is correct for fill/coding questions.
     Expected return: dict with keys 'correct' (bool), 'feedback' (str), 'explanation' (str).
     If AI validation fails or returns invalid JSON, this function returns None.
+    
+    Args:
+        user_answer: The user's submitted answer
+        correct_answer: The reference/correct answer
+        question_text: The question being asked
+        question_type: Type of question (fill or coding)
+        max_tokens: Maximum tokens for AI response
+    
+    Returns:
+        Dict with validation result or None if AI validation fails
     """
+    if not user_answer or not user_answer.strip():
+        logger.warning("ai_validate_answer called with empty user answer")
+        return None
+    
     try:
         # Build a concise but strict prompt asking AI to return JSON only
         prompt = f"""
@@ -149,8 +166,13 @@ Return JSON, for example:
             model="llama-3.3-70b-versatile",
             temperature=0.0,
             max_tokens=max_tokens,
+            timeout=30  # 30 second timeout
         )
         content = message.choices[0].message.content.strip()
+
+        if not content:
+            logger.warning("AI validation returned empty content")
+            return None
 
         # attempt to extract JSON payload if code fences present
         if "```json" in content:
@@ -168,7 +190,7 @@ Return JSON, for example:
 
         # Basic validation
         if "correct" not in parsed or "feedback" not in parsed:
-            logger.warning("AI validation returned JSON missing keys")
+            logger.warning("AI validation returned JSON missing required keys")
             return None
 
         # normalize types
@@ -178,6 +200,9 @@ Return JSON, for example:
 
         return parsed
 
+    except json.JSONDecodeError as e:
+        logger.warning(f"AI validation JSON decode error: {e}")
+        return None
     except Exception as e:
         logger.warning(f"AI validation failed: {e}")
         return None
@@ -236,8 +261,50 @@ def check_answer(user_answer: str, correct_answer: Any, question_type: str, expl
     return result
 
 
-def generate_question_set(topic: str, difficulty: int, count: int = 10, mcq_count: int = 5) -> list:
-    """Generate a set of questions with mixed types"""
+def _generate_question_with_retry(qtype: str, difficulty: int, max_retries: int = 3) -> Tuple[str, Dict[str, Any]]:
+    """Helper function to generate single question with retry logic"""
+    tries = 0
+    parsed = None
+    last_error = None
+    
+    while tries < max_retries and parsed is None:
+        tries += 1
+        try:
+            parsed = generate_question(difficulty, qtype)
+        except Exception as e:
+            last_error = e
+            logger.warning(f"Generate question attempt {tries}/{max_retries} failed for {qtype}: {e}")
+            if tries < max_retries:
+                time.sleep(0.5)  # Small delay before retry to avoid API rate limits
+    
+    return (qtype, parsed, last_error if parsed is None else None)
+
+
+def generate_question_set(topic: str, difficulty: int, count: int = 10, mcq_count: int = 5, max_workers: int = 3) -> list:
+    """
+    Generate a set of questions with mixed types using parallelization.
+    
+    Args:
+        topic: Topic for the questions
+        difficulty: Difficulty level (1-5)
+        count: Total number of questions to generate (max 20)
+        mcq_count: Number of MCQ questions (max = count)
+        max_workers: Number of parallel workers (default 3, max 5)
+    
+    Returns:
+        List of created questions
+    """
+    # Validation
+    if count <= 0:
+        raise ValueError("Count must be greater than 0")
+    if count > 20:
+        count = 20  # Limit max questions per request
+        logger.warning(f"Count limited to 20")
+    if mcq_count < 0 or mcq_count > count:
+        raise ValueError(f"mcq_count must be between 0 and {count}")
+    if max_workers < 1 or max_workers > 5:
+        max_workers = min(max(max_workers, 1), 5)
+    
     created = []
     types_pool = []
 
@@ -251,39 +318,52 @@ def generate_question_set(topic: str, difficulty: int, count: int = 10, mcq_coun
     # Shuffle to mix order
     random.shuffle(types_pool)
 
-    # Generate each question, retry a couple times if AI fails
-    for qtype in types_pool:
-        tries = 0
-        parsed = None
-        while tries < 3 and parsed is None:
-            tries += 1
-            try:
-                parsed = generate_question(difficulty, qtype)
-            except Exception as e:
-                parsed = None
-                logger.warning(f"Generate question attempt {tries} failed for {qtype}: {e}")
+    logger.info(f"Generating {count} questions ({mcq_count} MCQ) for topic '{topic}' with difficulty {difficulty} using {max_workers} workers")
+    
+    # Generate questions in parallel using ThreadPoolExecutor
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        # Submit all generation tasks
+        future_to_qtype = {
+            executor.submit(_generate_question_with_retry, qtype, difficulty): qtype 
+            for qtype in types_pool
+        }
         
-        if parsed is None:
-            continue
-
-        # Save question
-        q = Question.objects.create(
-            question_type=qtype,
-            difficulty=difficulty,
-            topic=topic,
-            question_text=parsed.get("question_text", ""),
-            code_template=parsed.get("code_template"),
-            options=parsed.get("options"),
-            answer_key=parsed.get("answer_key"),
-            explanation=parsed.get("explanation", "")
-        )
-        created.append({
-            "question_id": q.id,
-            "question_type": qtype,
-            "question_text": q.question_text,
-            "difficulty": q.difficulty,
-            "code_template": q.code_template,
-            "options": q.options,
-        })
-
+        # Process completed tasks as they finish
+        successful_count = 0
+        failed_count = 0
+        
+        for future in as_completed(future_to_qtype):
+            qtype, parsed, error = future.result()
+            
+            if parsed is None:
+                failed_count += 1
+                logger.warning(f"Failed to generate {qtype} question after retries: {error}")
+                continue
+            
+            try:
+                # Save question to database
+                q = Question.objects.create(
+                    question_type=qtype,
+                    difficulty=difficulty,
+                    topic=topic,
+                    question_text=parsed.get("question_text", ""),
+                    code_template=parsed.get("code_template"),
+                    options=parsed.get("options"),
+                    answer_key=parsed.get("answer_key"),
+                    explanation=parsed.get("explanation", "")
+                )
+                created.append({
+                    "question_id": q.id,
+                    "question_type": qtype,
+                    "question_text": q.question_text,
+                    "difficulty": q.difficulty,
+                    "code_template": q.code_template,
+                    "options": q.options,
+                })
+                successful_count += 1
+            except Exception as e:
+                failed_count += 1
+                logger.error(f"Failed to save {qtype} question to database: {e}")
+    
+    logger.info(f"Question generation complete: {successful_count} successful, {failed_count} failed")
     return created

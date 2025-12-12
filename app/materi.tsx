@@ -1,54 +1,75 @@
 import { styles } from "@/styles/materi";
 import Slider from "@react-native-community/slider";
 import { useState } from "react";
-import { Text, View } from "react-native";
+import { Text, View, TouchableOpacity } from "react-native";
+import { router } from "expo-router";
+import { useQuestions } from "@/lib/QuestionContext";
 
 const Materi = () => {
   const [value, setValue] = useState(2);
+  const { setTopic, setDifficulty, reset } = useQuestions();
 
-  const materiList = [
-    "Variabel dan Tipe Data",
-    "Operator",
-    "Percabangan",
-    "Perulangan",
-    "Pengurutan",
-    "Pencarian",
-  ];
+  const materiList = ["Variabel dan Tipe Data", "Operator", "Percabangan", "Perulangan", "Pengurutan", "Pencarian"];
 
   const currentMateri = materiList[value];
 
+  const handleStart = () => {
+    // Reset previous question set
+    reset();
+
+    // Set topic dan difficulty
+    const calculatedDifficulty = Math.ceil((value + 1) / 2); // 1-3
+    setTopic(currentMateri);
+    setDifficulty(calculatedDifficulty);
+
+    // Navigasi ke pathPage
+    router.push({
+      pathname: "/main/pathPage",
+      params: { topic: currentMateri, difficulty: calculatedDifficulty },
+    } as any);
+  };
+
   return (
     <View style={styles.container}>
-        <Text style={styles.title}>Test Your Skills with CodeJourney!</Text>
+      <Text style={styles.title}>Test Your Skills with CodeJourney!</Text>
 
-        <View style={styles.card}>
-            <Text style={styles.question}>
-            Berdasarkan pengetahuan yang kamu miliki, sampai mana kamu menguasai
-            Algoritma dan Pemrograman?
-            </Text>
+      <View style={styles.card}>
+        <Text style={styles.question}>Berdasarkan pengetahuan yang kamu miliki, sampai mana kamu menguasai Algoritma dan Pemrograman?</Text>
 
-            <View style={styles.sliderWrapper}>
-            {/* Garis slider custom */}
-            <View style={styles.customTrack} />
+        <View style={styles.sliderWrapper}>
+          <View style={styles.customTrack} />
 
-            <Slider
-                style={styles.slider}
-                minimumValue={0}
-                maximumValue={materiList.length - 1}
-                step={1}
-                value={value}
-                onValueChange={(v) => setValue(v)}
-                minimumTrackTintColor="transparent"
-                maximumTrackTintColor="transparent"
-                thumbTintColor="#B0C4DE"
-            />
+          <Slider
+            style={styles.slider}
+            minimumValue={0}
+            maximumValue={materiList.length - 1}
+            step={1}
+            value={value}
+            onValueChange={(v) => setValue(v)}
+            minimumTrackTintColor="transparent"
+            maximumTrackTintColor="transparent"
+            thumbTintColor="#B0C4DE"
+          />
 
-            {/* Label tetap di tengah */}
-            <View style={styles.labelBox}>
-                <Text style={styles.label}>{currentMateri}</Text>
-            </View>
-            </View>
+          <View style={styles.labelBox}>
+            <Text style={styles.label}>{currentMateri}</Text>
+          </View>
         </View>
+
+        <TouchableOpacity
+          style={{
+            marginTop: 60,
+            paddingHorizontal: 20,
+            paddingVertical: 8,
+            backgroundColor: "#0066cc",
+            borderRadius: 8,
+            alignItems: "center",
+          }}
+          onPress={handleStart}
+        >
+          <Text style={{ color: "white", fontWeight: "bold", fontSize: 16 }}>Mulai</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };

@@ -1,11 +1,13 @@
 import { styles } from "@/styles/multipleChoicesQuestion";
-import { useState, useCallback } from "react";
-import { Image, Modal, SafeAreaView, ScrollView, Text, TouchableOpacity, View, ActivityIndicator } from "react-native";
+import { useState, useEffect } from "react";
+import { Image, Modal, SafeAreaView, ScrollView, Text, TouchableOpacity, View, ActivityIndicator, Alert } from "react-native";
 import { router } from "expo-router";
 import { quizAPI } from "@/lib/api";
-import { useFocusEffect } from "@react-navigation/native";
+import { useQuestions, QuestionData } from "@/lib/QuestionContext";
 
 export default function MultipleChoicesQuestion() {
+  const { questionSet, setQuestionSet, currentIndex, setCurrentIndex, difficulty, goToNextQuestion } = useQuestions();
+
   const [question, setQuestion] = useState<any | null>(null);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [answerStatus, setAnswerStatus] = useState<"correct" | "wrong" | null>(null);
@@ -16,7 +18,11 @@ export default function MultipleChoicesQuestion() {
   const [correctAnswerInfo, setCorrectAnswerInfo] = useState<{ option: string; text: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const loadQuestion = useCallback(async () => {
+  useEffect(() => {
+    loadQuestion();
+  }, [currentIndex]);
+
+  const loadQuestion = async () => {
     try {
       setLoading(true);
       setError(null);
@@ -26,23 +32,53 @@ export default function MultipleChoicesQuestion() {
       setExplanation("");
       setCorrectAnswerInfo(null);
 
-      const difficulty = 2;
-      const data = await quizAPI.generateQuestion(difficulty, "mcq");
-      setQuestion(data);
+      // If we have a question set and the index exists, use it
+      if (questionSet.length > 0 && currentIndex < questionSet.length) {
+        let currentQuestion = questionSet[currentIndex];
+        currentQuestion = normalizeQuestion(currentQuestion);
+        console.log("✅ Loaded question from context:", currentQuestion);
+        console.log("📋 Question options:", currentQuestion.options);
+        setQuestion(currentQuestion);
+        return;
+      }
+
+      // Fallback: request a single MCQ from backend and populate context
+      try {
+        const q = await quizAPI.generateQuestion(difficulty || 2, "mcq");
+        if (q) {
+          const nq = normalizeQuestion(q);
+          console.log("✅ Generated single MCQ:", nq);
+          setQuestionSet([nq]);
+          setCurrentIndex(0);
+          setQuestion(nq);
+          return;
+        }
+      } catch (genErr) {
+        console.warn("Fallback single-question generate failed:", genErr);
+      }
+
+      // If still not available, create a local mock single question so UI can continue
+      console.warn("Using local mock MCQ for UI because backend generation failed.");
+      const mock = {
+        question_id: 9999,
+        question_text: "Contoh (mock) soal pilihan ganda: Apa hasil dari print(1+1)?",
+        code_template: "",
+        options: ["1", "2", "3", "4"],
+        question_type: "mcq",
+        difficulty: difficulty || 2,
+      };
+      console.log("✅ Using mock MCQ:", mock); // ADD THIS
+      setQuestionSet([mock]);
+      setCurrentIndex(0);
+      setQuestion(mock);
+      return;
     } catch (err: any) {
       console.error("Failed to load question:", err);
-      setError(err?.message || "Gagal memuat soal. Pastikan backend berjalan.");
+      setError(err?.message || "Gagal memuat soal");
     } finally {
       setLoading(false);
     }
-  }, []);
-
-  useFocusEffect(
-    useCallback(() => {
-      loadQuestion();
-      return () => {};
-    }, [loadQuestion])
-  );
+  };
 
   const handleSelectAnswer = async (optionId: string) => {
     if (selectedAnswer || !question || checking) return;
@@ -55,11 +91,10 @@ export default function MultipleChoicesQuestion() {
       setFeedback(result.feedback || "");
       setExplanation(result.explanation || "");
 
-      // Get correct answer text - dengan validation lebih ketat
       if (!result.correct && question.options && question.answer_key) {
         try {
           const answerKey = String(question.answer_key).toUpperCase().trim();
-          const correctIndex = answerKey.charCodeAt(0) - 65; // A=0, B=1, C=2, D=3
+          const correctIndex = answerKey.charCodeAt(0) - 65;
 
           if (correctIndex >= 0 && correctIndex < question.options.length) {
             setCorrectAnswerInfo({
@@ -80,8 +115,98 @@ export default function MultipleChoicesQuestion() {
     }
   };
 
+  const getQuestionScreenPath = (questionType: string) => {
+    if (questionType === "mcq") return "multipleChoicesQuestion";
+    if (questionType === "fill") return "completionQuestion";
+    if (questionType === "coding") return "codingQuestion";
+    return "multipleChoicesQuestion";
+  };
+
+  const handleNextQuestion = async () => {
+    setAnswerStatus(null);
+    setSelectedAnswer(null);
+
+    const nextIndex = currentIndex + 1;
+    console.log("handleNextQuestion: currentIndex=", currentIndex, "nextIndex=", nextIndex, "questionSet.length=", questionSet.length);
+
+    // Jika ada soal berikutnya dalam questionSet, pindah index dan navigasi bila tipe berbeda
+    if (nextIndex < questionSet.length) {
+      const nextQ = normalizeQuestion(questionSet[nextIndex]);
+      console.log("Advancing to existing question at index", nextIndex, nextQ);
+      const copy = [...questionSet];
+      copy[nextIndex] = nextQ;
+      setQuestionSet(copy);
+      // set local question immediately to avoid relying on batched state updates
+      setQuestion(nextQ);
+      setCurrentIndex(nextIndex);
+
+      const nextPath = getQuestionScreenPath(nextQ.question_type);
+      if (nextPath !== "multipleChoicesQuestion") {
+        router.push(`/level/${nextPath}` as any);
+      }
+      return;
+    }
+
+    // Jika belum ada soal berikutnya, coba generate 1 soal lagi dari backend
+    try {
+      const nextType = (() => {
+        if (questionSet.length > 0) {
+          const lastType = questionSet[questionSet.length - 1].question_type;
+          if (lastType === "mcq") return "fill";
+          if (lastType === "fill") return "coding";
+          return "mcq";
+        }
+        return "mcq";
+      })() as "mcq" | "fill" | "coding";
+
+      const newQuestion = await quizAPI.generateQuestion(difficulty || 2, nextType);
+      if (newQuestion) {
+        const nq = normalizeQuestion(newQuestion);
+        const updated = [...questionSet, nq];
+        setQuestionSet(updated);
+        // set local question immediately to avoid waiting for context propagation
+        setQuestion(nq);
+        setCurrentIndex(nextIndex);
+
+        const newPath = getQuestionScreenPath(nq.question_type);
+        if (newPath !== "multipleChoicesQuestion") {
+          router.push(`/level/${newPath}` as any);
+        }
+        return;
+      }
+    } catch (err) {
+      console.warn("Gagal generate soal berikutnya:", err);
+    }
+
+    // Jika tidak bisa generate soal lagi, anggap selesai
+    Alert.alert("Selesai!", "Anda telah menyelesaikan semua soal.", [{ text: "OK", onPress: () => router.push("/main/dashboard") }]);
+  };
+
   const emojiWrongSource = require("../../assets/images/emoji-wrong-answer.png");
   const emojiCorrectSource = require("../../assets/images/emoji-correct-answer.png");
+
+  // helper: pastikan options selalu berupa array (toleran terhadap string JSON atau comma-list)
+  const normalizeQuestion = (q: any) => {
+    if (!q) return q;
+    try {
+      if (q.options && typeof q.options === "string") {
+        try {
+          q.options = JSON.parse(q.options);
+        } catch (e) {
+          const s = String(q.options)
+            .replace(/^\[|\]$/g, "")
+            .replace(/"/g, "");
+          q.options = s
+            .split(",")
+            .map((x: string) => x.trim())
+            .filter(Boolean);
+        }
+      }
+    } catch (e) {
+      console.warn("normalizeQuestion error:", e);
+    }
+    return q;
+  };
 
   if (loading) {
     return (
@@ -99,12 +224,9 @@ export default function MultipleChoicesQuestion() {
       <SafeAreaView style={styles.container}>
         <View style={{ flex: 1, justifyContent: "center", alignItems: "center", paddingHorizontal: 20 }}>
           <Text style={{ color: "#ff0000", fontSize: 16, textAlign: "center", marginBottom: 20 }}>{error || "Gagal memuat soal"}</Text>
-
-          <View style={{ flexDirection: "row", gap: 8 }}>
-            <TouchableOpacity style={{ paddingHorizontal: 20, paddingVertical: 12, backgroundColor: "#0066cc", borderRadius: 8, marginBottom: 12 }} onPress={loadQuestion}>
-              <Text style={{ color: "white", fontWeight: "bold" }}>Coba Lagi</Text>
-            </TouchableOpacity>
-          </View>
+          <TouchableOpacity style={{ paddingHorizontal: 20, paddingVertical: 12, backgroundColor: "#0066cc", borderRadius: 8 }} onPress={loadQuestion}>
+            <Text style={{ color: "white", fontWeight: "bold" }}>Coba Lagi</Text>
+          </TouchableOpacity>
         </View>
       </SafeAreaView>
     );
@@ -115,21 +237,15 @@ export default function MultipleChoicesQuestion() {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.scrollView}>
-        {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>Level {question.difficulty ?? "?"}</Text>
-
-          <View style={{ flexDirection: "row", alignItems: "center" }}>
-            <TouchableOpacity style={[styles.rulesButton, { marginRight: 8 }]} onPress={loadQuestion}>
-              <Text style={styles.rulesButtonText}>Refresh</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.rulesButton}>
-              <Text style={styles.rulesButtonText}>Pilihan Ganda</Text>
-            </TouchableOpacity>
-          </View>
+          <Text style={styles.headerTitle}>
+            Soal {currentIndex + 1}/{Math.max(questionSet.length, 1)}
+          </Text>
+          <TouchableOpacity style={styles.rulesButton}>
+            <Text style={styles.rulesButtonText}>Pilihan Ganda</Text>
+          </TouchableOpacity>
         </View>
 
-        {/* Question Card */}
         <View style={styles.questionCard}>
           {question.code_template && (
             <View style={styles.codeBlock}>
@@ -139,10 +255,9 @@ export default function MultipleChoicesQuestion() {
           <Text style={styles.questionText}>{question.question_text}</Text>
         </View>
 
-        {/* Answer Options */}
         <View style={styles.optionsContainer}>
           {options.map((opt, idx) => {
-            const optionId = String.fromCharCode(65 + idx); // A, B, C, D
+            const optionId = String.fromCharCode(65 + idx);
             const optionText = typeof opt === "string" ? opt : opt.value ?? String(opt);
             const isSelected = selectedAnswer === optionId;
 
@@ -185,7 +300,7 @@ export default function MultipleChoicesQuestion() {
                 }}
               >
                 <Text style={styles.closeIcon}>✕</Text>
-                <Text style={styles.closeText}>Close</Text>
+                <Text style={styles.closeText}>Tutup</Text>
               </TouchableOpacity>
               <Text style={styles.modalTitle}>Jawaban Anda Salah!</Text>
 
@@ -227,7 +342,7 @@ export default function MultipleChoicesQuestion() {
                 }}
               >
                 <Text style={styles.closeIcon}>✕</Text>
-                <Text style={styles.closeText}>Close</Text>
+                <Text style={styles.closeText}>Tutup</Text>
               </TouchableOpacity>
               <Text style={styles.modalTitle}>Sempurna! 🎉</Text>
               <Text style={styles.modalSubtitle}>{feedback}</Text>
@@ -240,14 +355,8 @@ export default function MultipleChoicesQuestion() {
               )}
 
               <View style={styles.nextButtonRow}>
-                <TouchableOpacity
-                  style={styles.nextButton}
-                  onPress={() => {
-                    setAnswerStatus(null);
-                    router.push("/level/completionQuestion");
-                  }}
-                >
-                  <Text style={styles.nextButtonText}>Selanjutnya</Text>
+                <TouchableOpacity style={styles.nextButton} onPress={handleNextQuestion}>
+                  <Text style={styles.nextButtonText}>{currentIndex + 1 >= 10 ? "Selesai" : "Selanjutnya"}</Text>
                 </TouchableOpacity>
               </View>
             </View>

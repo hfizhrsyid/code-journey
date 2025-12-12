@@ -155,31 +155,65 @@ def get_question_view(request, question_id):
 def generate_question_set_view(request):
     """Generate a set of questions for a given topic"""
     try:
-        topic = request.data.get("topic")
+        topic = request.data.get("topic", "").strip()
         difficulty = request.data.get("difficulty", 2)
-        count = int(request.data.get("count", 10))
-        mcq_count = int(request.data.get("mcq_count", 5))
+        count = request.data.get("count", 10)
+        mcq_count = request.data.get("mcq_count", 5)
+        max_workers = request.data.get("max_workers", 3)
 
+        # Validate topic
         if not topic:
-            return Response({"error": "Missing topic"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "Topic is required and cannot be empty"}, status=status.HTTP_400_BAD_REQUEST)
+        if len(topic) > 100:
+            return Response({"error": "Topic must be 100 characters or less"}, status=status.HTTP_400_BAD_REQUEST)
 
+        # Validate difficulty
         try:
             difficulty = int(difficulty)
+            if not 1 <= difficulty <= 5:
+                raise ValueError("Difficulty must be between 1 and 5")
+        except (ValueError, TypeError) as e:
+            return Response({"error": f"Invalid difficulty: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Validate counts
+        try:
+            count = int(count)
+            mcq_count = int(mcq_count)
+            max_workers = int(max_workers)
         except (ValueError, TypeError):
-            return Response({"error": "Invalid difficulty"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "Count, mcq_count, and max_workers must be integers"}, status=status.HTTP_400_BAD_REQUEST)
 
-        if count <= 0 or mcq_count < 0 or mcq_count > count:
-            return Response({"error": "Invalid counts"}, status=status.HTTP_400_BAD_REQUEST)
+        if count <= 0:
+            return Response({"error": "Count must be greater than 0"}, status=status.HTTP_400_BAD_REQUEST)
+        if count > 20:
+            return Response({"error": "Count cannot exceed 20 questions per request"}, status=status.HTTP_400_BAD_REQUEST)
+        if mcq_count < 0 or mcq_count > count:
+            return Response({"error": f"mcq_count must be between 0 and {count}"}, status=status.HTTP_400_BAD_REQUEST)
+        if max_workers < 1 or max_workers > 5:
+            return Response({"error": "max_workers must be between 1 and 5"}, status=status.HTTP_400_BAD_REQUEST)
 
-        questions = generate_question_set(topic, difficulty, count, mcq_count)
+        logger.info(f"Generating {count} questions ({mcq_count} MCQ) for topic '{topic}' (difficulty: {difficulty})")
+
+        try:
+            questions = generate_question_set(topic, difficulty, count, mcq_count, max_workers)
+        except ValueError as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            logger.error(f"Error in generate_question_set: {str(e)}")
+            return Response(
+                {"error": f"Failed to generate questions: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
         return Response({
             "success": True,
             "created_count": len(questions),
+            "requested_count": count,
             "questions": questions
         }, status=status.HTTP_201_CREATED)
 
     except Exception as e:
+        logger.error(f"Unexpected error in generate_question_set_view: {str(e)}")
         return Response(
             {"error": f"Server error: {str(e)}"},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR

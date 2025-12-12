@@ -43,11 +43,43 @@ class QuizAPI {
       });
 
       if (response.data.success) {
-        return response.data;
+        // Defensive normalization: ensure `options` is an array when present
+        const data = { ...response.data };
+        if (data.options && typeof data.options === "string") {
+          try {
+            data.options = JSON.parse(data.options);
+          } catch (e) {
+            // Try a forgiving split if API returned a simple comma list
+            const s = data.options.replace(/^\[|\]$/g, "").replace(/"/g, "");
+            data.options = s
+              .split(",")
+              .map((x: string) => x.trim())
+              .filter(Boolean);
+          }
+        }
+        return data;
       }
       throw new Error(response.data.error || "Failed to generate question");
     } catch (error) {
       console.error("Error generating question:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Generate a set of 10 questions for a topic
+   */
+  async generateQuestionSet(topic: string, difficulty: number) {
+    try {
+      const response = await this.client.post("generate-question-set/", {
+        topic,
+        difficulty,
+        count: 10,
+        mcq_count: 5,
+      });
+      return response.data.questions || [];
+    } catch (error) {
+      console.error("Error generating question set:", error);
       throw error;
     }
   }
