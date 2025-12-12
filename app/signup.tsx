@@ -1,4 +1,5 @@
 import AuthHeader from "@/app/authHeader";
+import supabase from "@/lib/supabaseConfig";
 import { styles } from "@/styles/signup";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
@@ -64,6 +65,7 @@ export default function Signup() {
     // show password
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [signupError, setSignupError] = useState("");
 
     return (
         <View style={styles.container}>
@@ -183,18 +185,43 @@ export default function Signup() {
 
                         <TouchableOpacity
                             style={styles.button}
-                            onPress={() => {
+                            onPress={async () => {
+                                setSignupError("");
                                 if (!validateName()) return;
                                 if (!validateEmail()) return;
                                 if (!validatePassword()) return;
                                 if (!validateConfirmPassword()) return;
 
+                                const { data, error } = await supabase.auth.signUp({
+                                    email,
+                                    password,
+                                });
+                                if (error) {
+                                    setSignupError(error.message || "Signup failed");
+                                    return;
+                                }
+                                // Save name to profiles table
+                                if (data.user) {
+                                    const userId = data.user.id;
+                                    const { error: profileError } = await supabase
+                                        .from("profiles")
+                                        .insert([{ id: userId, name, email }]);
+                                    if (profileError) {
+                                        setSignupError(profileError.message || "Failed to save profile");
+                                        return;
+                                    }
+                                }
                                 router.push("/main/dashboard");
                             }}
                         >
-
                             <Text style={styles.buttonText}>Sign Up</Text>
                         </TouchableOpacity>
+
+                        {signupError ? (
+                            <Text style={{ color: "red", marginTop: 10, marginBottom: 10, textAlign: "center" }}>
+                                {signupError}
+                            </Text>
+                        ) : null}
 
                         <View style={styles.login}>
                             <Text style={styles.loginText}>Already have have an account?    </Text>

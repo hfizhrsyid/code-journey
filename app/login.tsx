@@ -1,4 +1,5 @@
 import AuthHeader from "@/app/authHeader";
+import supabase from "@/lib/supabaseConfig";
 import { styles } from "@/styles/login";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
@@ -34,6 +35,7 @@ export default function Login() {
     };
 
     const [showPassword, setShowPassword] = useState(false);
+    const [loginError, setLoginError] = useState("");
 
     return (
         <View style={styles.container}>
@@ -103,16 +105,44 @@ export default function Login() {
 
                         <TouchableOpacity
                             style={styles.button}
-                            onPress={() => {
+                            onPress={async () => {
+                                setLoginError("");
                                 if (!validateEmail()) return;
                                 if (!validatePassword()) return;
 
-                                router.push("/main/dashboard");
+                                const { data, error } = await supabase.auth.signInWithPassword({
+                                    email,
+                                    password,
+                                });
+                                if (error || !data?.user) {
+                                    setLoginError(error?.message || "Login failed");
+                                    return;
+                                }
+                                // Fetch user profile data after successful login
+                                const { data: profile, error: profileError } = await supabase
+                                    .from('profiles')
+                                    .select('name')
+                                    .eq('id', data.user.id)
+                                    .single();
+                                if (profileError) {
+                                    setLoginError(profileError.message);
+                                    return;
+                                }
+                                // Pass user's name to dashboard (via router query or context)
+                                router.replace({
+                                    pathname: "/main/dashboard",
+                                    params: { name: profile?.name || "" }
+                                });
                             }}
                         >
-
                             <Text style={styles.buttonText}>Login</Text>
                         </TouchableOpacity>
+
+                        {loginError ? (
+                            <Text style={{ color: "red", marginTop: 10, marginBottom: 10, textAlign: "center" }}>
+                                {loginError}
+                            </Text>
+                        ) : null}
 
                         <View style={styles.signup}>
                             <Text style={styles.signupText}>Don’t have an account?    </Text>
