@@ -1,9 +1,9 @@
-import { styles } from "@/styles/multipleChoicesQuestion";
-import { useState, useEffect } from "react";
-import { Image, Modal, SafeAreaView, ScrollView, Text, TouchableOpacity, View, ActivityIndicator, Alert } from "react-native";
-import { router } from "expo-router";
 import { quizAPI } from "@/lib/api";
-import { useQuestions, QuestionData } from "@/lib/QuestionContext";
+import { styles } from "@/styles/multipleChoicesQuestion";
+import { router } from "expo-router";
+import { useCallback, useEffect, useState } from "react";
+import { ActivityIndicator, Alert, Image, Modal, SafeAreaView, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { useQuestions } from "../../lib/QuestionContext";
 
 export default function MultipleChoicesQuestion() {
   const { questionSet, setQuestionSet, currentIndex, setCurrentIndex, difficulty, goToNextQuestion } = useQuestions();
@@ -18,11 +18,7 @@ export default function MultipleChoicesQuestion() {
   const [correctAnswerInfo, setCorrectAnswerInfo] = useState<{ option: string; text: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadQuestion();
-  }, [currentIndex]);
-
-  const loadQuestion = async () => {
+  const loadQuestion = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -67,7 +63,7 @@ export default function MultipleChoicesQuestion() {
         question_type: "mcq",
         difficulty: difficulty || 2,
       };
-      console.log("✅ Using mock MCQ:", mock); // ADD THIS
+      console.log("✅ Using mock MCQ:", mock);
       setQuestionSet([mock]);
       setCurrentIndex(0);
       setQuestion(mock);
@@ -78,7 +74,11 @@ export default function MultipleChoicesQuestion() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [questionSet, currentIndex, difficulty, setQuestionSet, setCurrentIndex]);
+
+  useEffect(() => {
+    loadQuestion();
+  }, [loadQuestion]);
 
   const handleSelectAnswer = async (optionId: string) => {
     if (selectedAnswer || !question || checking) return;

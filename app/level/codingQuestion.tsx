@@ -1,9 +1,9 @@
+import { Question, quizAPI } from "@/lib/api";
 import { styles } from "@/styles/codeQuestion";
-import { Text, View, TouchableOpacity, TextInput, ScrollView, SafeAreaView, ActivityIndicator, Alert } from "react-native";
-import { useState, useEffect } from "react";
-import { quizAPI, Question } from "@/lib/api";
 import { router } from "expo-router";
-import { useQuestions } from "@/lib/QuestionContext";
+import { useCallback, useState } from "react";
+import { ActivityIndicator, Alert, SafeAreaView, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { useQuestions } from "../../lib/QuestionContext";
 
 // helper: pastikan options selalu berupa array (toleran terhadap string JSON atau comma-list)
 const normalizeQuestion = (q: any) => {
@@ -12,6 +12,7 @@ const normalizeQuestion = (q: any) => {
     if (q.options && typeof q.options === "string") {
       try {
         q.options = JSON.parse(q.options);
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (e) {
         const s = String(q.options)
           .replace(/^\[|\]$/g, "")
@@ -38,11 +39,7 @@ export default function CodingQuestion() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadQuestion();
-  }, [currentIndex]);
-
-  const loadQuestion = async () => {
+  const loadQuestion = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -92,7 +89,7 @@ export default function CodingQuestion() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [questionSet, currentIndex, difficulty, setQuestion, setQuestionSet, setCurrentIndex, setLoading, setError, setAnswer, setFeedback]);
 
   const handleSubmit = async () => {
     if (!question || !answer.trim()) {

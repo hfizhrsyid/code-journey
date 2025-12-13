@@ -1,7 +1,7 @@
 import json
 from groq import Groq
 from django.conf import settings
-from typing import Dict, Any, List, Tuple
+from typing import Dict, Any, List, Tuple, Optional
 import logging
 import random
 from .models import Question
@@ -10,7 +10,29 @@ import time
 from functools import lru_cache
 
 logger = logging.getLogger(__name__)
-client = Groq(api_key=settings.GROQ_API_KEY)
+
+# Lazy initialization of Groq client
+_groq_client: Optional[Groq] = None
+
+
+def get_groq_client() -> Groq:
+    """Get or initialize Groq client with error handling"""
+    global _groq_client
+    
+    if _groq_client is None:
+        api_key = getattr(settings, 'GROQ_API_KEY', None)
+        if not api_key:
+            raise ValueError(
+                "GROQ_API_KEY not configured. Please set it in settings.py or .env file"
+            )
+        
+        try:
+            _groq_client = Groq(api_key=api_key)
+        except Exception as e:
+            logger.error(f"Failed to initialize Groq client: {str(e)}")
+            raise
+    
+    return _groq_client
 
 PROMPT_TEMPLATES = {
     "mcq": """Buat 1 soal pilihan ganda pemrograman Python dalam bahasa Indonesia dengan materi perulangan. Untuk kode programnya tetap gunakan bahasa inggris atau bahasa pemrograman Python tanpa di translate ke bahasa indonesia.
@@ -71,7 +93,7 @@ def generate_question(difficulty: int, question_type: str) -> Dict[str, Any]:
     try:
         logger.info(f"Generating {question_type} question with difficulty {difficulty}")
         
-        message = client.chat.completions.create(
+        message = get_groq_client().chat.completions.create(
             messages=[{"role": "user", "content": prompt}],
             model="llama-3.3-70b-versatile",
             temperature=0.85,
@@ -161,7 +183,7 @@ Question type: {question_type}
 Return JSON, for example:
 {{ "correct": true, "feedback": "✓ Jawaban Anda benar!", "explanation": "Penjelasan singkat" }}
 """
-        message = client.chat.completions.create(
+        message = get_groq_client().chat.completions.create(
             messages=[{"role": "user", "content": prompt}],
             model="llama-3.3-70b-versatile",
             temperature=0.0,

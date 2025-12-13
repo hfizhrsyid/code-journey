@@ -1,13 +1,13 @@
 import { styles } from "@/styles/pathPage";
 import { FontAwesome } from "@expo/vector-icons";
-import { useLocalSearchParams } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { useMemo, useState } from "react";
-import { Image, ScrollView, Text, TouchableOpacity, View, ActivityIndicator, Alert } from "react-native";
+import { ActivityIndicator, Alert, Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Svg, { Circle, Path } from "react-native-svg";
-import { router } from "expo-router";
+
 import { quizAPI } from "@/lib/api";
-import { useQuestions } from "@/lib/QuestionContext";
+import { useQuestions } from "../../lib/QuestionContext";
 
 import { radius, SCREEN_W, spacing, timeline } from "@/app/main/constants";
 

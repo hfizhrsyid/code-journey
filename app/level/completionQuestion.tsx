@@ -1,9 +1,9 @@
-import { useState, useEffect } from "react";
+import { Question, quizAPI } from "@/lib/api";
 import { styles } from "@/styles/completionQuestion";
-import { Image, Modal, SafeAreaView, ScrollView, Text, TextInput, TouchableOpacity, View, ActivityIndicator, Alert } from "react-native";
-import { quizAPI, Question } from "@/lib/api";
 import { router } from "expo-router";
-import { useQuestions } from "@/lib/QuestionContext";
+import { useCallback, useEffect, useState } from "react";
+import { ActivityIndicator, Alert, Image, Modal, SafeAreaView, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { useQuestions } from "../../lib/QuestionContext";
 
 export default function CompletionQuestion() {
   const { questionSet, setQuestionSet, currentIndex, setCurrentIndex, difficulty } = useQuestions();
@@ -17,11 +17,7 @@ export default function CompletionQuestion() {
   const [feedback, setFeedback] = useState("");
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadQuestion();
-  }, [currentIndex]);
-
-  const loadQuestion = async () => {
+  const loadQuestion = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -46,7 +42,11 @@ export default function CompletionQuestion() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [questionSet, currentIndex]);
+
+  useEffect(() => {
+    loadQuestion();
+  }, [loadQuestion]);
 
   const handleSubmit = async () => {
     if (!question || !answer.trim()) {
@@ -149,6 +149,7 @@ export default function CompletionQuestion() {
       if (q.options && typeof q.options === "string") {
         try {
           q.options = JSON.parse(q.options);
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         } catch (e) {
           const s = String(q.options)
             .replace(/^\[|\]$/g, "")

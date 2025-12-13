@@ -133,16 +133,17 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # ============================================
 # CORS Configuration
 # ============================================
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    "http://localhost:8081",
-    "http://127.0.0.1:8000",
+CORS_ALLOWED_ORIGINS = os.getenv('CORS_ALLOWED_ORIGINS', '').split(',') if os.getenv('CORS_ALLOWED_ORIGINS') else [
+    "http://localhost:3000",      # Web
+    "http://localhost:8081",      # React Native web
+    "http://localhost:19006",     # Expo web preview
+    "http://localhost:19000",     # Expo (alternative)
     "http://127.0.0.1:3000",
+    "http://127.0.0.1:8081",
+    "http://127.0.0.1:19006",
 ]
 
 CORS_ALLOW_CREDENTIALS = True
-
-CORS_ALLOW_ALL_ORIGINS = True
 
 # ============================================
 # REST Framework Configuration
