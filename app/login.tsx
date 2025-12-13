@@ -1,24 +1,22 @@
 import AuthHeader from "@/app/authHeader";
-import supabase from "@/lib/supabaseConfig";
+import authService from "@/lib/auth";
 import { styles } from "@/styles/login";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useState } from "react";
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
 
 export default function Login() {
-    const [email, setEmail] = useState("");
-    const [emailError, setEmailError] = useState("");
+    const [username, setUsername] = useState("");
+    const [usernameError, setUsernameError] = useState("");
     
-    const validateEmail = () => {
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-        if (!emailRegex.test(email)) {
-            setEmailError("Format email tidak valid (contoh: user@mail.com)");
+    const validateUsername = () => {
+        if (username.trim().length === 0) {
+            setUsernameError("Username tidak boleh kosong!");
             return false;
         }
 
-        setEmailError("");
+        setUsernameError("");
         return true;
     };
 
@@ -36,6 +34,28 @@ export default function Login() {
 
     const [showPassword, setShowPassword] = useState(false);
     const [loginError, setLoginError] = useState("");
+    const [isLoading, setIsLoading] = useState(false);
+
+    const handleLogin = async () => {
+        setLoginError("");
+        if (!validateUsername()) return;
+        if (!validatePassword()) return;
+
+        setIsLoading(true);
+        try {
+            const response = await authService.signIn(username, password);
+            // Login successful, navigate to dashboard
+            router.replace({
+                pathname: "/main/dashboard",
+                params: { name: response.user.first_name || response.user.username }
+            });
+        } catch (error: any) {
+            const errorMsg = error?.error || error?.detail || "Login failed";
+            setLoginError(errorMsg);
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     return (
         <View style={styles.container}>
@@ -57,17 +77,17 @@ export default function Login() {
                         <Text style={styles.subtitle}>Login to your account</Text>
 
                         <TextInput
-                            placeholder="Email"
+                            placeholder="Username"
                             style={styles.input}
                             placeholderTextColor="#999"
-                            value={email}
-                            onChangeText={setEmail}
-                            onBlur={validateEmail}
+                            value={username}
+                            onChangeText={setUsername}
+                            onBlur={validateUsername}
                         />
 
-                        {emailError ? (
+                        {usernameError ? (
                             <Text style={{ color: "red", marginTop: -10, marginBottom: 10 }}>
-                                {emailError}
+                                {usernameError}
                             </Text>
                         ) : null}
 
@@ -105,37 +125,14 @@ export default function Login() {
 
                         <TouchableOpacity
                             style={styles.button}
-                            onPress={async () => {
-                                setLoginError("");
-                                if (!validateEmail()) return;
-                                if (!validatePassword()) return;
-
-                                const { data, error } = await supabase.auth.signInWithPassword({
-                                    email,
-                                    password,
-                                });
-                                if (error || !data?.user) {
-                                    setLoginError(error?.message || "Login failed");
-                                    return;
-                                }
-                                // Fetch user profile data after successful login
-                                const { data: profile, error: profileError } = await supabase
-                                    .from('profiles')
-                                    .select('name')
-                                    .eq('id', data.user.id)
-                                    .single();
-                                if (profileError) {
-                                    setLoginError(profileError.message);
-                                    return;
-                                }
-                                // Pass user's name to dashboard (via router query or context)
-                                router.replace({
-                                    pathname: "/main/dashboard",
-                                    params: { name: profile?.name || "" }
-                                });
-                            }}
+                            onPress={handleLogin}
+                            disabled={isLoading}
                         >
-                            <Text style={styles.buttonText}>Login</Text>
+                            {isLoading ? (
+                                <ActivityIndicator color="#fff" />
+                            ) : (
+                                <Text style={styles.buttonText}>Login</Text>
+                            )}
                         </TouchableOpacity>
 
                         {loginError ? (

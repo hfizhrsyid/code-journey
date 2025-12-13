@@ -1,22 +1,26 @@
 import AuthHeader from "@/app/authHeader";
-import supabase from "@/lib/supabaseConfig";
+import authService from "@/lib/auth";
 import { styles } from "@/styles/signup";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useState } from "react";
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
 
 export default function Signup() {
-    // name
-    const [name, setName] = useState("");
-    const [nameError, setNameError] = useState("");
+    // username
+    const [username, setUsername] = useState("");
+    const [usernameError, setUsernameError] = useState("");
 
-    const validateName = () => {
-        if (name.trim().length === 0) {
-            setNameError("Nama tidak boleh kosong!");
+    const validateUsername = () => {
+        if (username.trim().length === 0) {
+            setUsernameError("Username tidak boleh kosong!");
             return false;
         }
-        setNameError("");
+        if (username.length < 3) {
+            setUsernameError("Username minimal 3 karakter!");
+            return false;
+        }
+        setUsernameError("");
         return true;
     };
 
@@ -45,6 +49,10 @@ export default function Signup() {
             setPasswordError("Password tidak boleh kosong!");
             return false;
         }
+        if (password.length < 6) {
+            setPasswordError("Password minimal 6 karakter!");
+            return false;
+        }
         setPasswordError("");
         return true;
     };
@@ -66,6 +74,36 @@ export default function Signup() {
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [signupError, setSignupError] = useState("");
+    const [isLoading, setIsLoading] = useState(false);
+
+    const handleSignup = async () => {
+        setSignupError("");
+        if (!validateUsername()) return;
+        if (!validateEmail()) return;
+        if (!validatePassword()) return;
+        if (!validateConfirmPassword()) return;
+
+        setIsLoading(true);
+        try {
+            const response = await authService.signUp(
+                username,
+                email,
+                password,
+                username, // firstName
+                ""        // lastName
+            );
+            // Signup successful, navigate to dashboard
+            router.replace({
+                pathname: "/main/dashboard",
+                params: { name: response.user.first_name || response.user.username }
+            });
+        } catch (error: any) {
+            const errorMsg = error?.error || error?.detail || error?.message || "Signup failed";
+            setSignupError(typeof errorMsg === 'string' ? errorMsg : JSON.stringify(errorMsg));
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     return (
         <View style={styles.container}>
@@ -85,19 +123,19 @@ export default function Signup() {
                         <Text style={styles.welcome}>Start Your Journey!</Text>
                         <Text style={styles.subtitle}>Sign up for your account</Text>
 
-                        {/* input name */}
+                        {/* input username */}
                         <TextInput
-                            placeholder="Name"
+                            placeholder="Username"
                             style={styles.inputName}
                             placeholderTextColor="#999"
-                            value={name}
-                            onChangeText={setName}
-                            onBlur={validateName}
+                            value={username}
+                            onChangeText={setUsername}
+                            onBlur={validateUsername}
                         />
 
-                        {nameError ? (
+                        {usernameError ? (
                             <Text style={{ color: "red", marginTop: -10, marginBottom: 10 }}>
-                                {nameError}
+                                {usernameError}
                             </Text>
                         ) : null}
 
@@ -185,36 +223,14 @@ export default function Signup() {
 
                         <TouchableOpacity
                             style={styles.button}
-                            onPress={async () => {
-                                setSignupError("");
-                                if (!validateName()) return;
-                                if (!validateEmail()) return;
-                                if (!validatePassword()) return;
-                                if (!validateConfirmPassword()) return;
-
-                                const { data, error } = await supabase.auth.signUp({
-                                    email,
-                                    password,
-                                });
-                                if (error) {
-                                    setSignupError(error.message || "Signup failed");
-                                    return;
-                                }
-                                // Save name to profiles table
-                                if (data.user) {
-                                    const userId = data.user.id;
-                                    const { error: profileError } = await supabase
-                                        .from("profiles")
-                                        .insert([{ id: userId, name, email }]);
-                                    if (profileError) {
-                                        setSignupError(profileError.message || "Failed to save profile");
-                                        return;
-                                    }
-                                }
-                                router.push("/main/dashboard");
-                            }}
+                            onPress={handleSignup}
+                            disabled={isLoading}
                         >
-                            <Text style={styles.buttonText}>Sign Up</Text>
+                            {isLoading ? (
+                                <ActivityIndicator color="#fff" />
+                            ) : (
+                                <Text style={styles.buttonText}>Sign Up</Text>
+                            )}
                         </TouchableOpacity>
 
                         {signupError ? (
