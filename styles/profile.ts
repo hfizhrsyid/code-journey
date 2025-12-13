@@ -133,19 +133,45 @@ export const styles = StyleSheet.create({
         color: "#555",
     },
 
+    statCard: {
+        backgroundColor: "#2A3551",
+        borderRadius: 12,
+        padding: 20,
+        width: "48%",
+        alignItems: "center",
+        borderWidth: 1,
+        borderColor: "#3A4561",
+    },
+
+    statNumber: {
+        color: "#ffffff",
+        fontSize: 32,
+        fontWeight: "bold",
+    },
+
+    statLabel: {
+        color: "#A0A8B8",
+        fontSize: 13,
+        marginTop: 5,
+        textAlign: "center",
+    },
+
     logoutButton: {
+        backgroundColor: "#DC3545",
         borderRadius: 15,
-        padding: 7,
-        borderColor: "#ffffff",
-        borderWidth: 2,
-        paddingHorizontal: 15,
-        alignSelf: "flex-end",
-        marginRight: 20,        
+        padding: 15,
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
+        marginHorizontal: 20,
+        marginBottom: 30,
+        gap: 8,
     },
 
     textButton: {
         color: "#ffffff",
-        fontSize: 15,
+        fontSize: 16,
+        fontWeight: "600",
     },
 
 });

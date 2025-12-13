@@ -1,5 +1,5 @@
 import AuthHeader from "@/app/authHeader";
-import authService from "@/lib/auth";
+import { useAuth } from "@/lib/AuthContext";
 import { styles } from "@/styles/login";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
@@ -7,6 +7,7 @@ import { useState } from "react";
 import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
 
 export default function Login() {
+    const { login } = useAuth();
     const [username, setUsername] = useState("");
     const [usernameError, setUsernameError] = useState("");
     
@@ -43,14 +44,11 @@ export default function Login() {
 
         setIsLoading(true);
         try {
-            const response = await authService.signIn(username, password);
-            // Login successful, navigate to dashboard
-            router.replace({
-                pathname: "/main/dashboard",
-                params: { name: response.user.first_name || response.user.username }
-            });
+            await login(username, password);
+            // Login successful, AuthContext is updated, navigate to dashboard
+            router.replace("/main/dashboard");
         } catch (error: any) {
-            const errorMsg = error?.error || error?.detail || "Login failed";
+            const errorMsg = error?.message || error?.error || error?.detail || "Login failed";
             setLoginError(errorMsg);
         } finally {
             setIsLoading(false);

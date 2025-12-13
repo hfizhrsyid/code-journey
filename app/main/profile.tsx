@@ -1,137 +1,105 @@
+import { useAuth } from "@/lib/AuthContext";
+import { quizAPI } from "@/lib/api";
 import { styles } from "@/styles/profile";
 import { MaterialIcons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { router } from "expo-router";
-import { useState } from "react";
-import { Image, Pressable, ScrollView, Text, View } from "react-native";
-
-/* =====================
-   PROGRESS
-===================== */
-
-const MATERIALS = [
-    "variabel_tipe_data",
-    "operator",
-    "percabangan",
-    "perulangan",
-    "pengurutan",
-    "pencarian",
-] as const;
-
-type MaterialKey = typeof MATERIALS[number];
-const LEVEL_PER_MATERIAL = 10;
-const TOTAL_LEVEL = MATERIALS.length * LEVEL_PER_MATERIAL;
-
-/* =====================
-   DUMMY DATA (NANTI API)
-===================== */
-type UserProgress = {
-    materials: Record<MaterialKey, number>;
-};
-
-const initialProgress: UserProgress = {
-    materials: {
-        variabel_tipe_data: 10,
-        operator: 10,
-        percabangan: 10,
-        perulangan: 10,
-        pengurutan: 10,
-        pencarian: 10,
-    },
-};
-
-const calculateProgress = (progress: UserProgress) => {
-    const completedLevels = Object.values(progress.materials)
-        .reduce((total, value) => total + value, 0);
-
-    return Math.round((completedLevels / TOTAL_LEVEL) * 100);
-};
-
-/* =====================
-   BADGE
-===================== */
-const BADGES = [
-    {
-        key: "variabel_tipe_data" as MaterialKey,
-        title: "Variable Master",
-        desc: "Kamu resmi menguasai fondasi pemrograman!",
-        on: require("@/assets/images/badges/badge-1.png"),
-    },
-    {
-        key: "operator" as MaterialKey,
-        title: "Operator Pro",
-        desc: "Logika dan perhitungan sudah jadi temanmu!",
-        on: require("@/assets/images/badges/badge-2.png"),
-    },
-    {
-        key: "percabangan" as MaterialKey,
-        title: "Decision Maker",
-        desc: "Kamu sudah mahir membuat keputusan dalam program!",
-        on: require("@/assets/images/badges/badge-3.png"),
-    },
-    {
-        key: "perulangan" as MaterialKey,
-        title: "Loop Hero",
-        desc: "Kamu sudah menguasai seni pengulangan!",
-        on: require("@/assets/images/badges/badge-4.png"),
-    },
-    {
-        key: "pengurutan" as MaterialKey,
-        title: "Sorting Expert",
-        desc: "Kamu sudah paham cara menyusun data seperti pro!",
-        on: require("@/assets/images/badges/badge-5.png"),
-    },
-    {
-        key: "pencarian" as MaterialKey,
-        title: "Search Master",
-        desc: "Kamu seperti detektif data! Cepat, tepat, dan jeli!",
-        on: require("@/assets/images/badges/badge-6.png"),
-    },
-];
+import { useEffect, useState } from "react";
+import { ActivityIndicator, Alert, Image, Pressable, ScrollView, Text, View } from "react-native";
 
 export default function Profile() {
-    const [selectedImage, setSelectedImage] = useState<string | null>(null);
+    const { user, logout, isAuthenticated, isLoading: authLoading } = useAuth();
+    const [profileImage, setProfileImage] = useState<string | null>(null);
+    const [stats, setStats] = useState({
+        totalAttempts: 0,
+        correctAnswers: 0,
+        accuracy: 0,
+        topicsCompleted: 0
+    });
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        if (!authLoading && !isAuthenticated) {
+            router.replace("/login");
+        } else if (isAuthenticated) {
+            loadUserStats();
+        }
+    }, [isAuthenticated, authLoading]);
+
+    const loadUserStats = async () => {
+        try {
+            setLoading(true);
+            // Get all user attempts across all topics
+            const attempts = await quizAPI.getUserAttempts(0); // 0 or undefined for all topics
+            
+            const totalAttempts = attempts.length;
+            const correctAnswers = attempts.filter((a: any) => a.is_correct).length;
+            const accuracy = totalAttempts > 0 ? Math.round((correctAnswers / totalAttempts) * 100) : 0;
+            
+            // Count unique topics attempted
+            const uniqueTopics = new Set(attempts.map((a: any) => a.question?.topic_id || 0)).size;
+
+            setStats({
+                totalAttempts,
+                correctAnswers,
+                accuracy,
+                topicsCompleted: uniqueTopics
+            });
+        } catch (error) {
+            console.error("Failed to load stats:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleLogout = async () => {
+        Alert.alert(
+            "Logout",
+            "Are you sure you want to logout?",
+            [
+                { text: "Cancel", style: "cancel" },
+                {
+                    text: "Logout",
+                    style: "destructive",
+                    onPress: async () => {
+                        await logout();
+                        router.replace("/login");
+                    }
+                }
+            ]
+        );
+    };
 
     const pickImage = async () => {
         let permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
         if (!permission.granted) {
-            alert("Izin diperlukan untuk mengakses galeri!");
+            Alert.alert("Permission Required", "Permission to access gallery is required!");
             return;
         }
 
         let result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ImagePicker.MediaTypeOptions.Images,
             allowsEditing: true,
-            aspect: [1, 1], 
+            aspect: [1, 1],
             quality: 1,
         });
 
-      if (!result.canceled) {
-          setSelectedImage(result.assets[0].uri);
-      }
-  };
-
-    // Progress
-    const [userProgress, setUserProgress] =
-        useState<UserProgress>(initialProgress);
-    const progress = calculateProgress(userProgress);
-
-    /* =====================
-      SIMULASI LEVEL SELESAI
-      (HAPUS NANTI)
-    ===================== */
-    const completeLevel = (material: MaterialKey) => {
-        setUserProgress(prev => ({
-            ...prev,
-            materials: {
-                ...prev.materials,
-                [material]: Math.min(
-                    prev.materials[material] + 1,
-                    LEVEL_PER_MATERIAL
-                ),
-            },
-        }));
+        if (!result.canceled) {
+            setProfileImage(result.assets[0].uri);
+        }
     };
+
+    if (authLoading || loading) {
+        return (
+            <View style={[styles.container, { justifyContent: "center", alignItems: "center" }]}>
+                <ActivityIndicator size="large" color="#007AFF" />
+            </View>
+        );
+    }
+
+    if (!user) {
+        return null;
+    }
 
     return (
         <View style={styles.container}>
@@ -139,12 +107,12 @@ export default function Profile() {
 
             <View style={styles.profileWrapper}>
                 <Image
-                source={
-                    selectedImage
-                    ? { uri: selectedImage }
-                    : require("@/assets/images/profile_pic.jpeg")
-                }
-                style={styles.profile}
+                    source={
+                        profileImage
+                            ? { uri: profileImage }
+                            : require("@/assets/images/profile_pic.jpeg")
+                    }
+                    style={styles.profile}
                 />
 
                 <Pressable style={styles.editIcon} onPress={pickImage}>
@@ -152,53 +120,62 @@ export default function Profile() {
                 </Pressable>
             </View>
 
-            <Text style={styles.username}>Mingyuuuu</Text>
+            <Text style={styles.username}>
+                {user.first_name || user.username}
+            </Text>
+            <Text style={{ color: "#666", fontSize: 14, marginTop: -5, marginBottom: 20 }}>
+                {user.email}
+            </Text>
 
             <View style={styles.progressContainer}>
-                <Text style={styles.progressLabel}>Progress</Text>
+                <Text style={styles.progressLabel}>Overall Stats</Text>
 
                 <View style={styles.progressBarWrapper}>
-                    <View style={[styles.progressBarFill, { width: `${progress}%` },]}/>
-                    <Text style={styles.progressText}>{progress}%</Text>
+                    <View
+                        style={[
+                            styles.progressBarFill,
+                            { width: `${stats.accuracy}%` },
+                        ]}
+                    />
+                    <Text style={styles.progressText}>{stats.accuracy}% Accuracy</Text>
                 </View>
             </View>
 
-            <View style={styles.badgeContainer}>
-                <Text style={styles.badgeLabel}>My Badge</Text>
+            <ScrollView
+                style={{ flex: 1, width: "100%" }}
+                showsVerticalScrollIndicator={false}
+            >
+                {/* Stats Cards */}
+                <View style={{ 
+                    flexDirection: "row", 
+                    flexWrap: "wrap", 
+                    justifyContent: "space-between",
+                    marginBottom: 20,
+                    paddingHorizontal: 20,
+                }}>
+                    <View style={styles.statCard}>
+                        <Text style={styles.statNumber}>{stats.totalAttempts}</Text>
+                        <Text style={styles.statLabel}>Total Attempts</Text>
+                    </View>
+                    <View style={styles.statCard}>
+                        <Text style={styles.statNumber}>{stats.correctAnswers}</Text>
+                        <Text style={styles.statLabel}>Correct</Text>
+                    </View>
+                    <View style={[styles.statCard, { width: "100%", marginTop: 10 }]}>
+                        <Text style={styles.statNumber}>{stats.topicsCompleted}</Text>
+                        <Text style={styles.statLabel}>Topics Attempted</Text>
+                    </View>
+                </View>
 
-                <ScrollView
-                    horizontal
-                    showsHorizontalScrollIndicator={false}
-                    contentContainerStyle={styles.badgeScroll}
+                {/* Logout Button */}
+                <Pressable
+                    style={styles.logoutButton}
+                    onPress={handleLogout}
                 >
-                    {BADGES.filter(
-                        badge =>
-                            userProgress.materials[badge.key] === LEVEL_PER_MATERIAL
-                    ).map(badge => (
-                        <View key={badge.key} style={styles.badgeItemHorizontal}>
-                            <Image
-                                source={badge.on}
-                                style={styles.badgeImage}
-                            />
-                            <Text style={styles.badgeName}>{badge.title}</Text>
-                            <Text style={styles.badgeDesc}>{badge.desc}</Text>
-                        </View>
-                    ))}
-
-                    {BADGES.filter(
-                        badge =>
-                            userProgress.materials[badge.key] === LEVEL_PER_MATERIAL
-                    ).length === 0 && (
-                        <Text style={styles.badgeEmpty}>
-                            Kamu belum memiliki badge, ayo selesaikan seluruh level untuk mendapatkan badge!
-                        </Text>
-                    )}
-                </ScrollView>
-            </View>
-            
-            <Pressable style={styles.logoutButton} onPress={() => router.replace("../login")}>
-                <Text style={styles.textButton}>Logout</Text>
-            </Pressable>
+                    <MaterialIcons name="logout" size={20} color="#fff" />
+                    <Text style={styles.textButton}>Logout</Text>
+                </Pressable>
+            </ScrollView>
         </View>
     );
 }
