@@ -1,8 +1,9 @@
 import json
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework import status
-from .models import Question, QuestionAttempt
+from rest_framework.permissions import IsAuthenticated, AllowAny
+from .models import Question, QuestionAttempt, Topic
 from .services import generate_question, check_answer, generate_question_set
 import random
 import logging
@@ -214,6 +215,204 @@ def generate_question_set_view(request):
 
     except Exception as e:
         logger.error(f"Unexpected error in generate_question_set_view: {str(e)}")
+        return Response(
+            {"error": f"Server error: {str(e)}"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+# ============================================
+# NEW DATABASE-FIRST ENDPOINTS (Step 3)
+# ============================================
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def get_questions(request):
+    """
+    Get questions from database with filters
+    
+    Query params:
+    - topic: Topic name (optional)
+    - difficulty: 1-5 (optional)
+    - question_type: mcq, fill, coding (optional)
+    - limit: Max results (default 1)
+    """
+    try:
+        topic = request.query_params.get("topic")
+        difficulty = request.query_params.get("difficulty")
+        question_type = request.query_params.get("question_type")
+        limit = int(request.query_params.get("limit", 1))
+        
+        # Build query
+        questions = Question.objects.filter(is_active=True)
+        
+        if topic:
+            questions = questions.filter(topic__name__iexact=topic)
+        
+        if difficulty:
+            try:
+                difficulty = int(difficulty)
+                questions = questions.filter(difficulty=difficulty)
+            except ValueError:
+                return Response(
+                    {"error": "Difficulty must be integer 1-5"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        
+        if question_type:
+            questions = questions.filter(question_type=question_type)
+        
+        # Get random questions
+        total = questions.count()
+        if total == 0:
+            return Response(
+                {"error": "No questions found with those filters"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        # Get random sample
+        limit = min(limit, total)
+        random_questions = random.sample(list(questions), limit)
+        
+        return Response({
+            "count": len(random_questions),
+            "questions": [
+                {
+                    "id": q.id,
+                    "question_type": q.question_type,
+                    "difficulty": q.difficulty,
+                    "question_text": q.question_text,
+                    "code_template": q.code_template,
+                    "options": q.options,
+                    "topic": q.topic.name if q.topic else None,
+                }
+                for q in random_questions
+            ]
+        })
+    
+    except Exception as e:
+        logger.error(f"Error fetching questions: {str(e)}")
+        return Response(
+            {"error": f"Server error: {str(e)}"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def submit_answer(request):
+    """
+    Submit answer and track attempt
+    
+    POST data:
+    {
+        "question_id": 123,
+        "answer": "user's answer"
+    }
+    """
+    try:
+        question_id = request.data.get("question_id")
+        user_answer = request.data.get("answer")
+        
+        if not question_id or user_answer is None:
+            return Response(
+                {"error": "Missing question_id or answer"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        try:
+            question = Question.objects.get(id=question_id)
+        except Question.DoesNotExist:
+            return Response(
+                {"error": "Question not found"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        # Check answer
+        check_result = check_answer(
+            str(user_answer),
+            question.answer_key,
+            question.question_type,
+            question.explanation
+        )
+        
+        # Track attempt with authenticated user
+        attempt = QuestionAttempt.objects.create(
+            user=request.user,
+            question=question,
+            answer=user_answer,
+            is_correct=check_result["correct"]
+        )
+        
+        return Response({
+            "attempt_id": attempt.id,
+            "correct": check_result["correct"],
+            "feedback": check_result["feedback"],
+            "correct_answer": check_result["correct_answer"],
+            "explanation": question.explanation or ""
+        }, status=status.HTTP_201_CREATED)
+    
+    except Exception as e:
+        logger.error(f"Error submitting answer: {str(e)}")
+        return Response(
+            {"error": f"Server error: {str(e)}"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def get_user_attempts(request):
+    """Get current user's question attempts"""
+    try:
+        attempts = QuestionAttempt.objects.filter(user=request.user).select_related('question')
+        
+        return Response({
+            "count": attempts.count(),
+            "correct": attempts.filter(is_correct=True).count(),
+            "incorrect": attempts.filter(is_correct=False).count(),
+            "attempts": [
+                {
+                    "id": a.id,
+                    "question_id": a.question.id,
+                    "question_text": a.question.question_text[:100],
+                    "is_correct": a.is_correct,
+                    "user_answer": a.answer,
+                    "created_at": a.created_at.isoformat(),
+                }
+                for a in attempts[:50]  # Limit to last 50
+            ]
+        })
+    
+    except Exception as e:
+        logger.error(f"Error fetching user attempts: {str(e)}")
+        return Response(
+            {"error": f"Server error: {str(e)}"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def get_topics(request):
+    """Get list of available topics"""
+    try:
+        topics = Topic.objects.all().values('id', 'name', 'description')
+        
+        # Include question count per topic
+        result = []
+        for topic in topics:
+            count = Question.objects.filter(topic_id=topic['id'], is_active=True).count()
+            topic['question_count'] = count
+            result.append(topic)
+        
+        return Response({
+            "count": len(result),
+            "topics": result
+        })
+    
+    except Exception as e:
+        logger.error(f"Error fetching topics: {str(e)}")
         return Response(
             {"error": f"Server error: {str(e)}"},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR

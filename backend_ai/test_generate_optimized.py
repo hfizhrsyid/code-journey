@@ -1,33 +1,28 @@
 #!/usr/bin/env python
-"""
-Test script untuk memverifikasi optimasi generate_question_set
-"""
-import requests
-import json
-import time
+import os
+os.environ['DJANGO_SETTINGS_MODULE'] = 'backend_ai.settings'
 
-BASE_URL = "http://127.0.0.1:8000"
+import django
+django.setup()
 
-def test_generate_question_set():
-    """Test generate_question_set dengan parallelisasi"""
-    
-    print("\n" + "="*60)
-    print("Testing Optimized generate_question_set")
-    print("="*60)
-    
-    # Test case 1: Basic generation
-    print("\n✓ Test 1: Generate 5 questions (3 MCQ, 2 fill/coding)")
-    payload = {
-        "topic": "Python Loops",
-        "difficulty": 2,
-        "count": 5,
-        "mcq_count": 3,
-        "max_workers": 3
-    }
-    
-    start_time = time.time()
-    response = requests.post(f"{BASE_URL}/api/generate-set/", json=payload)
-    elapsed = time.time() - start_time
+# Import services to apply the monkey patch
+from quiz.services import generate_question
+
+try:
+    print("Attempting to generate a Python Basics question...")
+    result = generate_question(difficulty=1, question_type="mcq")
+    print(f"\nSuccess! Generated question:")
+    for key, value in result.items():
+        if key == "options" and isinstance(value, list):
+            print(f"  {key}: {value}")
+        else:
+            val_str = str(value)[:100]
+            print(f"  {key}: {val_str}")
+except Exception as e:
+    print(f"Error: {type(e).__name__}: {str(e)}")
+    import traceback
+    traceback.print_exc()
+
     
     print(f"Status: {response.status_code}")
     print(f"Time elapsed: {elapsed:.2f}s")

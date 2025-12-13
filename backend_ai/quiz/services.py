@@ -11,6 +11,23 @@ from functools import lru_cache
 
 logger = logging.getLogger(__name__)
 
+# Monkey patch to fix groq/httpx compatibility issue
+# This is needed because groq 0.4.2 tries to pass 'proxies' to httpx.Client
+# which is not supported in httpx 0.23.3
+try:
+    import httpx
+    original_init = httpx.Client.__init__
+    
+    def patched_init(self, *args, **kwargs):
+        # Remove 'proxies' parameter if present
+        kwargs.pop('proxies', None)
+        return original_init(self, *args, **kwargs)
+    
+    httpx.Client.__init__ = patched_init
+    logger.info("Applied httpx.Client monkey patch for groq compatibility")
+except Exception as e:
+    logger.warning(f"Could not apply httpx monkey patch: {str(e)}")
+
 # Lazy initialization of Groq client
 _groq_client: Optional[Groq] = None
 
