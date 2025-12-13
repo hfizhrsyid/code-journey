@@ -2,9 +2,10 @@ from rest_framework.decorators import api_view, permission_classes, authenticati
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from rest_framework.authentication import SessionAuthentication
+from rest_framework.authentication import TokenAuthentication
+from rest_framework.authtoken.models import Token
 from django.contrib.auth.models import User
-from django.contrib.auth import authenticate, login as auth_login
+from django.contrib.auth import authenticate
 from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponse
 from .serializers import UserSerializer, LoginSerializer, UserProfileSerializer
@@ -67,11 +68,12 @@ def signup(request):
         if serializer.is_valid():
             user = serializer.save()
             
-            # Log the user in
-            auth_login(request, user)
+            # Create token for the user
+            token, created = Token.objects.get_or_create(user=user)
             
             return Response({
                 "message": "User created successfully",
+                "token": token.key,
                 "user": {
                     "id": user.id,
                     "username": user.username,
@@ -115,11 +117,12 @@ def login(request):
         if serializer.is_valid():
             user = serializer.validated_data['user']
             
-            # Log the user in (sets session)
-            auth_login(request, user)
+            # Get or create token for the user
+            token, created = Token.objects.get_or_create(user=user)
             
             return Response({
                 "message": "Login successful",
+                "token": token.key,
                 "user": {
                     "id": user.id,
                     "username": user.username,

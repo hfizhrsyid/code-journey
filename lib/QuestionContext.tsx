@@ -1,4 +1,4 @@
-import React, { createContext, useState, ReactNode } from "react";
+import React, { createContext, ReactNode, useState } from "react";
 
 export interface QuestionData {
   question_id: number;
@@ -16,6 +16,8 @@ interface QuestionContextType {
   setCurrentIndex: (index: number) => void;
   topic: string;
   setTopic: (topic: string) => void;
+  topicId: number;
+  setTopicId: (id: number) => void;
   difficulty: number;
   setDifficulty: (difficulty: number) => void;
   goToNextQuestion: () => boolean;
@@ -28,6 +30,7 @@ export function QuestionProvider({ children }: { children: ReactNode }) {
   const [questionSet, setQuestionSet] = useState<QuestionData[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [topic, setTopic] = useState("");
+  const [topicId, setTopicId] = useState(0);
   const [difficulty, setDifficulty] = useState(2);
 
   const goToNextQuestion = () => {
@@ -42,6 +45,7 @@ export function QuestionProvider({ children }: { children: ReactNode }) {
     setQuestionSet([]);
     setCurrentIndex(0);
     setTopic("");
+    setTopicId(0);
     setDifficulty(2);
   };
 
@@ -54,6 +58,8 @@ export function QuestionProvider({ children }: { children: ReactNode }) {
         setCurrentIndex,
         topic,
         setTopic,
+        topicId,
+        setTopicId,
         difficulty,
         setDifficulty,
         goToNextQuestion,

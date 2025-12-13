@@ -1,5 +1,7 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios, { AxiosInstance } from "axios";
 
+// For Chrome browser (Expo web), use localhost
 const API_BASE_URL = "http://localhost:8000/api/auth/";
 
 interface User {
@@ -12,11 +14,13 @@ interface User {
 
 interface AuthResponse {
   message: string;
+  token: string;
   user: User;
 }
 
 class AuthService {
   private client: AxiosInstance;
+  private token: string | null = null;
 
   constructor() {
     this.client = axios.create({
@@ -25,8 +29,42 @@ class AuthService {
       headers: {
         "Content-Type": "application/json",
       },
-      // withCredentials: true, // Temporarily disabled for testing
     });
+
+    // Load token from storage on init
+    this.loadToken();
+  }
+
+  private async loadToken() {
+    try {
+      const token = await AsyncStorage.getItem('authToken');
+      if (token) {
+        this.token = token;
+        this.setAuthHeader(token);
+      }
+    } catch (error) {
+      console.error('Error loading token:', error);
+    }
+  }
+
+  private setAuthHeader(token: string) {
+    this.client.defaults.headers.common['Authorization'] = `Token ${token}`;
+  }
+
+  private async saveToken(token: string) {
+    this.token = token;
+    this.setAuthHeader(token);
+    await AsyncStorage.setItem('authToken', token);
+  }
+
+  async clearToken() {
+    this.token = null;
+    delete this.client.defaults.headers.common['Authorization'];
+    await AsyncStorage.removeItem('authToken');
+  }
+
+  getToken(): string | null {
+    return this.token;
   }
 
   /**
@@ -51,6 +89,12 @@ class AuthService {
       });
 
       console.log("✅ Signup response:", response.data);
+      
+      // Save token
+      if (response.data.token) {
+        await this.saveToken(response.data.token);
+      }
+      
       return response.data;
     } catch (error: any) {
       console.error("❌ Signup error:", error);
@@ -78,6 +122,11 @@ class AuthService {
         password,
       });
 
+      // Save token
+      if (response.data.token) {
+        await this.saveToken(response.data.token);
+      }
+
       return response.data;
     } catch (error: any) {
       console.error("Login error details:", error.response?.data || error.message);
@@ -104,7 +153,10 @@ class AuthService {
     try {
       await this.client.post("logout/");
     } catch (error: any) {
-      throw error.response?.data || { error: "Logout failed" };
+      console.error("Logout error:", error);
+    } finally {
+      // Always clear token on logout
+      await this.clearToken();
     }
   }
 }

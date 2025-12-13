@@ -5,12 +5,16 @@ from rest_framework import status
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from .models import Question, QuestionAttempt, Topic
 from .services import generate_question, check_answer, generate_question_set
+from .auth_views import add_cors_headers
+from django.views.decorators.csrf import csrf_exempt
 import random
 import logging
 
 logger = logging.getLogger(__name__)
 
 @api_view(["POST"])
+@csrf_exempt
+@add_cors_headers
 def generate_question_view(request):
     """Generate a new AI question"""
     try:
@@ -77,6 +81,8 @@ def generate_question_view(request):
 
 
 @api_view(["POST"])
+@csrf_exempt
+@add_cors_headers
 def check_answer_view(request):
     """Check user answer"""
     try:
@@ -132,6 +138,7 @@ def check_answer_view(request):
 
 
 @api_view(["GET"])
+@add_cors_headers
 def get_question_view(request, question_id):
     """Retrieve a question"""
     try:
@@ -153,6 +160,8 @@ def get_question_view(request, question_id):
 
 
 @api_view(["POST"])
+@csrf_exempt
+@add_cors_headers
 def generate_question_set_view(request):
     """Generate a set of questions for a given topic"""
     try:
@@ -226,7 +235,8 @@ def generate_question_set_view(request):
 # ============================================
 
 @api_view(["GET"])
-@permission_classes([IsAuthenticated])
+@csrf_exempt
+@add_cors_headers
 def get_questions(request):
     """
     Get questions from database with filters
@@ -299,7 +309,8 @@ def get_questions(request):
 
 
 @api_view(["POST"])
-@permission_classes([IsAuthenticated])
+@csrf_exempt
+@add_cors_headers
 def submit_answer(request):
     """
     Submit answer and track attempt
@@ -336,16 +347,19 @@ def submit_answer(request):
             question.explanation
         )
         
-        # Track attempt with authenticated user
-        attempt = QuestionAttempt.objects.create(
-            user=request.user,
-            question=question,
-            answer=user_answer,
-            is_correct=check_result["correct"]
-        )
+        # Track attempt (only if user is logged in)
+        attempt_id = None
+        if request.user and request.user.is_authenticated:
+            attempt = QuestionAttempt.objects.create(
+                user=request.user,
+                question=question,
+                answer=user_answer,
+                is_correct=check_result["correct"]
+            )
+            attempt_id = attempt.id
         
         return Response({
-            "attempt_id": attempt.id,
+            "attempt_id": attempt_id,
             "correct": check_result["correct"],
             "feedback": check_result["feedback"],
             "correct_answer": check_result["correct_answer"],
@@ -361,10 +375,20 @@ def submit_answer(request):
 
 
 @api_view(["GET"])
-@permission_classes([IsAuthenticated])
+@csrf_exempt
+@add_cors_headers
 def get_user_attempts(request):
     """Get current user's question attempts"""
     try:
+        # If no user is logged in, return empty results
+        if not request.user or not request.user.is_authenticated:
+            return Response({
+                "count": 0,
+                "correct": 0,
+                "incorrect": 0,
+                "attempts": []
+            })
+            
         attempts = QuestionAttempt.objects.filter(user=request.user).select_related('question')
         
         return Response({

@@ -100,7 +100,7 @@ export default function CodingQuestion() {
     setSubmitting(true);
     try {
       const normalizedToSend = answer.trim().toLowerCase();
-      const result = await quizAPI.checkAnswer(question.question_id, normalizedToSend);
+      const result = await quizAPI.submitAnswer(question.question_id, normalizedToSend);
       setFeedback({
         correct: result.correct,
         message: result.feedback,

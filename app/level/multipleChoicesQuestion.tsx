@@ -2,11 +2,11 @@ import { quizAPI } from "@/lib/api";
 import { styles } from "@/styles/multipleChoicesQuestion";
 import { router } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, Alert, Image, Modal, SafeAreaView, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Image, Modal, SafeAreaView, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { useQuestions } from "../../lib/QuestionContext";
 
 export default function MultipleChoicesQuestion() {
-  const { questionSet, setQuestionSet, currentIndex, setCurrentIndex, difficulty, goToNextQuestion } = useQuestions();
+  const { questionSet, setQuestionSet, currentIndex, setCurrentIndex, difficulty, topic, topicId } = useQuestions();
 
   const [question, setQuestion] = useState<any | null>(null);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
@@ -86,7 +86,7 @@ export default function MultipleChoicesQuestion() {
     setChecking(true);
 
     try {
-      const result = await quizAPI.checkAnswer(question.question_id, optionId);
+      const result = await quizAPI.submitAnswer(question.question_id, optionId);
       setAnswerStatus(result.correct ? "correct" : "wrong");
       setFeedback(result.feedback || "");
       setExplanation(result.explanation || "");
@@ -107,7 +107,7 @@ export default function MultipleChoicesQuestion() {
         }
       }
     } catch (err: any) {
-      console.error("Error checking answer:", err);
+      console.error("Error submitting answer:", err);
       setAnswerStatus("wrong");
       setFeedback("Gagal memeriksa jawaban: " + (err?.message || "Unknown error"));
     } finally {
@@ -179,7 +179,13 @@ export default function MultipleChoicesQuestion() {
     }
 
     // Jika tidak bisa generate soal lagi, anggap selesai
-    Alert.alert("Selesai!", "Anda telah menyelesaikan semua soal.", [{ text: "OK", onPress: () => router.push("/main/dashboard") }]);
+    router.push({
+      pathname: "/main/topicResults",
+      params: { 
+        topicId: topicId.toString(),
+        topicName: topic
+      }
+    } as any);
   };
 
   const emojiWrongSource = require("../../assets/images/emoji-wrong-answer.png");

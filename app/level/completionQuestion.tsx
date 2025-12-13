@@ -58,7 +58,7 @@ export default function CompletionQuestion() {
     setSubmitting(true);
     try {
       const normalizedToSend = answer.trim().toLowerCase();
-      const result = await quizAPI.checkAnswer(question.question_id, normalizedToSend);
+      const result = await quizAPI.submitAnswer(question.question_id, normalizedToSend);
 
       if (result.correct) {
         setFeedback(result.feedback || "Benar! Periksa formatting dan detail kecil jika perlu.");

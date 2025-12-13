@@ -1,7 +1,7 @@
 import { styles } from "@/styles/pathPage";
 import { FontAwesome } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, Alert, Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Svg, { Circle, Path } from "react-native-svg";
@@ -45,9 +45,17 @@ const CARD_H = 100;
 export default function PathPage() {
   const params = useLocalSearchParams();
   const topic = (params.topic as string) || "Unknown";
+  const topicId = parseInt(params.id as string) || 0;
   const difficulty = parseInt(params.difficulty as string) || 2;
 
-  const { questionSet, setQuestionSet, setCurrentIndex } = useQuestions();
+  const { questionSet, setQuestionSet, setCurrentIndex, setTopic, setTopicId, setDifficulty } = useQuestions();
+
+  // Store topic info in context
+  useEffect(() => {
+    setTopic(topic);
+    setTopicId(topicId);
+    setDifficulty(difficulty);
+  }, [topic, topicId, difficulty, setTopic, setTopicId, setDifficulty]);
 
   const initialLevels: LevelItem[] = Array.from({ length: 10 }).map((_, i) => ({
     id: i + 1,
@@ -97,21 +105,17 @@ export default function PathPage() {
     }
   };
 
-  // Fallback: generate soal satu per satu jika endpoint set belum ada
+  // Fallback: try old generate endpoint or return empty for mock questions
   const generateQuestionSetFallback = async (): Promise<any[]> => {
-    const questions = [];
-    const questionTypes = ["mcq", "mcq", "mcq", "mcq", "mcq", "fill", "fill", "coding", "coding", "fill"];
-
-    for (let i = 0; i < questionTypes.length; i++) {
-      try {
-        const q = await quizAPI.generateQuestion(difficulty, questionTypes[i] as any);
-        questions.push(q);
-      } catch (error) {
-        console.error(`Failed to generate question ${i + 1}:`, error);
-      }
+    try {
+      // Try old generateQuestionSet endpoint as last resort
+      const questions = await quizAPI.generateQuestionSet(topic, difficulty);
+      console.log("Used old generateQuestionSet endpoint:", questions.length);
+      return questions;
+    } catch (error) {
+      console.warn("Old endpoint also failed, will use mock questions:", error);
+      return []; // Return empty to trigger mock questions
     }
-
-    return questions;
   };
 
   const handlePress = async (node: LevelItem) => {
@@ -126,12 +130,12 @@ export default function PathPage() {
       try {
         let questions: any[] = [];
 
-        // Coba gunakan endpoint baru dulu
+        // Use new database-first API
         try {
-          questions = await quizAPI.generateQuestionSet(topic, difficulty);
-          console.log("Generated question set via API:", questions.length);
+          questions = await quizAPI.getQuestions(topic, difficulty);
+          console.log("Loaded questions from database:", questions.length);
         } catch (apiError) {
-          console.warn("generateQuestionSet endpoint tidak tersedia, gunakan fallback:", apiError);
+          console.warn("Database questions not available, using fallback:", apiError);
           // Fallback: generate satu per satu
           questions = await generateQuestionSetFallback();
         }
