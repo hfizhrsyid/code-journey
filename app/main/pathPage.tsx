@@ -454,11 +454,14 @@ export default function PathPage() {
                     <Text style={[styles.caption, { textAlign: "center" }]}>
                       {showAllTopics ? node.title : `Soal ${node.id}`}
                     </Text>
-                    {showAllTopics && !node.status === "locked" as any && topics.find(t => t.id === node.id)?.completion_percentage > 0 && (
-                      <Text style={[styles.caption, { textAlign: "center", fontSize: 11, color: "#4CAF50" }]}>
-                        {topics.find(t => t.id === node.id)?.completion_percentage}%
-                      </Text>
-                    )}
+                    {showAllTopics && node.status !== "locked" && (() => {
+                      const topicData = topics.find(t => t.id === node.id);
+                      return topicData && topicData.completion_percentage > 0 && (
+                        <Text style={[styles.caption, { textAlign: "center", fontSize: 11, color: "#4CAF50" }]}>
+                          {topicData.completion_percentage}%
+                        </Text>
+                      );
+                    })()}
                   </View>
                 </TouchableOpacity>
               </View>

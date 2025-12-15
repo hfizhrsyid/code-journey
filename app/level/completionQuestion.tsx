@@ -312,8 +312,7 @@ export default function CompletionQuestion() {
               </View>
             </View>
           </View>
-        </View>
-      </Modal>
+        </View>    </Modal>
     </SafeAreaView>
   );
 }
