@@ -2,7 +2,7 @@ import { Question, quizAPI } from "@/lib/api";
 import { styles } from "@/styles/codeQuestion";
 import { router } from "expo-router";
 import { useCallback, useState } from "react";
-import { ActivityIndicator, Alert, SafeAreaView, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, SafeAreaView, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { useQuestions } from "../../lib/QuestionContext";
 
 // helper: pastikan options selalu berupa array (toleran terhadap string JSON atau comma-list)
@@ -30,7 +30,7 @@ const normalizeQuestion = (q: any) => {
 };
 
 export default function CodingQuestion() {
-  const { questionSet, setQuestionSet, currentIndex, setCurrentIndex, difficulty } = useQuestions();
+  const { questionSet, setQuestionSet, currentIndex, setCurrentIndex, difficulty, topic, topicId } = useQuestions();
 
   const [question, setQuestion] = useState<Question | null>(null);
   const [answer, setAnswer] = useState("");
@@ -175,8 +175,14 @@ export default function CodingQuestion() {
       console.warn("Gagal generate soal berikutnya (coding):", err);
     }
 
-    // Jika tidak bisa generate soal lagi, anggap selesai
-    Alert.alert("Selesai!", "Anda telah menyelesaikan semua soal.", [{ text: "OK", onPress: () => router.push("/main/dashboard") }]);
+    // Navigate to results screen
+    router.push({
+      pathname: "/main/topicResults",
+      params: { 
+        topicId: topicId.toString(),
+        topicName: topic
+      }
+    } as any);
   };
 
   if (loading) {

@@ -2,11 +2,11 @@ import { Question, quizAPI } from "@/lib/api";
 import { styles } from "@/styles/completionQuestion";
 import { router } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, Alert, Image, Modal, SafeAreaView, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Image, Modal, SafeAreaView, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { useQuestions } from "../../lib/QuestionContext";
 
 export default function CompletionQuestion() {
-  const { questionSet, setQuestionSet, currentIndex, setCurrentIndex, difficulty } = useQuestions();
+  const { questionSet, setQuestionSet, currentIndex, setCurrentIndex, difficulty, topic, topicId } = useQuestions();
 
   const [question, setQuestion] = useState<Question | null>(null);
   const [answer, setAnswer] = useState("");
@@ -136,7 +136,14 @@ export default function CompletionQuestion() {
       console.warn("Gagal generate soal berikutnya (completion):", err);
     }
 
-    Alert.alert("Selesai!", "Anda telah menyelesaikan semua soal.", [{ text: "OK", onPress: () => router.push("/main/dashboard") }]);
+    // Navigate to results screen
+    router.push({
+      pathname: "/main/topicResults",
+      params: { 
+        topicId: topicId.toString(),
+        topicName: topic
+      }
+    } as any);
   };
 
   const emojiWrongSource = require("../../assets/images/emoji-wrong-answer.png");

@@ -1,12 +1,14 @@
 import { styles } from "@/styles/pathPage";
 import { FontAwesome } from "@expo/vector-icons";
+import { useFocusEffect } from "@react-navigation/native";
 import { router, useLocalSearchParams } from "expo-router";
-import { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, Alert, Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Svg, { Circle, Path } from "react-native-svg";
 
 import { quizAPI } from "@/lib/api";
+import { useAuth } from "@/lib/AuthContext";
 import { useQuestions } from "../../lib/QuestionContext";
 
 import { radius, SCREEN_W, spacing, timeline } from "@/app/main/constants";
@@ -48,6 +50,7 @@ export default function PathPage() {
   const topicId = parseInt(params.id as string) || 0;
   const difficulty = parseInt(params.difficulty as string) || 2;
 
+  const { isAuthenticated } = useAuth();
   const { questionSet, setQuestionSet, setCurrentIndex, setTopic, setTopicId, setDifficulty } = useQuestions();
 
   // Store topic info in context
@@ -69,6 +72,73 @@ export default function PathPage() {
 
   const [levels, setLevels] = useState(initialLevels);
   const [loading, setLoading] = useState(false);
+  const [loadingProgress, setLoadingProgress] = useState(true);
+
+  // Reload progress when screen comes into focus (e.g., after completing questions)
+  useFocusEffect(
+    React.useCallback(() => {
+      loadUserProgress();
+    }, [topicId, isAuthenticated])
+  );
+
+  const loadUserProgress = async () => {
+    if (!isAuthenticated || !topicId) {
+      setLoadingProgress(false);
+      return;
+    }
+
+    try {
+      setLoadingProgress(true);
+      const attempts = await quizAPI.getUserAttempts(topicId);
+      
+      console.log("📊 User attempts loaded:", attempts?.length || 0);
+      
+      if (attempts && attempts.length > 0) {
+        // Get unique questions answered correctly
+        const correctQuestionIds = new Set(
+          attempts.filter((a: any) => a.is_correct).map((a: any) => a.question_id)
+        );
+
+        // Get all unique questions attempted (both correct and incorrect)
+        const attemptedQuestionIds = new Set(
+          attempts.map((a: any) => a.question_id)
+        );
+
+        const completedCount = correctQuestionIds.size;
+        const attemptedCount = attemptedQuestionIds.size;
+
+        console.log(`✅ Completed: ${completedCount}, 📝 Attempted: ${attemptedCount}`);
+
+        // Update level status based on progress
+        // - Levels with correctly answered questions = "done"
+        // - Next level after completed ones = "open" 
+        // - Future levels = "locked"
+        setLevels(prev => prev.map((level, idx) => {
+          if (idx < completedCount) {
+            // Questions already answered correctly
+            return { ...level, status: "done" as LevelStatus };
+          } else if (idx === completedCount || (idx === 0 && completedCount === 0)) {
+            // Next available question, or first question if none completed
+            return { ...level, status: "open" as LevelStatus };
+          } else {
+            // Future questions
+            return { ...level, status: "locked" as LevelStatus };
+          }
+        }));
+      } else {
+        // No attempts yet - only first level is open
+        console.log("📭 No attempts found, starting fresh");
+        setLevels(prev => prev.map((level, idx) => ({
+          ...level,
+          status: idx === 0 ? "open" : "locked" as LevelStatus
+        })));
+      }
+    } catch (error) {
+      console.error("Failed to load progress:", error);
+    } finally {
+      setLoadingProgress(false);
+    }
+  };
 
   const totalHeight = useMemo(() => spacing * levels.length + 100 + CONTENT_TOP, [levels.length]);
 
@@ -105,78 +175,59 @@ export default function PathPage() {
     }
   };
 
-  // Fallback: try old generate endpoint or return empty for mock questions
-  const generateQuestionSetFallback = async (): Promise<any[]> => {
-    try {
-      // Try old generateQuestionSet endpoint as last resort
-      const questions = await quizAPI.generateQuestionSet(topic, difficulty);
-      console.log("Used old generateQuestionSet endpoint:", questions.length);
-      return questions;
-    } catch (error) {
-      console.warn("Old endpoint also failed, will use mock questions:", error);
-      return []; // Return empty to trigger mock questions
-    }
-  };
-
   const handlePress = async (node: LevelItem) => {
     if (node.status === "locked") {
       Alert.alert("Terkunci", "Selesaikan level sebelumnya terlebih dahulu");
       return;
     }
 
-    // Jika level pertama dan belum ada question set, generate soal
-    if (node.id === 1 && questionSet.length === 0) {
+    // Load questions from database if not already loaded
+    if (questionSet.length === 0) {
       setLoading(true);
       try {
         let questions: any[] = [];
 
-        // Use new database-first API
+        // Use database-first API - no AI generation fallback
         try {
-          questions = await quizAPI.getQuestions(topic, difficulty);
-          console.log("Loaded questions from database:", questions.length);
+          questions = await quizAPI.getQuestions(topicId, difficulty);
+          console.log("✅ Loaded questions from database:", questions.length);
         } catch (apiError) {
-          console.warn("Database questions not available, using fallback:", apiError);
-          // Fallback: generate satu per satu
-          questions = await generateQuestionSetFallback();
+          console.warn("⚠️ Database questions not available:", apiError);
+          // Show alert to inform user
+          Alert.alert(
+            "No Questions Available",
+            `No questions found for "${topic}". Please ask the admin to generate questions for this topic.`,
+            [{ text: "OK" }]
+          );
+          setLoading(false);
+          return;
         }
 
         if (questions && questions.length > 0) {
           setQuestionSet(questions);
-          setCurrentIndex(0);
+          // Navigate to the clicked level (not always level 0)
+          const targetIndex = Math.min(node.id - 1, questions.length - 1);
+          setCurrentIndex(targetIndex);
 
-          const screenPath = getQuestionScreenPath(questions[0].question_type);
+          const screenPath = getQuestionScreenPath(questions[targetIndex].question_type);
           router.push(`/level/${screenPath}` as any);
         } else {
-          // --- NEW: fallback local mock questions so UI won't break ---
-          console.warn("No questions generated from backend, creating local mock questions for flow testing.");
-          const mockQuestions = Array.from({ length: 10 }).map((_, i) => {
-            // distribute types: first 5 mcq, rest mix
-            const qtype = i < 5 ? "mcq" : i % 2 === 0 ? "fill" : "coding";
-            return {
-              question_id: 1000 + i,
-              question_text: `Mock soal ${i + 1} (${qtype}) untuk topik ${topic}`,
-              code_template: qtype !== "mcq" ? `# contoh kode untuk soal ${i + 1}` : undefined,
-              options: qtype === "mcq" ? ["Opsi A", "Opsi B", "Opsi C", "Opsi D"] : undefined,
-              question_type: qtype,
-              difficulty,
-            };
-          });
-
-          setQuestionSet(mockQuestions);
-          setCurrentIndex(0);
-          const screenPath = getQuestionScreenPath(mockQuestions[0].question_type);
-          router.push(`/level/${screenPath}` as any);
+          Alert.alert(
+            "No Questions",
+            "No questions available for this topic yet.",
+            [{ text: "OK" }]
+          );
         }
       } catch (error) {
-        console.error("Error generating question set:", error);
-        Alert.alert("Error", "Gagal membuat set soal. Coba lagi.");
+        console.error("Error loading questions:", error);
+        Alert.alert("Error", "Failed to load questions. Please try again.");
       } finally {
         setLoading(false);
       }
       return;
     }
 
-    // Jika level sudah ada soal, langsung navigasi
+    // If questions already loaded, navigate to the selected level
     if (node.id <= questionSet.length) {
       const q = questionSet[node.id - 1];
       setCurrentIndex(node.id - 1);
@@ -184,15 +235,19 @@ export default function PathPage() {
 
       console.log("Navigating to question", node.id, "path:", screenPath);
       router.push(`/level/${screenPath}` as any);
+    } else {
+      Alert.alert("Invalid Level", "This level is not available.");
     }
   };
 
-  if (loading) {
+  if (loading || loadingProgress) {
     return (
       <SafeAreaView style={styles.safe}>
         <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
           <ActivityIndicator size="large" color="#0066cc" />
-          <Text style={{ marginTop: 10, color: "#666" }}>Membuat soal...</Text>
+          <Text style={{ marginTop: 10, color: "#666" }}>
+            {loading ? "Membuat soal..." : "Loading progress..."}
+          </Text>
         </View>
       </SafeAreaView>
     );
@@ -202,9 +257,21 @@ export default function PathPage() {
     <SafeAreaView style={styles.safe}>
       <View style={{ flex: 1, position: "relative" }}>
         <Text style={styles.header}>CodeJourney - {topic}</Text>
-        <Text style={{ paddingHorizontal: 16, marginBottom: 8, color: "#666" }}>
-          Difficulty: {difficulty} | Soal: {questionSet.length}/10
-        </Text>
+        <View style={{ paddingHorizontal: 16, marginBottom: 8 }}>
+          <Text style={{ color: "#666" }}>
+            Difficulty: {difficulty} | Soal: {questionSet.length}/10
+          </Text>
+          {isAuthenticated && (
+            <Text style={{ color: "#4CAF50", fontSize: 12, marginTop: 4 }}>
+              ✓ Progress saved to your account
+            </Text>
+          )}
+          {!isAuthenticated && (
+            <Text style={{ color: "#FF9800", fontSize: 12, marginTop: 4 }}>
+              ⚠ Login to save progress
+            </Text>
+          )}
+        </View>
 
         <ScrollView
           showsVerticalScrollIndicator={false}

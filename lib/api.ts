@@ -160,12 +160,21 @@ class QuizAPI {
   }
 
   /**
-   * Get questions for a topic
+   * Get questions for a topic (by topic ID or name)
    */
-  async getQuestions(topic: string, difficulty?: number) {
+  async getQuestions(topicIdOrName: string | number, difficulty?: number) {
     try {
-      const params: any = { topic };
+      const params: any = {};
+      
+      // If topicIdOrName is a number, use topic_id, otherwise use topic name
+      if (typeof topicIdOrName === 'number') {
+        params.topic_id = topicIdOrName;
+      } else {
+        params.topic = topicIdOrName;
+      }
+      
       if (difficulty) params.difficulty = difficulty;
+      
       const response = await this.client.get("questions/", { params });
       return response.data.questions || [];
     } catch (error) {

@@ -6,10 +6,11 @@ class Topic(models.Model): #Topik yang berkaitan dengan soal
     """Represents a learning topic"""
     name = models.CharField(max_length=100, unique=True)
     description = models.TextField(blank=True)
+    order = models.IntegerField(default=0)  # Order for sequential topic progression
     created_at = models.DateTimeField(auto_now_add=True)
     
     class Meta:
-        ordering = ['name']
+        ordering = ['order', 'name']
     
     def __str__(self):
         return self.name

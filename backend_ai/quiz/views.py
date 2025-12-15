@@ -243,21 +243,34 @@ def get_questions(request):
     
     Query params:
     - topic: Topic name (optional)
+    - topic_id: Topic ID (optional, preferred)
     - difficulty: 1-5 (optional)
     - question_type: mcq, fill, coding (optional)
-    - limit: Max results (default 1)
+    - limit: Max results (default 10)
     """
     try:
-        topic = request.query_params.get("topic")
-        difficulty = request.query_params.get("difficulty")
-        question_type = request.query_params.get("question_type")
-        limit = int(request.query_params.get("limit", 1))
+        # Use request.GET for query parameters (works with both DRF and plain Django)
+        topic_name = request.GET.get("topic") or request.query_params.get("topic")
+        topic_id = request.GET.get("topic_id") or request.query_params.get("topic_id")
+        difficulty = request.GET.get("difficulty") or request.query_params.get("difficulty")
+        question_type = request.GET.get("question_type") or request.query_params.get("question_type")
+        limit_param = request.GET.get("limit") or request.query_params.get("limit") or "10"
+        limit = int(limit_param)
         
         # Build query
         questions = Question.objects.filter(is_active=True)
         
-        if topic:
-            questions = questions.filter(topic__name__iexact=topic)
+        # Filter by topic_id (preferred) or topic name
+        if topic_id:
+            try:
+                questions = questions.filter(topic_id=int(topic_id))
+            except ValueError:
+                return Response(
+                    {"error": "topic_id must be an integer"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        elif topic_name:
+            questions = questions.filter(topic__name__iexact=topic_name)
         
         if difficulty:
             try:
@@ -419,16 +432,76 @@ def get_user_attempts(request):
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def get_topics(request):
-    """Get list of available topics"""
+    """Get list of available topics with lock status"""
     try:
-        topics = Topic.objects.all().values('id', 'name', 'description')
+        user = request.user if request.user.is_authenticated else None
+        topics = Topic.objects.all().values('id', 'name', 'description', 'order')
         
-        # Include question count per topic
+        # Include question count, completion percentage, and lock status per topic
         result = []
         for topic in topics:
+            # Get question count
             count = Question.objects.filter(topic_id=topic['id'], is_active=True).count()
             topic['question_count'] = count
+            
+            # Calculate completion percentage if user is authenticated
+            completion_percentage = 0
+            is_locked = False
+            
+            if user:
+                # Get user's attempts for this topic
+                topic_questions = Question.objects.filter(topic_id=topic['id'], is_active=True)
+                total_questions = topic_questions.count()
+                
+                if total_questions > 0:
+                    # Count correct attempts (only the most recent attempt per question)
+                    correct_count = 0
+                    for question in topic_questions:
+                        # Get latest attempt for this question
+                        latest_attempt = QuestionAttempt.objects.filter(
+                            user=user,
+                            question=question
+                        ).order_by('-created_at').first()
+                        
+                        if latest_attempt and latest_attempt.is_correct:
+                            correct_count += 1
+                    
+                    completion_percentage = int((correct_count / total_questions) * 100)
+                
+                # Check if topic is locked (previous topic must be completed)
+                if topic['order'] > 1:
+                    # Get previous topic
+                    previous_topic = Topic.objects.filter(order=topic['order'] - 1).first()
+                    if previous_topic:
+                        # Check if previous topic is completed (>= 80% correct)
+                        prev_questions = Question.objects.filter(topic_id=previous_topic.id, is_active=True)
+                        prev_total = prev_questions.count()
+                        
+                        if prev_total > 0:
+                            prev_correct = 0
+                            for question in prev_questions:
+                                latest_attempt = QuestionAttempt.objects.filter(
+                                    user=user,
+                                    question=question
+                                ).order_by('-created_at').first()
+                                
+                                if latest_attempt and latest_attempt.is_correct:
+                                    prev_correct += 1
+                            
+                            prev_completion = int((prev_correct / prev_total) * 100)
+                            is_locked = prev_completion < 80  # Lock if previous topic < 80%
+                        else:
+                            is_locked = True  # Lock if previous topic has no questions
+            else:
+                # Not authenticated - lock all topics except the first one
+                is_locked = topic['order'] > 1
+            
+            topic['completion_percentage'] = completion_percentage
+            topic['is_locked'] = is_locked
             result.append(topic)
+        
+        # Sort by order
+        result = sorted(result, key=lambda x: x['order'])
         
         return Response({
             "count": len(result),
