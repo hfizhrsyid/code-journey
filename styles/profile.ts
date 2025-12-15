@@ -9,10 +9,11 @@ export const styles = StyleSheet.create({
 
     title: {
         color: "#ffffff",
-        fontSize: 24,
-        fontWeight: "bold",
+        fontSize: 26,
+        fontWeight: "700",
         textAlign: "center",
         marginTop: 35,
+        letterSpacing: -0.5,
     },
 
     profileWrapper: {
@@ -43,9 +44,10 @@ export const styles = StyleSheet.create({
 
     username: {
         color: "#ffffff",
-        fontSize: 20,
+        fontSize: 22,
         marginTop: 15,
-        fontWeight: "bold",
+        fontWeight: "700",
+        letterSpacing: -0.3,
     },
 
     progressContainer: {

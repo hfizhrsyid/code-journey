@@ -68,6 +68,33 @@ export default function Dashboard() {
     <View style={styles.container}>
       <Text style={styles.brand}>CodeJourney</Text>
 
+      {/* Developer Quick Access - Remove in production */}
+      {__DEV__ && (
+        <View style={{ padding: 16, backgroundColor: "#fff3cd", borderRadius: 8, margin: 16 }}>
+          <Text style={{ fontWeight: "bold", marginBottom: 8 }}>🛠️ Developer Tools</Text>
+          <View style={{ flexDirection: "row", gap: 8, flexWrap: "wrap" }}>
+            <TouchableOpacity
+              style={{ backgroundColor: "#007bff", padding: 8, borderRadius: 4 }}
+              onPress={() => router.push("/level/multipleChoicesQuestion")}
+            >
+              <Text style={{ color: "white", fontSize: 12 }}>MCQ</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={{ backgroundColor: "#28a745", padding: 8, borderRadius: 4 }}
+              onPress={() => router.push("/level/completionQuestion")}
+            >
+              <Text style={{ color: "white", fontSize: 12 }}>Fill</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={{ backgroundColor: "#ffc107", padding: 8, borderRadius: 4 }}
+              onPress={() => router.push("/level/codingQuestion")}
+            >
+              <Text style={{ color: "white", fontSize: 12 }}>Coding</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
+
       <FlatList
         showsVerticalScrollIndicator={false}
         data={topics}

@@ -8,6 +8,7 @@ from .views import (
     submit_answer,
     get_user_attempts,
     get_topics,
+    run_code,
 )
 from .auth_views import (
     signup,
@@ -26,6 +27,7 @@ urlpatterns = [
     # NEW: Database-first question endpoints (Step 3)
     path("questions/", get_questions, name="get_questions"),
     path("questions/submit/", submit_answer, name="submit_answer"),
+    path("questions/run/", run_code, name="run_code"),  # New: Run code with test cases
     path("questions/attempts/", get_user_attempts, name="get_user_attempts"),
     path("topics/", get_topics, name="get_topics"),
     

@@ -205,6 +205,28 @@ class QuizAPI {
   }
 
   /**
+   * Run code with test cases
+   */
+  async runCode(questionId: number, code: string) {
+    try {
+      const response = await this.client.post("questions/run/", {
+        question_id: questionId,
+        code,
+      });
+      return {
+        passed: response.data.passed || 0,
+        failed: response.data.failed || 0,
+        total: response.data.total || 0,
+        all_passed: response.data.all_passed || false,
+        test_results: response.data.test_results || [],
+      };
+    } catch (error) {
+      console.error("Error running code:", error);
+      throw error;
+    }
+  }
+
+  /**
    * Get user's attempts for a topic
    */
   async getUserAttempts(topicId: number) {

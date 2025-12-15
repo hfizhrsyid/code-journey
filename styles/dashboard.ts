@@ -12,8 +12,9 @@ export const styles = StyleSheet.create({
     padding: 30,
     textAlign: "center",
     color: "white",
-    fontSize: 20,
-    fontWeight: "bold",
+    fontSize: 24,
+    fontWeight: "700",
+    letterSpacing: -0.5,
   },
 
   card: {
@@ -27,8 +28,9 @@ export const styles = StyleSheet.create({
 
   cardTitle: {
     color: '#1A233A',
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 17,
+    fontWeight: '700',
+    letterSpacing: 0.3,
   },
 
   bottomNav: {

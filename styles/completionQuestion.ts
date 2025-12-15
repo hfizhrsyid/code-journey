@@ -20,9 +20,10 @@ export const styles = StyleSheet.create({
     paddingTop: 50,
   },
   headerText: {
-    fontSize: 20,
-    fontWeight: "600",
+    fontSize: 22,
+    fontWeight: "700",
     color: "#ffffff",
+    letterSpacing: -0.5,
   },
   rulesButton: {
     backgroundColor: "#3b82f6",
@@ -41,8 +42,9 @@ export const styles = StyleSheet.create({
   },
   rulesButtonText: {
     color: "#ffffff",
-    fontSize: 14,
-    fontWeight: "500",
+    fontSize: 13,
+    fontWeight: "700",
+    letterSpacing: 0.3,
   },
   card: {
     backgroundColor: "#ffffff",
@@ -52,10 +54,11 @@ export const styles = StyleSheet.create({
     marginBottom: 24,
   },
   questionText: {
-    fontSize: 15,
+    fontSize: 16,
     color: "#374151",
     marginBottom: 16,
-    lineHeight: 22,
+    lineHeight: 24,
+    fontWeight: "400",
   },
   codeBlock: {
     backgroundColor: "#f3f4f6",
@@ -64,10 +67,11 @@ export const styles = StyleSheet.create({
     marginBottom: 0,
   },
   codeText: {
-    // fontFamily: "Courier New",
-    fontSize: 14,
+    fontFamily: "monospace",
+    fontSize: 15,
     color: "#1f2937",
-    lineHeight: 20,
+    lineHeight: 22,
+    fontWeight: "400",
   },
   inputContainer: {
     paddingHorizontal: 24,
@@ -77,10 +81,11 @@ export const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     borderRadius: 12,
     padding: 16,
-    fontSize: 14,
+    fontSize: 15,
     color: "#1f2937",
     borderWidth: 1,
     borderColor: "#e5e7eb",
+    fontWeight: "400",
   },
   submitButtonContainer: {
     paddingHorizontal: 24,

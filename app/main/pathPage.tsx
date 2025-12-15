@@ -44,21 +44,36 @@ const imageRight = [
 const CONTENT_TOP = 80;
 const CARD_H = 100;
 
+interface Topic {
+  id: number;
+  name: string;
+  description?: string;
+  order: number;
+  question_count: number;
+  completion_percentage: number;
+  is_locked: boolean;
+}
+
 export default function PathPage() {
   const params = useLocalSearchParams();
-  const topic = (params.topic as string) || "Unknown";
+  const topic = (params.topic as string) || "";
   const topicId = parseInt(params.id as string) || 0;
   const difficulty = parseInt(params.difficulty as string) || 2;
 
   const { isAuthenticated } = useAuth();
   const { questionSet, setQuestionSet, setCurrentIndex, setTopic, setTopicId, setDifficulty } = useQuestions();
 
+  // Determine if we're showing all topics or a specific topic
+  const showAllTopics = !topicId || topicId === 0;
+
   // Store topic info in context
   useEffect(() => {
-    setTopic(topic);
-    setTopicId(topicId);
-    setDifficulty(difficulty);
-  }, [topic, topicId, difficulty, setTopic, setTopicId, setDifficulty]);
+    if (!showAllTopics) {
+      setTopic(topic);
+      setTopicId(topicId);
+      setDifficulty(difficulty);
+    }
+  }, [topic, topicId, difficulty, showAllTopics, setTopic, setTopicId, setDifficulty]);
 
   const initialLevels: LevelItem[] = Array.from({ length: 10 }).map((_, i) => ({
     id: i + 1,
@@ -73,13 +88,43 @@ export default function PathPage() {
   const [levels, setLevels] = useState(initialLevels);
   const [loading, setLoading] = useState(false);
   const [loadingProgress, setLoadingProgress] = useState(true);
+  const [topics, setTopics] = useState<Topic[]>([]);
 
   // Reload progress when screen comes into focus (e.g., after completing questions)
   useFocusEffect(
     React.useCallback(() => {
-      loadUserProgress();
-    }, [topicId, isAuthenticated])
+      if (showAllTopics) {
+        loadAllTopics();
+      } else {
+        loadUserProgress();
+      }
+    }, [topicId, isAuthenticated, showAllTopics])
   );
+
+  const loadAllTopics = async () => {
+    try {
+      setLoadingProgress(true);
+      const data = await quizAPI.getTopics();
+      setTopics(data);
+      
+      // Create levels based on topics
+      const topicLevels: LevelItem[] = data.map((t: Topic, i: number) => ({
+        id: t.id,
+        title: t.name,
+        status: t.is_locked ? "locked" : (t.completion_percentage === 100 ? "done" : "open") as LevelStatus,
+        imgLeft: imageLeft[i % imageLeft.length],
+        imgRight: imageRight[i % imageRight.length],
+        imgLeftSize: { width: 110, height: 70 },
+        imgRightSize: { width: 90, height: 90 },
+      }));
+      
+      setLevels(topicLevels);
+    } catch (error) {
+      console.error("Failed to load topics:", error);
+    } finally {
+      setLoadingProgress(false);
+    }
+  };
 
   const loadUserProgress = async () => {
     if (!isAuthenticated || !topicId) {
@@ -176,6 +221,28 @@ export default function PathPage() {
   };
 
   const handlePress = async (node: LevelItem) => {
+    // If showing all topics, navigate to specific topic path
+    if (showAllTopics) {
+      if (node.status === "locked") {
+        Alert.alert("Terkunci", "Selesaikan topik sebelumnya untuk membuka topik ini");
+        return;
+      }
+      
+      const selectedTopic = topics.find(t => t.id === node.id);
+      if (selectedTopic) {
+        router.push({
+          pathname: "./pathPage",
+          params: {
+            id: selectedTopic.id.toString(),
+            topic: selectedTopic.name,
+            difficulty: "2"
+          }
+        } as any);
+      }
+      return;
+    }
+
+    // Original logic for specific topic
     if (node.status === "locked") {
       Alert.alert("Terkunci", "Selesaikan level sebelumnya terlebih dahulu");
       return;
@@ -256,22 +323,38 @@ export default function PathPage() {
   return (
     <SafeAreaView style={styles.safe}>
       <View style={{ flex: 1, position: "relative" }}>
-        <Text style={styles.header}>CodeJourney - {topic}</Text>
-        <View style={{ paddingHorizontal: 16, marginBottom: 8 }}>
-          <Text style={{ color: "#666" }}>
-            Difficulty: {difficulty} | Soal: {questionSet.length}/10
-          </Text>
-          {isAuthenticated && (
-            <Text style={{ color: "#4CAF50", fontSize: 12, marginTop: 4 }}>
-              ✓ Progress saved to your account
+        <Text style={styles.header}>
+          {showAllTopics ? "CodeJourney - Semua Topik" : `CodeJourney - ${topic}`}
+        </Text>
+        {!showAllTopics && (
+          <View style={{ paddingHorizontal: 16, marginBottom: 8 }}>
+            <Text style={{ color: "#d9eefc", fontSize: 14, fontWeight: "500" }}>
+              Difficulty: {difficulty} | Soal: {questionSet.length}/10
             </Text>
-          )}
-          {!isAuthenticated && (
-            <Text style={{ color: "#FF9800", fontSize: 12, marginTop: 4 }}>
-              ⚠ Login to save progress
+            {isAuthenticated && (
+              <Text style={{ color: "#4CAF50", fontSize: 12, marginTop: 4 }}>
+                ✓ Progress saved to your account
+              </Text>
+            )}
+            {!isAuthenticated && (
+              <Text style={{ color: "#FF9800", fontSize: 12, marginTop: 4 }}>
+                ⚠ Login to save progress
+              </Text>
+            )}
+          </View>
+        )}
+        {showAllTopics && (
+          <View style={{ paddingHorizontal: 16, marginBottom: 8 }}>
+            <Text style={{ color: "#d9eefc", fontSize: 14, fontWeight: "500" }}>
+              Pilih topik untuk memulai belajar
             </Text>
-          )}
-        </View>
+            {isAuthenticated && (
+              <Text style={{ color: "#4CAF50", fontSize: 12, marginTop: 4 }}>
+                ✓ Progress Anda tersimpan
+              </Text>
+            )}
+          </View>
+        )}
 
         <ScrollView
           showsVerticalScrollIndicator={false}
@@ -363,7 +446,18 @@ export default function PathPage() {
                     ) : node.status === "locked" ? (
                       <FontAwesome name="lock" size={23} color="#286292" />
                     ) : (
-                      <Text style={styles.nodeNumber}>{node.id}</Text>
+                      <Text style={styles.nodeNumber}>{showAllTopics ? idx + 1 : node.id}</Text>
+                    )}
+                  </View>
+                  {/* Show caption below node */}
+                  <View style={{ position: "absolute", top: radius * 2 + 8, width: 120, left: -48 }}>
+                    <Text style={[styles.caption, { textAlign: "center" }]}>
+                      {showAllTopics ? node.title : `Soal ${node.id}`}
+                    </Text>
+                    {showAllTopics && !node.status === "locked" as any && topics.find(t => t.id === node.id)?.completion_percentage > 0 && (
+                      <Text style={[styles.caption, { textAlign: "center", fontSize: 11, color: "#4CAF50" }]}>
+                        {topics.find(t => t.id === node.id)?.completion_percentage}%
+                      </Text>
                     )}
                   </View>
                 </TouchableOpacity>

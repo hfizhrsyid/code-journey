@@ -21,17 +21,20 @@ export const styles = StyleSheet.create({
     },
 
     welcome: {
-        fontSize: 24,
-        fontWeight: "bold",
+        fontSize: 28,
+        fontWeight: "700",
         textAlign: "center",
         color: "#1A233A",
+        letterSpacing: -0.5,
     },
 
     subtitle: {
-        fontSize: 14,
+        fontSize: 15,
         color: "#1A233A",
         textAlign: "center",
         marginTop: 5,
+        fontWeight: "400",
+        letterSpacing: 0.2,
     },
 
     input: {
@@ -42,6 +45,8 @@ export const styles = StyleSheet.create({
         padding: 14,
         marginBottom: 16,
         color: "#1A233A",
+        fontSize: 15,
+        fontWeight: "400",
     },
 
     passwordWrapper: {
@@ -62,6 +67,8 @@ export const styles = StyleSheet.create({
         borderColor: "#1A233A",
         borderRadius: 10,
         paddingLeft: 15,
+        fontSize: 15,
+        fontWeight: "400",
     },
 
     eyeIcon: {

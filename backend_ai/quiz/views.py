@@ -387,6 +387,75 @@ def submit_answer(request):
         )
 
 
+@api_view(["POST"])
+@csrf_exempt
+@add_cors_headers
+def run_code(request):
+    """
+    Run user's code against test cases
+    
+    POST data:
+    {
+        "question_id": 123,
+        "code": "user's Python code"
+    }
+    """
+    try:
+        from .code_executor import execute_code_with_tests
+        
+        question_id = request.data.get("question_id")
+        code = request.data.get("code")
+        
+        if not question_id or not code:
+            return Response(
+                {"error": "question_id and code are required"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Get question
+        try:
+            question = Question.objects.get(id=question_id, is_active=True)
+        except Question.DoesNotExist:
+            return Response(
+                {"error": "Question not found"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        # Check if question has test cases
+        if not question.test_cases:
+            return Response(
+                {"error": "This question has no test cases"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Execute code with test cases
+        result = execute_code_with_tests(code, question.test_cases)
+        
+        # Save attempt if user is authenticated
+        if request.user and request.user.is_authenticated:
+            QuestionAttempt.objects.create(
+                user=request.user,
+                question=question,
+                answer=code,
+                is_correct=result['all_passed']
+            )
+        
+        return Response({
+            "passed": result['passed'],
+            "failed": result['failed'],
+            "total": result['total'],
+            "all_passed": result['all_passed'],
+            "test_results": result['results']
+        })
+    
+    except Exception as e:
+        logger.error(f"Error running code: {str(e)}")
+        return Response(
+            {"error": f"Server error: {str(e)}"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
 @api_view(["GET"])
 @csrf_exempt
 @add_cors_headers

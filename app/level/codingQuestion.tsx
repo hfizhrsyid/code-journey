@@ -1,8 +1,8 @@
 import { Question, quizAPI } from "@/lib/api";
 import { styles } from "@/styles/codeQuestion";
 import { router } from "expo-router";
-import { useCallback, useState } from "react";
-import { ActivityIndicator, SafeAreaView, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { useCallback, useEffect, useState } from "react";
+import { ActivityIndicator, Image, Modal, SafeAreaView, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { useQuestions } from "../../lib/QuestionContext";
 
 // helper: pastikan options selalu berupa array (toleran terhadap string JSON atau comma-list)
@@ -34,7 +34,9 @@ export default function CodingQuestion() {
 
   const [question, setQuestion] = useState<Question | null>(null);
   const [answer, setAnswer] = useState("");
-  const [feedback, setFeedback] = useState<{ correct: boolean; message: string } | null>(null);
+  const [feedbackStatus, setFeedbackStatus] = useState<"correct" | "wrong" | null>(null);
+  const [feedbackMessage, setFeedbackMessage] = useState("");
+  const [testResults, setTestResults] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -44,7 +46,9 @@ export default function CodingQuestion() {
       setLoading(true);
       setError(null);
       setAnswer("");
-      setFeedback(null);
+      setFeedbackStatus(null);
+      setFeedbackMessage("");
+      setTestResults([]);
 
       // If we have a question set and the index exists, use it
       if (questionSet.length > 0 && currentIndex < questionSet.length) {
@@ -89,28 +93,40 @@ export default function CodingQuestion() {
     } finally {
       setLoading(false);
     }
-  }, [questionSet, currentIndex, difficulty, setQuestion, setQuestionSet, setCurrentIndex, setLoading, setError, setAnswer, setFeedback]);
+  }, [questionSet, currentIndex, difficulty, setQuestion, setQuestionSet, setCurrentIndex, setLoading, setError, setAnswer, setFeedbackStatus, setFeedbackMessage]);
+
+  // Load question on component mount
+  useEffect(() => {
+    loadQuestion();
+  }, [loadQuestion]);
 
   const handleSubmit = async () => {
     if (!question || !answer.trim()) {
-      setFeedback({ correct: false, message: "Silakan masukkan jawaban" });
+      setFeedbackMessage("Silakan masukkan jawaban");
+      setFeedbackStatus("wrong");
       return;
     }
 
     setSubmitting(true);
+    setTestResults([]);
     try {
-      const normalizedToSend = answer.trim().toLowerCase();
-      const result = await quizAPI.submitAnswer(question.question_id, normalizedToSend);
-      setFeedback({
-        correct: result.correct,
-        message: result.feedback,
-      });
+      // Try to run code with test cases first
+      try {
+        const result = await quizAPI.runCode(question.question_id, answer);
+        setTestResults(result.test_results);
+        setFeedbackMessage(`${result.passed}/${result.total} test cases passed`);
+        setFeedbackStatus(result.all_passed ? "correct" : "wrong");
+      } catch (runError: any) {
+        // If runCode fails (e.g., no test cases), fall back to simple submit
+        console.log("No test cases, using simple submit:", runError);
+        const result = await quizAPI.submitAnswer(question.question_id, answer.trim().toLowerCase());
+        setFeedbackMessage(result.feedback);
+        setFeedbackStatus(result.correct ? "correct" : "wrong");
+      }
     } catch (error: any) {
       console.error("Error submitting answer:", error);
-      setFeedback({
-        correct: false,
-        message: "Gagal mengirim jawaban",
-      });
+      setFeedbackMessage("Gagal mengirim jawaban");
+      setFeedbackStatus("wrong");
     } finally {
       setSubmitting(false);
     }
@@ -125,7 +141,9 @@ export default function CodingQuestion() {
 
   const handleNextQuestion = async () => {
     // reset per-question UI state
-    setFeedback(null);
+    setFeedbackStatus(null);
+    setFeedbackMessage("");
+    setTestResults([]);
     setAnswer("");
     setSubmitting(false);
 
@@ -230,62 +248,185 @@ export default function CodingQuestion() {
         </View>
 
         <ScrollView contentContainerStyle={styles.scrollContent}>
+          {/* Question Card */}
           <View style={styles.card}>
             <Text style={styles.cardText}>{question.question_text}</Text>
+            
+            {/* Code Template - Read Only Reference */}
+            {question.code_template && (
+              <View style={{ marginTop: 16 }}>
+                <Text style={styles.sectionLabel}>Template Kode</Text>
+                <View style={styles.codeBlock}>
+                  <Text style={{ 
+                    fontFamily: "monospace", 
+                    fontSize: 13, 
+                    color: "#1f2937",
+                    lineHeight: 20
+                  }}>
+                    {question.code_template}
+                  </Text>
+                </View>
+              </View>
+            )}
           </View>
 
-          {question.code_template && (
-            <View style={styles.card}>
-              <Text style={{ fontFamily: "monospace", fontSize: 12, color: "#333" }}>{question.code_template}</Text>
-            </View>
-          )}
-
+          {/* Code Input Area */}
           <View style={styles.inputCard}>
+            <Text style={styles.sectionLabel}>Solusi Anda</Text>
             <TextInput
               style={styles.textInput}
-              placeholder="Ketikkan Jawabanmu di sini..."
-              placeholderTextColor="#999"
-              multiline
-              textAlignVertical="top"
+              placeholder="# Tulis solusi Python lengkap Anda di sini...\nprint('Hello, World!')"
+              placeholderTextColor="#9ca3af"
               value={answer}
               onChangeText={setAnswer}
-              editable={!submitting}
+              multiline
+              autoCorrect={false}
+              autoCapitalize="none"
+              spellCheck={false}
             />
           </View>
-
-          {feedback && (
-            <View
-              style={{
-                backgroundColor: feedback.correct ? "#d4edda" : "#f8d7da",
-                borderColor: feedback.correct ? "#28a745" : "#dc3545",
-                borderWidth: 1,
-                borderRadius: 5,
-                padding: 15,
-                marginVertical: 10,
-              }}
-            >
-              <Text
-                style={{
-                  color: feedback.correct ? "#155724" : "#721c24",
-                  fontSize: 14,
-                }}
-              >
-                {feedback.message}
-              </Text>
-            </View>
-          )}
         </ScrollView>
 
-        <View style={styles.footer}>
-          <TouchableOpacity style={[styles.nextButton, submitting && { opacity: 0.5 }]} onPress={handleSubmit} disabled={submitting}>
-            <Text style={styles.footerButtonText}>{submitting ? "Checking..." : "Submit"}</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={[styles.nextButton, { marginLeft: 10 }]} onPress={handleNextQuestion} disabled={submitting}>
-            <Text style={styles.footerButtonText}>{currentIndex + 1 >= 10 ? "Selesai" : "Selanjutnya"}</Text>
+        <View style={styles.submitButtonContainer}>
+          <TouchableOpacity style={[styles.submitButton, submitting && { opacity: 0.5 }]} onPress={handleSubmit} disabled={submitting}>
+            <Text style={styles.submitText}>{submitting ? "Memeriksa..." : "Submit"}</Text>
           </TouchableOpacity>
         </View>
       </View>
+
+      {/* Feedback Modal - Wrong */}
+      <Modal transparent visible={feedbackStatus === "wrong"} animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalPositionWrapper}>
+            <Image source={require("../../assets/images/emoji-wrong-answer.png")} style={styles.modalEmojiImage} />
+            <View style={styles.modalContent}>
+              <TouchableOpacity
+                style={styles.closeLabel}
+                onPress={() => {
+                  setFeedbackStatus(null);
+                  setAnswer("");
+                }}
+              >
+                <Text style={styles.closeIcon}>✕</Text>
+                <Text style={styles.closeText}>Tutup</Text>
+              </TouchableOpacity>
+              <Text style={styles.modalTitle}>Jawaban kamu kurang tepat!</Text>
+
+              <ScrollView style={{ maxHeight: 300 }}>
+                <Text style={styles.modalSubtitle}>{feedbackMessage || "Coba cek lagi kode Anda."}</Text>
+
+                {/* Test Results Display in Modal */}
+                {testResults.length > 0 && (
+                  <View style={{ marginTop: 10 }}>
+                    <Text style={{ fontWeight: "600", marginBottom: 8, color: "#374151" }}>
+                      Hasil Test:
+                    </Text>
+                    {testResults.map((result, index) => (
+                      <View
+                        key={index}
+                        style={{
+                          backgroundColor: result.passed ? "#d1fae5" : "#fee2e2",
+                          borderLeftColor: result.passed ? "#10b981" : "#ef4444",
+                          borderLeftWidth: 4,
+                          borderRadius: 8,
+                          padding: 10,
+                          marginBottom: 6,
+                        }}
+                      >
+                        <Text style={{ fontWeight: "600", marginBottom: 4, color: result.passed ? "#065f46" : "#991b1b", fontSize: 12 }}>
+                          {result.passed ? "✓" : "✗"} Test Case {result.test_num}
+                        </Text>
+                        {result.input && (
+                          <Text style={{ fontSize: 10, color: "#6b7280", fontFamily: "monospace" }}>
+                            Input: {result.input}
+                          </Text>
+                        )}
+                        <Text style={{ fontSize: 10, color: "#6b7280", fontFamily: "monospace" }}>
+                          Expected: {result.expected}
+                        </Text>
+                        <Text style={{ fontSize: 10, color: "#6b7280", fontFamily: "monospace" }}>
+                          Got: {result.actual || "(no output)"}
+                        </Text>
+                        {result.error && (
+                          <Text style={{ fontSize: 10, color: "#991b1b", marginTop: 4, fontFamily: "monospace" }}>
+                            Error: {result.error}
+                          </Text>
+                        )}
+                      </View>
+                    ))}
+                  </View>
+                )}
+              </ScrollView>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Feedback Modal - Correct */}
+      <Modal transparent visible={feedbackStatus === "correct"} animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalPositionWrapper}>
+            <Image source={require("../../assets/images/emoji-correct-answer.png")} style={styles.modalEmojiImage} />
+            <View style={styles.modalContent}>
+              <TouchableOpacity
+                style={styles.closeLabel}
+                onPress={() => {
+                  setFeedbackStatus(null);
+                  setAnswer("");
+                }}
+              >
+                <Text style={styles.closeIcon}>✕</Text>
+                <Text style={styles.closeText}>Tutup</Text>
+              </TouchableOpacity>
+              <Text style={styles.modalTitle}>Sempurna! 🎉</Text>
+              <Text style={styles.modalSubtitle}>{feedbackMessage}</Text>
+
+              {/* Test Results Display in Modal */}
+              {testResults.length > 0 && (
+                <View style={{ marginTop: 10 }}>
+                  <Text style={{ fontWeight: "600", marginBottom: 8, color: "#374151" }}>
+                    Hasil Test:
+                  </Text>
+                  {testResults.map((result, index) => (
+                    <View
+                      key={index}
+                      style={{
+                        backgroundColor: result.passed ? "#d1fae5" : "#fee2e2",
+                        borderLeftColor: result.passed ? "#10b981" : "#ef4444",
+                        borderLeftWidth: 4,
+                        borderRadius: 8,
+                        padding: 10,
+                        marginBottom: 6,
+                      }}
+                    >
+                      <Text style={{ fontWeight: "600", marginBottom: 4, color: result.passed ? "#065f46" : "#991b1b", fontSize: 12 }}>
+                        {result.passed ? "✓" : "✗"} Test Case {result.test_num}
+                      </Text>
+                      {result.input && (
+                        <Text style={{ fontSize: 10, color: "#6b7280", fontFamily: "monospace" }}>
+                          Input: {result.input}
+                        </Text>
+                      )}
+                      <Text style={{ fontSize: 10, color: "#6b7280", fontFamily: "monospace" }}>
+                        Expected: {result.expected}
+                      </Text>
+                      <Text style={{ fontSize: 10, color: "#6b7280", fontFamily: "monospace" }}>
+                        Got: {result.actual || "(no output)"}
+                      </Text>
+                    </View>
+                  ))}
+                </View>
+              )}
+
+              <View style={styles.nextButtonRow}>
+                <TouchableOpacity style={styles.nextButton} onPress={handleNextQuestion}>
+                  <Text style={styles.nextButtonText}>{currentIndex + 1 >= 10 ? "Selesai" : "Selanjutnya"}</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }

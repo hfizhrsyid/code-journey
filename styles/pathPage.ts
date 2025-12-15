@@ -60,8 +60,9 @@ export const styles = StyleSheet.create({
 
   nodeNumber: {
     color: "#286292",
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: "700",
+    letterSpacing: -0.5,
   },
 
   nodeDone: {
@@ -93,6 +94,12 @@ export const styles = StyleSheet.create({
 
   emoji: { fontSize: 36 },
   
-  caption: { color: "#d9eefc", marginTop: 6, fontSize: 12 },
+  caption: { 
+    color: "#d9eefc", 
+    marginTop: 6, 
+    fontSize: 13, 
+    fontWeight: "500",
+    letterSpacing: 0.2,
+  },
 });
 

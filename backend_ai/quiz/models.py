@@ -31,6 +31,7 @@ class Question(models.Model):
     options = models.JSONField(null=True, blank=True)
     answer_key = models.JSONField()
     explanation = models.TextField(null=True, blank=True)
+    test_cases = models.JSONField(null=True, blank=True)  # For coding questions: [{"input": "...", "expected_output": "..."}]
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

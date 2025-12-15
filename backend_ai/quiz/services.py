@@ -266,8 +266,16 @@ def check_answer(user_answer: str, correct_answer: Any, question_type: str, expl
             result["feedback"] = "✗ Jawaban Anda salah. Silakan coba lagi."
         return result
 
-    # For fill / coding, prefer AI-based validation (semantic)
-    if question_type in ("fill", "coding"):
+    # For coding questions, skip AI validation (use test cases instead via /api/questions/run/)
+    if question_type == "coding":
+        # Simple fallback check - just accept any non-empty answer
+        # The real validation happens through test cases in the run_code endpoint
+        result["correct"] = bool(user_answer.strip())
+        result["feedback"] = "✓ Kode Anda telah dikirim!" if result["correct"] else "✗ Kode tidak boleh kosong."
+        return result
+
+    # For fill questions, prefer AI-based validation (semantic)
+    if question_type == "fill":
         ai_res = ai_validate_answer(user_answer, correct_answer, question_text=explanation or "", question_type=question_type)
         if ai_res is not None:
             result["correct"] = bool(ai_res.get("correct", False))
@@ -278,15 +286,9 @@ def check_answer(user_answer: str, correct_answer: Any, question_type: str, expl
 
         # If AI fails, fallback to conservative normalization checks (previous behavior)
         logger.info("AI validation unavailable — falling back to string normalization check")
-
-        if question_type == "fill":
-            normalized_user = user_answer.strip().lower().replace(" ", "").replace("\n", "")
-            normalized_correct = str(correct_answer).strip().lower().replace(" ", "").replace("\n", "")
-            result["correct"] = normalized_user == normalized_correct
-        else:  # coding fallback
-            normalized_user = user_answer.strip().lower()
-            normalized_correct = str(correct_answer).strip().lower()
-            result["correct"] = normalized_user == normalized_correct
+        normalized_user = user_answer.strip().lower().replace(" ", "").replace("\n", "")
+        normalized_correct = str(correct_answer).strip().lower().replace(" ", "").replace("\n", "")
+        result["correct"] = normalized_user == normalized_correct
 
         if result["correct"]:
             result["feedback"] = "✓ Jawaban Anda benar!"
