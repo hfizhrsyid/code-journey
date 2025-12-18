@@ -1,7 +1,7 @@
 import { quizAPI } from "@/lib/api";
 import { FontAwesome } from "@expo/vector-icons";
-import { useLocalSearchParams, useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
+import { useCallback, useState } from "react";
 import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -14,20 +14,25 @@ export default function TopicResults() {
   const [attempts, setAttempts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadAttempts();
-  }, []);
-
-  const loadAttempts = async () => {
+  const loadAttempts = useCallback(async () => {
     try {
+      setLoading(true);
       const data = await quizAPI.getUserAttempts(topicId);
+      console.log("📊 User attempts loaded:", data.length);
       setAttempts(data);
     } catch (error) {
       console.error("Failed to load attempts:", error);
     } finally {
       setLoading(false);
     }
-  };
+  }, [topicId]);
+
+  // Reload attempts whenever screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      loadAttempts();
+    }, [loadAttempts])
+  );
 
   if (loading) {
     return (
@@ -118,7 +123,7 @@ export default function TopicResults() {
         )}
 
         <TouchableOpacity
-          onPress={() => router.push("/main/dashboard" as any)}
+          onPress={() => router.replace("/main/dashboard" as any)}
           style={{
             marginTop: 40,
             backgroundColor: "#007AFF",

@@ -1,6 +1,6 @@
 import { Question, quizAPI } from "@/lib/api";
 import { styles } from "@/styles/codeQuestion";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, Image, Modal, SafeAreaView, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { useQuestions } from "../../lib/QuestionContext";
@@ -30,7 +30,9 @@ const normalizeQuestion = (q: any) => {
 };
 
 export default function CodingQuestion() {
+  const params = useLocalSearchParams();
   const { questionSet, setQuestionSet, currentIndex, setCurrentIndex, difficulty, topic, topicId } = useQuestions();
+  const effectiveTopicId = params.topicId ? parseInt(params.topicId as string) : topicId;
 
   const [question, setQuestion] = useState<Question | null>(null);
   const [answer, setAnswer] = useState("");
@@ -50,50 +52,32 @@ export default function CodingQuestion() {
       setFeedbackMessage("");
       setTestResults([]);
 
+      // Determine which question index to use - params take priority
+      const targetIndex = params.questionIndex ? parseInt(params.questionIndex as string) : currentIndex;
+      console.log("🎯 CodingQuestion targetIndex:", targetIndex, "from params:", params.questionIndex, "currentIndex:", currentIndex);
+
       // If we have a question set and the index exists, use it
-      if (questionSet.length > 0 && currentIndex < questionSet.length) {
-        let currentQuestion = questionSet[currentIndex];
+      if (questionSet.length > 0 && targetIndex >= 0 && targetIndex < questionSet.length) {
+        let currentQuestion = questionSet[targetIndex];
         currentQuestion = normalizeQuestion(currentQuestion);
-        console.log("✅ Loaded coding question from context:", currentQuestion);
+        console.log("✅ Loaded coding question at index", targetIndex, "ID:", currentQuestion.id || currentQuestion.question_id);
         setQuestion(currentQuestion as any);
+        setCurrentIndex(targetIndex); // Update context index to match
         return;
       }
 
-      // Fallback: request a single coding question from backend and populate context
-      try {
-        const q = await quizAPI.generateQuestion(difficulty || 2, "coding");
-        if (q) {
-          const nq = normalizeQuestion(q);
-          console.log("✅ Generated single coding question:", nq);
-          setQuestionSet([nq]);
-          setCurrentIndex(0);
-          setQuestion(nq as any);
-          return;
-        }
-      } catch (genErr) {
-        console.warn("Fallback single-question generate failed:", genErr);
-      }
-
-      // If still not available, create a local mock single question
-      console.warn("Using local mock coding question for UI because backend generation failed.");
-      const mock = {
-        question_id: 9998,
-        question_text: "Contoh (mock) soal coding: Tulis program untuk print 'Hello World'",
-        code_template: "# Lengkapi kode di bawah ini\nprint()",
-        question_type: "coding",
-        difficulty: difficulty || 2,
-      };
-      setQuestionSet([mock]);
-      setCurrentIndex(0);
-      setQuestion(mock as any);
+      // No questions in context - redirect to pathPage
+      console.warn("⚠️ No questions in context (length:", questionSet.length, "), redirecting to pathPage...");
+      router.replace("/main/pathPage" as any);
       return;
+
     } catch (err: any) {
       console.error("Failed to load question:", err);
       setError(err?.message || "Gagal memuat soal");
     } finally {
       setLoading(false);
     }
-  }, [questionSet, currentIndex, difficulty, setQuestion, setQuestionSet, setCurrentIndex, setLoading, setError, setAnswer, setFeedbackStatus, setFeedbackMessage]);
+  }, [questionSet, currentIndex, params.questionIndex]);
 
   // Load question on component mount
   useEffect(() => {
@@ -110,16 +94,19 @@ export default function CodingQuestion() {
     setSubmitting(true);
     setTestResults([]);
     try {
+      const questionId = question.id || question.question_id;
+      console.log("📤 Submitting code for question ID:", questionId);
+      
       // Try to run code with test cases first
       try {
-        const result = await quizAPI.runCode(question.question_id, answer);
+        const result = await quizAPI.runCode(questionId, answer);
         setTestResults(result.test_results);
         setFeedbackMessage(`${result.passed}/${result.total} test cases passed`);
         setFeedbackStatus(result.all_passed ? "correct" : "wrong");
       } catch (runError: any) {
         // If runCode fails (e.g., no test cases), fall back to simple submit
         console.log("No test cases, using simple submit:", runError);
-        const result = await quizAPI.submitAnswer(question.question_id, answer.trim().toLowerCase());
+        const result = await quizAPI.submitAnswer(questionId, answer.trim().toLowerCase());
         setFeedbackMessage(result.feedback);
         setFeedbackStatus(result.correct ? "correct" : "wrong");
       }
@@ -160,44 +147,22 @@ export default function CodingQuestion() {
       const nextPath = getQuestionScreenPath(nextQ.question_type);
       if (nextPath !== "codingQuestion") {
         router.push(`/level/${nextPath}` as any);
+      } else {
+        // Same type - update local state
+        setQuestion(nextQ);
+        setAnswer(nextQ.code_template || "");
       }
       return;
     }
 
-    // Jika belum ada soal berikutnya, coba generate 1 soal lagi dari backend
-    try {
-      const nextType = (() => {
-        if (questionSet.length > 0) {
-          const lastType = questionSet[questionSet.length - 1].question_type;
-          if (lastType === "mcq") return "fill";
-          if (lastType === "fill") return "coding";
-          return "mcq";
-        }
-        return "mcq";
-      })() as "mcq" | "fill" | "coding";
-
-      const newQuestion = await quizAPI.generateQuestion(difficulty || 2, nextType);
-      if (newQuestion) {
-        const nq = normalizeQuestion(newQuestion);
-        const updated = [...questionSet, nq];
-        setQuestionSet(updated);
-        setCurrentIndex(nextIndex);
-
-        const newPath = getQuestionScreenPath(nq.question_type);
-        if (newPath !== "codingQuestion") {
-          router.push(`/level/${newPath}` as any);
-        }
-        return;
-      }
-    } catch (err) {
-      console.warn("Gagal generate soal berikutnya (coding):", err);
-    }
+    // No more questions - navigate to results
+    console.log("✅ All questions completed, navigating to results...");
 
     // Navigate to results screen
     router.push({
       pathname: "/main/topicResults",
       params: { 
-        topicId: topicId.toString(),
+        topicId: effectiveTopicId.toString(),
         topicName: topic
       }
     } as any);
@@ -273,9 +238,22 @@ export default function CodingQuestion() {
           {/* Code Input Area */}
           <View style={styles.inputCard}>
             <Text style={styles.sectionLabel}>Solusi Anda</Text>
+            <Text style={{ fontSize: 12, color: "#6b7280", marginBottom: 8 }}>
+              {question.question_text.toLowerCase().includes("apa yang") || 
+               question.question_text.toLowerCase().includes("output") || 
+               question.question_text.toLowerCase().includes("dicetak") 
+                ? "Tip: Jika pertanyaan meminta output/hasil cetak, tulis jawabannya langsung (contoh: 1 2 3 4 5)"
+                : "Tulis kode Python lengkap untuk menyelesaikan soal ini"}
+            </Text>
             <TextInput
               style={styles.textInput}
-              placeholder="# Tulis solusi Python lengkap Anda di sini...\nprint('Hello, World!')"
+              placeholder={
+                question.question_text.toLowerCase().includes("apa yang") || 
+                question.question_text.toLowerCase().includes("output") || 
+                question.question_text.toLowerCase().includes("dicetak")
+                  ? "Contoh: 5\\n4\\n3\\n2\\n1\\natau\\n5 4 3 2 1"
+                  : "# Tulis solusi Python lengkap Anda di sini...\\nprint('Hello, World!')"
+              }
               placeholderTextColor="#9ca3af"
               value={answer}
               onChangeText={setAnswer}
@@ -419,8 +397,17 @@ export default function CodingQuestion() {
               )}
 
               <View style={styles.nextButtonRow}>
-                <TouchableOpacity style={styles.nextButton} onPress={handleNextQuestion}>
-                  <Text style={styles.nextButtonText}>{currentIndex + 1 >= 10 ? "Selesai" : "Selanjutnya"}</Text>
+                <TouchableOpacity 
+                  style={[styles.nextButton, { backgroundColor: '#6c757d', marginRight: 8, flex: 1 }]} 
+                  onPress={() => router.back()}
+                >
+                  <Text style={styles.nextButtonText}>Kembali ke Path</Text>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={[styles.nextButton, { flex: 1 }]} 
+                  onPress={handleNextQuestion}
+                >
+                  <Text style={styles.nextButtonText}>{currentIndex + 1 >= 10 ? "Selesai" : "Level Selanjutnya"}</Text>
                 </TouchableOpacity>
               </View>
             </View>

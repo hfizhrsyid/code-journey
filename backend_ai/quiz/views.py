@@ -1,4 +1,5 @@
 import json
+from django.conf import settings
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework import status
@@ -11,6 +12,38 @@ import random
 import logging
 
 logger = logging.getLogger(__name__)
+
+
+# Default distribution: 3 questions per difficulty 1..5
+DEFAULT_DISTRIBUTION = getattr(
+    settings,
+    "QUESTION_DISTRIBUTION",
+    [
+        {"difficulty": 1, "count": 3},
+        {"difficulty": 2, "count": 3},
+        {"difficulty": 3, "count": 3},
+        {"difficulty": 4, "count": 3},
+        {"difficulty": 5, "count": 3},
+    ],
+)
+
+
+def _select_progressive_questions(questions_queryset, distribution=None):
+    """Select progressive questions based on a difficulty distribution."""
+    dist = distribution or DEFAULT_DISTRIBUTION
+    byDifficulty = {1: [], 2: [], 3: [], 4: [], 5: []}
+    for q in questions_queryset:
+        if q.difficulty in byDifficulty:
+            byDifficulty[q.difficulty].append(q)
+
+    progressive = []
+    for item in dist:
+        d = item.get("difficulty")
+        c = item.get("count", 0)
+        if d in byDifficulty:
+            progressive.extend(byDifficulty[d][:c])
+
+    return progressive
 
 @api_view(["POST"])
 @csrf_exempt
@@ -302,11 +335,14 @@ def get_questions(request):
             "questions": [
                 {
                     "id": q.id,
+                    "question_id": q.id,  # keep both keys for frontend compatibility
                     "question_type": q.question_type,
                     "difficulty": q.difficulty,
                     "question_text": q.question_text,
                     "code_template": q.code_template,
                     "options": q.options,
+                    "answer_key": q.answer_key,
+                    "explanation": q.explanation,
                     "topic": q.topic.name if q.topic else None,
                 }
                 for q in random_questions
@@ -421,12 +457,41 @@ def run_code(request):
                 status=status.HTTP_404_NOT_FOUND
             )
         
-        # Check if question has test cases
+        # Check if question has test cases. If none, fall back to simple validation so the user is not blocked.
         if not question.test_cases:
-            return Response(
-                {"error": "This question has no test cases"},
-                status=status.HTTP_400_BAD_REQUEST
+            fallback = check_answer(
+                str(code),
+                question.answer_key,
+                question.question_type,
+                question.explanation,
             )
+
+            if request.user and request.user.is_authenticated:
+                QuestionAttempt.objects.create(
+                    user=request.user,
+                    question=question,
+                    answer=code,
+                    is_correct=fallback.get("correct", False),
+                )
+
+            return Response({
+                "passed": 1 if fallback.get("correct") else 0,
+                "failed": 0 if fallback.get("correct") else 1,
+                "total": 1,
+                "all_passed": bool(fallback.get("correct")),
+                "test_results": [
+                    {
+                        "test_num": 1,
+                        "input": "(no test cases configured)",
+                        "expected": question.answer_key or "(n/a)",
+                        "actual": "(not executed)",
+                        "passed": bool(fallback.get("correct")),
+                    }
+                ],
+                "feedback": fallback.get("feedback", ""),
+                "correct_answer": fallback.get("correct_answer", ""),
+                "explanation": question.explanation or "",
+            }, status=status.HTTP_200_OK)
         
         # Execute code with test cases
         result = execute_code_with_tests(code, question.test_cases)
@@ -506,67 +571,86 @@ def get_topics(request):
         user = request.user if request.user.is_authenticated else None
         topics = Topic.objects.all().values('id', 'name', 'description', 'order')
         
-        # Include question count, completion percentage, and lock status per topic
+        # Include question count, completion percentage, solved ids, and lock status per topic
         result = []
         for topic in topics:
             # Get question count
-            count = Question.objects.filter(topic_id=topic['id'], is_active=True).count()
-            topic['question_count'] = count
+            available_count = Question.objects.filter(topic_id=topic['id'], is_active=True).count()
+            topic['question_count'] = available_count
             
             # Calculate completion percentage if user is authenticated
             completion_percentage = 0
             is_locked = False
+            solved_question_ids = []
+            total_questions = 0
+            correct_count = 0
+            unlock_reason = ""
             
+            distribution = getattr(settings, "QUESTION_DISTRIBUTION", DEFAULT_DISTRIBUTION)
+            desired_total = sum([d.get("count", 0) for d in distribution]) or len(DEFAULT_DISTRIBUTION) * 3
+            topic['question_distribution'] = distribution
+            topic['total_questions'] = desired_total
+            topic['available_questions'] = available_count
+
             if user:
-                # Get user's attempts for this topic
-                topic_questions = Question.objects.filter(topic_id=topic['id'], is_active=True)
-                total_questions = topic_questions.count()
-                
+                total_questions = desired_total
+
+                # Count distinct correct attempts for this topic (most recent per question)
+                attempts = (
+                    QuestionAttempt.objects
+                    .filter(user=user, question__topic_id=topic['id'], is_correct=True)
+                    .order_by('-created_at')
+                )
+                seen_questions = set()
+                for attempt in attempts:
+                    qid = attempt.question_id
+                    if qid in seen_questions:
+                        continue
+                    seen_questions.add(qid)
+                    solved_question_ids.append({
+                        "question_id": qid,
+                        "index": len(solved_question_ids),
+                    })
+                correct_count = len(seen_questions)
+
                 if total_questions > 0:
-                    # Count correct attempts (only the most recent attempt per question)
-                    correct_count = 0
-                    for question in topic_questions:
-                        # Get latest attempt for this question
-                        latest_attempt = QuestionAttempt.objects.filter(
-                            user=user,
-                            question=question
-                        ).order_by('-created_at').first()
-                        
-                        if latest_attempt and latest_attempt.is_correct:
-                            correct_count += 1
-                    
                     completion_percentage = int((correct_count / total_questions) * 100)
-                
+
                 # Check if topic is locked (previous topic must be completed)
                 if topic['order'] > 1:
-                    # Get previous topic
                     previous_topic = Topic.objects.filter(order=topic['order'] - 1).first()
                     if previous_topic:
-                        # Check if previous topic is completed (>= 80% correct)
-                        prev_questions = Question.objects.filter(topic_id=previous_topic.id, is_active=True)
-                        prev_total = prev_questions.count()
-                        
+                        prev_total = sum([d.get("count", 0) for d in distribution]) or len(DEFAULT_DISTRIBUTION) * 3
+
                         if prev_total > 0:
-                            prev_correct = 0
-                            for question in prev_questions:
-                                latest_attempt = QuestionAttempt.objects.filter(
-                                    user=user,
-                                    question=question
-                                ).order_by('-created_at').first()
-                                
-                                if latest_attempt and latest_attempt.is_correct:
-                                    prev_correct += 1
-                            
+                            prev_correct = (
+                                QuestionAttempt.objects
+                                .filter(user=user, question__topic_id=previous_topic.id, is_correct=True)
+                                .values('question_id')
+                                .distinct()
+                                .count()
+                            )
+
                             prev_completion = int((prev_correct / prev_total) * 100)
                             is_locked = prev_completion < 80  # Lock if previous topic < 80%
+                            if is_locked:
+                                unlock_reason = "Selesaikan >=80% topik sebelumnya"
                         else:
                             is_locked = True  # Lock if previous topic has no questions
+                            unlock_reason = "Topik sebelumnya belum tersedia"
             else:
                 # Not authenticated - lock all topics except the first one
                 is_locked = topic['order'] > 1
+                if is_locked:
+                    unlock_reason = "Masuk untuk membuka topik berikutnya"
             
             topic['completion_percentage'] = completion_percentage
+            topic['correct_count'] = correct_count
+            topic['total_questions'] = total_questions
+            topic['solved_question_ids'] = solved_question_ids
+            topic['question_distribution'] = distribution
             topic['is_locked'] = is_locked
+            topic['unlock_reason'] = unlock_reason
             result.append(topic)
         
         # Sort by order

@@ -1,12 +1,16 @@
 import React, { createContext, ReactNode, useState } from "react";
 
 export interface QuestionData {
+  // Align with backend payloads that may provide either `id` or `question_id`
+  id?: number;
   question_id: number;
   question_text: string;
   code_template?: string;
   options?: string[];
   question_type: string;
   difficulty: number;
+  answer_key?: string;
+  explanation?: string;
 }
 
 interface QuestionContextType {

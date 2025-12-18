@@ -41,6 +41,15 @@ const imageRight = [
   require("../../assets/images/path/imgRight5.png"),
 ];
 
+// Default: 3 questions per difficulty (1..5). Admin can change via backend distribution.
+const defaultDistribution = [
+  { difficulty: 1, count: 3 },
+  { difficulty: 2, count: 3 },
+  { difficulty: 3, count: 3 },
+  { difficulty: 4, count: 3 },
+  { difficulty: 5, count: 3 },
+];
+
 const CONTENT_TOP = 80;
 const CARD_H = 100;
 
@@ -50,8 +59,13 @@ interface Topic {
   description?: string;
   order: number;
   question_count: number;
+  available_questions?: number;
   completion_percentage: number;
+  correct_count?: number;
+  total_questions?: number;
+  solved_question_ids?: { question_id: number; index: number }[];
   is_locked: boolean;
+  unlock_reason?: string;
 }
 
 export default function PathPage() {
@@ -75,20 +89,41 @@ export default function PathPage() {
     }
   }, [topic, topicId, difficulty, showAllTopics, setTopic, setTopicId, setDifficulty]);
 
-  const initialLevels: LevelItem[] = Array.from({ length: 10 }).map((_, i) => ({
-    id: i + 1,
-    title: `Soal ${i + 1}`,
-    status: i === 0 ? "open" : "locked",
-    imgLeft: imageLeft[i % imageLeft.length],
-    imgRight: imageRight[i % imageRight.length],
-    imgLeftSize: { width: 110, height: 70 },
-    imgRightSize: { width: 90, height: 90 },
-  }));
+  // Clear previous topic’s questions when switching topics to avoid reusing the same set
+  useEffect(() => {
+    setQuestionSet([]);
+    setCurrentIndex(0);
+  }, [topicId, setQuestionSet, setCurrentIndex]);
 
-  const [levels, setLevels] = useState(initialLevels);
+  const [questionDistribution, setQuestionDistribution] = useState(defaultDistribution);
+  const totalLevels = useMemo(() => questionDistribution.reduce((s, d) => s + d.count, 0), [questionDistribution]);
+
+  const buildLevels = (length: number): LevelItem[] => {
+    return Array.from({ length }).map((_, i) => ({
+      id: i + 1,
+      title: `Soal ${i + 1}`,
+      status: i === 0 ? "open" : "locked",
+      imgLeft: imageLeft[i % imageLeft.length],
+      imgRight: imageRight[i % imageRight.length],
+      imgLeftSize: { width: 110, height: 70 },
+      imgRightSize: { width: 90, height: 90 },
+    }));
+  };
+
+  const [levels, setLevels] = useState<LevelItem[]>(buildLevels(totalLevels));
+  const [availableTotalLevels, setAvailableTotalLevels] = useState<number>(totalLevels);
   const [loading, setLoading] = useState(false);
   const [loadingProgress, setLoadingProgress] = useState(true);
   const [topics, setTopics] = useState<Topic[]>([]);
+  const [currentTopicStatus, setCurrentTopicStatus] = useState<Topic | null>(null);
+
+  // Rebuild base levels when distribution size changes (for per-topic view)
+  useEffect(() => {
+    if (!showAllTopics) {
+      setLevels(buildLevels(totalLevels));
+      setAvailableTotalLevels(totalLevels);
+    }
+  }, [totalLevels, showAllTopics]);
 
   // Reload progress when screen comes into focus (e.g., after completing questions)
   useFocusEffect(
@@ -134,45 +169,47 @@ export default function PathPage() {
 
     try {
       setLoadingProgress(true);
-      const attempts = await quizAPI.getUserAttempts(topicId);
-      
-      console.log("📊 User attempts loaded:", attempts?.length || 0);
-      
-      if (attempts && attempts.length > 0) {
-        // Get unique questions answered correctly
-        const correctQuestionIds = new Set(
-          attempts.filter((a: any) => a.is_correct).map((a: any) => a.question_id)
-        );
+      const topicsData = await quizAPI.getTopics();
+      const current = topicsData.find((t: Topic) => t.id === topicId) as Topic | undefined;
+      if (current) {
+        setCurrentTopicStatus(current);
+        const newDist = (current as any).question_distribution || defaultDistribution;
+        const desiredTotal = newDist.reduce((s: number, d: any) => s + d.count, 0);
+        // Prefer admin-defined desiredTotal; fall back to backend total_questions if provided; never drop below default total
+        const totalForUi = desiredTotal || current.total_questions || defaultDistribution.reduce((s, d) => s + d.count, 0);
+        const availableCountRaw = current.available_questions || current.question_count || totalForUi;
+        // Use solved count to keep at least the next slot open even if backend available is stale
+        const solved = current.solved_question_ids || [];
+        const solvedFromIds = Array.from(new Set(solved.map((s) => s.question_id))).length;
+        const solvedFromCount = current.correct_count || 0;
+        const solvedCount = Math.min(totalForUi, Math.max(solvedFromIds, solvedFromCount));
+        const availableCount = Math.max(1, availableCountRaw, solvedCount + 1);
 
-        // Get all unique questions attempted (both correct and incorrect)
-        const attemptedQuestionIds = new Set(
-          attempts.map((a: any) => a.question_id)
-        );
+        setQuestionDistribution(newDist);
+        setAvailableTotalLevels(totalForUi);
 
-        const completedCount = correctQuestionIds.size;
-        const attemptedCount = attemptedQuestionIds.size;
+        const nextOpenIndex = solvedCount < availableCount ? solvedCount : -1;
 
-        console.log(`✅ Completed: ${completedCount}, 📝 Attempted: ${attemptedCount}`);
-
-        // Update level status based on progress
-        // - Levels with correctly answered questions = "done"
-        // - Next level after completed ones = "open" 
-        // - Future levels = "locked"
-        setLevels(prev => prev.map((level, idx) => {
-          if (idx < completedCount) {
-            // Questions already answered correctly
-            return { ...level, status: "done" as LevelStatus };
-          } else if (idx === completedCount || (idx === 0 && completedCount === 0)) {
-            // Next available question, or first question if none completed
-            return { ...level, status: "open" as LevelStatus };
-          } else {
-            // Future questions
+        setLevels(buildLevels(totalForUi).map((level, idx) => {
+          if (idx >= availableCount) {
             return { ...level, status: "locked" as LevelStatus };
           }
+          if (idx < solvedCount) {
+            return { ...level, status: "done" as LevelStatus };
+          }
+          if (idx === nextOpenIndex) {
+            return { ...level, status: "open" as LevelStatus };
+          }
+          if (nextOpenIndex === -1) {
+            return { ...level, status: "locked" as LevelStatus };
+          }
+          return { ...level, status: "locked" as LevelStatus };
         }));
       } else {
-        // No attempts yet - only first level is open
-        console.log("📭 No attempts found, starting fresh");
+        // fallback: no status, keep first open
+        const desiredTotal = defaultDistribution.reduce((s, d) => s + d.count, 0);
+        setQuestionDistribution(defaultDistribution);
+        setAvailableTotalLevels(desiredTotal);
         setLevels(prev => prev.map((level, idx) => ({
           ...level,
           status: idx === 0 ? "open" : "locked" as LevelStatus
@@ -221,6 +258,8 @@ export default function PathPage() {
   };
 
   const handlePress = async (node: LevelItem) => {
+    console.log("🎯 Level clicked:", node.id, "Status:", node.status, "ShowAllTopics:", showAllTopics);
+    
     // If showing all topics, navigate to specific topic path
     if (showAllTopics) {
       if (node.status === "locked") {
@@ -244,20 +283,32 @@ export default function PathPage() {
 
     // Original logic for specific topic
     if (node.status === "locked") {
+      console.log("❌ Level is locked, showing alert");
       Alert.alert("Terkunci", "Selesaikan level sebelumnya terlebih dahulu");
       return;
     }
 
+    const availableCount = currentTopicStatus?.available_questions || currentTopicStatus?.question_count || availableTotalLevels;
+    if (node.id > availableCount) {
+      Alert.alert("Belum tersedia", "Soal untuk level ini belum tersedia. Hubungi admin untuk menambah soal.");
+      return;
+    }
+
+    console.log("✅ Level is open, loading questions...");
+    console.log("📦 Current questionSet length:", questionSet.length);
+
     // Load questions from database if not already loaded
     if (questionSet.length === 0) {
+      console.log("📋 QuestionSet is empty, fetching from API...");
       setLoading(true);
       try {
         let questions: any[] = [];
 
-        // Use database-first API - no AI generation fallback
+        // Use progressive difficulty - questions get harder as user advances
         try {
-          questions = await quizAPI.getQuestions(topicId, difficulty);
-          console.log("✅ Loaded questions from database:", questions.length);
+          questions = await quizAPI.getProgressiveQuestions(topicId);
+          console.log("✅ Loaded progressive questions from database:", questions.length);
+          console.log("📊 Difficulty distribution:", questions.map(q => `Q${questions.indexOf(q)+1}:D${q.difficulty}`).join(', '));
         } catch (apiError) {
           console.warn("⚠️ Database questions not available:", apiError);
           // Show alert to inform user
@@ -271,13 +322,18 @@ export default function PathPage() {
         }
 
         if (questions && questions.length > 0) {
+          // Set context first
           setQuestionSet(questions);
-          // Navigate to the clicked level (not always level 0)
           const targetIndex = Math.min(node.id - 1, questions.length - 1);
           setCurrentIndex(targetIndex);
 
+          // Navigate immediately with index param to help the component know which question to load
           const screenPath = getQuestionScreenPath(questions[targetIndex].question_type);
-          router.push(`/level/${screenPath}` as any);
+          console.log(`🚀 Navigating to ${screenPath} with ${questions.length} questions, index ${targetIndex}`);
+          router.push({
+            pathname: `/level/${screenPath}`,
+            params: { questionIndex: targetIndex, topicId: topicId }
+          } as any);
         } else {
           Alert.alert(
             "No Questions",
@@ -295,13 +351,17 @@ export default function PathPage() {
     }
 
     // If questions already loaded, navigate to the selected level
+    console.log("🔄 Questions already in memory, checking if level exists...");
     if (node.id <= questionSet.length) {
       const q = questionSet[node.id - 1];
       setCurrentIndex(node.id - 1);
       const screenPath = getQuestionScreenPath(q.question_type);
 
-      console.log("Navigating to question", node.id, "path:", screenPath);
-      router.push(`/level/${screenPath}` as any);
+      console.log("✅ Navigating to question", node.id, "path:", screenPath, "type:", q.question_type);
+      router.push({
+        pathname: `/level/${screenPath}`,
+        params: { questionIndex: node.id - 1, topicId: topicId }
+      } as any);
     } else {
       Alert.alert("Invalid Level", "This level is not available.");
     }
@@ -329,8 +389,13 @@ export default function PathPage() {
         {!showAllTopics && (
           <View style={{ paddingHorizontal: 16, marginBottom: 8 }}>
             <Text style={{ color: "#d9eefc", fontSize: 14, fontWeight: "500" }}>
-              Difficulty: {difficulty} | Soal: {questionSet.length}/10
+              Difficulty: {difficulty} | Soal: {questionSet.length || availableTotalLevels}/{availableTotalLevels}
             </Text>
+              {currentTopicStatus && (
+                <Text style={{ color: "#9ad1ff", fontSize: 12, marginTop: 4 }}>
+                  Debug: availableRaw={currentTopicStatus.available_questions || currentTopicStatus.question_count || 0} • desiredTotal={availableTotalLevels} • solvedIds={currentTopicStatus.solved_question_ids?.length || 0} • correctCount={currentTopicStatus.correct_count || 0}
+                </Text>
+              )}
             {isAuthenticated && (
               <Text style={{ color: "#4CAF50", fontSize: 12, marginTop: 4 }}>
                 ✓ Progress saved to your account
@@ -339,6 +404,11 @@ export default function PathPage() {
             {!isAuthenticated && (
               <Text style={{ color: "#FF9800", fontSize: 12, marginTop: 4 }}>
                 ⚠ Login to save progress
+              </Text>
+            )}
+            {currentTopicStatus && (
+              <Text style={{ color: "#d9eefc", fontSize: 12, marginTop: 4 }}>
+                Progress: {currentTopicStatus.correct_count || 0}/{currentTopicStatus.total_questions || 10} • {currentTopicStatus.completion_percentage}%
               </Text>
             )}
           </View>

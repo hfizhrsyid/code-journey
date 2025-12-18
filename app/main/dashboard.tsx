@@ -1,8 +1,8 @@
 import { quizAPI } from "@/lib/api";
 import { styles } from "@/styles/dashboard";
 import { FontAwesome } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useFocusEffect, useRouter } from "expo-router";
+import { useCallback, useState } from "react";
 import { ActivityIndicator, Alert, FlatList, Text, TouchableOpacity, View } from "react-native";
 
 interface Materi {
@@ -12,7 +12,11 @@ interface Materi {
   order: number;
   question_count: number;
   completion_percentage: number;
+  correct_count?: number;
+  total_questions?: number;
+  solved_question_ids?: { question_id: number; index: number }[];
   is_locked: boolean;
+  unlock_reason?: string;
 }
 
 export default function Dashboard() {
@@ -20,9 +24,11 @@ export default function Dashboard() {
   const [topics, setTopics] = useState<Materi[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadTopics();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      loadTopics();
+    }, [])
+  );
 
   const loadTopics = async () => {
     try {
@@ -40,7 +46,7 @@ export default function Dashboard() {
     if (item.is_locked) {
       Alert.alert(
         "Topic Locked",
-        `Complete the previous topic to unlock "${item.name}". You need to get at least 80% correct answers.`,
+        item.unlock_reason || `Complete the previous topic to unlock "${item.name}" (>=80%).`,
         [{ text: "OK" }]
       );
       return;
@@ -118,9 +124,15 @@ export default function Dashboard() {
                     <FontAwesome name="lock" size={18} color="#666" />
                   )}
                 </View>
-                {item.completion_percentage > 0 && !item.is_locked && (
+                {!item.is_locked && (
                   <Text style={{ fontSize: 14, color: "#666", marginTop: 4 }}>
                     Progress: {item.completion_percentage}%
+                    {item.total_questions ? ` • ${item.correct_count || 0}/${item.total_questions}` : ""}
+                  </Text>
+                )}
+                {item.is_locked && item.unlock_reason && (
+                  <Text style={{ fontSize: 12, color: "#666", marginTop: 4 }}>
+                    {item.unlock_reason}
                   </Text>
                 )}
               </View>

@@ -9,12 +9,16 @@ import axios, { AxiosInstance } from "axios";
 const API_BASE_URL = "http://localhost:8000/api/";
 
 export interface Question {
+  // Backend sometimes returns `id`, other times `question_id`; keep both to avoid narrowing errors
+  id?: number;
   question_id: number;
   question_text: string;
   code_template?: string;
   options?: string[];
   question_type: string;
   difficulty: number;
+  answer_key?: string;
+  explanation?: string;
 }
 
 export interface CheckAnswerResponse {
@@ -179,6 +183,92 @@ class QuizAPI {
       return response.data.questions || [];
     } catch (error) {
       console.error("Error fetching questions:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get questions with progressive difficulty (easy to hard)
+   * Returns 10 questions sorted by difficulty for adaptive learning
+   */
+  async getProgressiveQuestions(topicIdOrName: string | number) {
+    console.log("🔍 getProgressiveQuestions called with:", topicIdOrName);
+    try {
+      const params: any = {};
+      
+      // If topicIdOrName is a number, use topic_id, otherwise use topic name
+      if (typeof topicIdOrName === 'number') {
+        params.topic_id = topicIdOrName;
+      } else {
+        params.topic = topicIdOrName;
+      }
+      
+      // Don't filter by difficulty - get all difficulties
+      params.limit = 30; // Get more to ensure we have enough for each difficulty
+      
+      console.log("📡 Fetching questions with params:", params);
+      const response = await this.client.get("questions/", { params });
+      let questions = response.data.questions || [];
+      console.log(`📦 Received ${questions.length} questions from API`);
+      
+      // Sort by difficulty (ascending) so questions get progressively harder
+      questions.sort((a: any, b: any) => a.difficulty - b.difficulty);
+      
+      // Take 10 questions with progressive difficulty:
+      // - Questions 1-3: difficulty 1 (easy start)
+      // - Questions 4-7: difficulty 2 (medium challenge)
+      // - Questions 8-10: difficulty 3 (hard finish)
+      const progressive: any[] = [];
+      const byDifficulty: { [key: number]: any[] } = { 1: [], 2: [], 3: [] };
+      
+      // Group by difficulty
+      questions.forEach((q: any) => {
+        if (byDifficulty[q.difficulty]) {
+          byDifficulty[q.difficulty].push(q);
+        }
+      });
+
+      // Shuffle within each difficulty so the same slot isn't always the same question
+      [1, 2, 3].forEach((d) => {
+        byDifficulty[d] = (byDifficulty[d] || []).sort(() => Math.random() - 0.5);
+      });
+      
+      // Default distribution (admin can adjust backend; frontend mirrors defaults)
+      const distribution = [
+        { difficulty: 1, count: 3 },
+        { difficulty: 2, count: 3 },
+        { difficulty: 3, count: 3 },
+        { difficulty: 4, count: 3 },
+        { difficulty: 5, count: 3 },
+      ];
+      
+      distribution.forEach(({ difficulty, count }) => {
+        const available = byDifficulty[difficulty] || [];
+        const selected = available.slice(0, count);
+        progressive.push(...selected);
+      });
+      
+      const desiredTotal = distribution.reduce((sum, item) => sum + item.count, 0);
+
+      // If we don't have enough, fill with whatever is available
+      if (progressive.length < desiredTotal) {
+        const remaining = questions.filter(q => !progressive.includes(q));
+        progressive.push(...remaining.slice(0, desiredTotal - progressive.length));
+      }
+      
+      const finalQuestions = progressive.slice(0, desiredTotal);
+      
+      // Log warning if we couldn't get 10 questions
+      if (finalQuestions.length < desiredTotal) {
+        console.warn(`⚠️ Only ${finalQuestions.length}/${desiredTotal} questions available for progressive mode`);
+        console.warn(`Available by difficulty: D1=${byDifficulty[1]?.length || 0}, D2=${byDifficulty[2]?.length || 0}, D3=${byDifficulty[3]?.length || 0}, D4=${byDifficulty[4]?.length || 0}, D5=${byDifficulty[5]?.length || 0}`);
+      }
+      
+      console.log(`✅ Returning ${finalQuestions.length} progressive questions (desired ${desiredTotal})`);
+      console.log("📊 Difficulty breakdown:", finalQuestions.map((q, i) => `Q${i+1}:D${q.difficulty}`).join(', '));
+      return finalQuestions;
+    } catch (error) {
+      console.error("Error fetching progressive questions:", error);
       throw error;
     }
   }

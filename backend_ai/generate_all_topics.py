@@ -11,7 +11,7 @@ django.setup()
 from quiz.models import Topic, Question
 from django.core.management import call_command
 
-# Define topics with their question counts
+# Define topics with their question counts per difficulty level
 topics = [
     ("Variabel dan Tipe Data", 10),
     ("Operator", 10),
@@ -20,6 +20,9 @@ topics = [
     ("Pengurutan", 10),
     ("Pencarian", 10),
 ]
+
+# Generate for difficulties 1, 2, and 3
+difficulties = [1, 2, 3]
 
 print("=" * 60)
 print("Generating questions for all topics...")
@@ -32,29 +35,41 @@ for topic_name, count in topics:
         print(f"\n❌ Topic '{topic_name}' not found, skipping...")
         continue
     
-    # Check existing questions
-    existing = Question.objects.filter(topic=topic, is_active=True).count()
-    
-    if existing >= count:
-        print(f"\n✓ {topic_name}: Already has {existing} questions, skipping...")
-        continue
-    
-    needed = count - existing
-    print(f"\n📝 {topic_name}: Has {existing} questions, generating {needed} more...")
-    
-    try:
-        call_command('generate_questions', 
-                    topic=topic_name, 
-                    count=needed, 
-                    difficulty=1)
-        print(f"   ✅ Done!")
-    except Exception as e:
-        print(f"   ❌ Error: {e}")
+    # Generate for each difficulty level
+    for difficulty in difficulties:
+        # Check existing questions for this difficulty
+        existing = Question.objects.filter(
+            topic=topic, 
+            is_active=True, 
+            difficulty=difficulty
+        ).count()
+        
+        if existing >= count:
+            print(f"\n✓ {topic_name} (Difficulty {difficulty}): Already has {existing} questions, skipping...")
+            continue
+        
+        needed = count - existing
+        print(f"\n📝 {topic_name} (Difficulty {difficulty}): Has {existing} questions, generating {needed} more...")
+        
+        try:
+            call_command('generate_questions', 
+                        topic=topic_name, 
+                        count=needed, 
+                        difficulty=difficulty)
+            print(f"   ✅ Done!")
+        except Exception as e:
+            print(f"   ❌ Error: {e}")
 
 print("\n" + "=" * 60)
 print("Summary:")
 print("=" * 60)
 for topic in Topic.objects.all():
-    q_count = Question.objects.filter(topic=topic, is_active=True).count()
-    print(f"  {topic.name}: {q_count} questions")
+    for diff in difficulties:
+        q_count = Question.objects.filter(
+            topic=topic, 
+            is_active=True, 
+            difficulty=diff
+        ).count()
+        if q_count > 0:
+            print(f"  {topic.name} (Difficulty {diff}): {q_count} questions")
 print("=" * 60)

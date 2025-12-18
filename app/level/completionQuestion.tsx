@@ -1,12 +1,14 @@
 import { Question, quizAPI } from "@/lib/api";
 import { styles } from "@/styles/completionQuestion";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, Image, Modal, SafeAreaView, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { useQuestions } from "../../lib/QuestionContext";
 
 export default function CompletionQuestion() {
+  const params = useLocalSearchParams();
   const { questionSet, setQuestionSet, currentIndex, setCurrentIndex, difficulty, topic, topicId } = useQuestions();
+  const effectiveTopicId = params.topicId ? parseInt(params.topicId as string) : topicId;
 
   const [question, setQuestion] = useState<Question | null>(null);
   const [answer, setAnswer] = useState("");
@@ -25,17 +27,20 @@ export default function CompletionQuestion() {
       setExplanation("");
       setFeedbackStatus(null);
       setFeedback("");
+      // Determine which question index to use
+      const targetIndex = params.questionIndex ? parseInt(params.questionIndex as string) : currentIndex;
 
-      if (questionSet.length === 0 || currentIndex >= questionSet.length) {
+      if (questionSet.length === 0 || targetIndex >= questionSet.length) {
         setError("Soal tidak ditemukan");
         return;
       }
 
-      let currentQuestion = questionSet[currentIndex];
+      let currentQuestion = questionSet[targetIndex];
       currentQuestion = normalizeQuestion(currentQuestion);
       console.log("✅ Loaded question from context:", currentQuestion);
       console.log("📋 Question options:", currentQuestion.options);
       setQuestion(currentQuestion);
+      setCurrentIndex(targetIndex); // Update context index to match
     } catch (error: any) {
       console.error("Failed to load question:", error);
       setError(error.message || "Gagal memuat soal");
@@ -58,7 +63,8 @@ export default function CompletionQuestion() {
     setSubmitting(true);
     try {
       const normalizedToSend = answer.trim().toLowerCase();
-      const result = await quizAPI.submitAnswer(question.question_id, normalizedToSend);
+      const questionId = question.id || question.question_id;
+      const result = await quizAPI.submitAnswer(questionId, normalizedToSend);
 
       if (result.correct) {
         setFeedback(result.feedback || "Benar! Periksa formatting dan detail kecil jika perlu.");
@@ -104,43 +110,22 @@ export default function CompletionQuestion() {
       const nextPath = getQuestionScreenPath(nextQ.question_type);
       if (nextPath !== "completionQuestion") {
         router.push(`/level/${nextPath}` as any);
+      } else {
+        // Same type - update local state
+        setQuestion(nextQ);
+        setUserAnswer("");
       }
       return;
     }
 
-    try {
-      const nextType = (() => {
-        if (questionSet.length > 0) {
-          const lastType = questionSet[questionSet.length - 1].question_type;
-          if (lastType === "mcq") return "fill";
-          if (lastType === "fill") return "coding";
-          return "mcq";
-        }
-        return "mcq";
-      })() as "mcq" | "fill" | "coding";
-
-      const newQuestion = await quizAPI.generateQuestion(difficulty || 2, nextType);
-      if (newQuestion) {
-        const nq = normalizeQuestion(newQuestion);
-        const updated = [...questionSet, nq];
-        setQuestionSet(updated);
-        setCurrentIndex(nextIndex);
-
-        const newPath = getQuestionScreenPath(nq.question_type);
-        if (newPath !== "completionQuestion") {
-          router.push(`/level/${newPath}` as any);
-        }
-        return;
-      }
-    } catch (err) {
-      console.warn("Gagal generate soal berikutnya (completion):", err);
-    }
+    // No more questions - navigate to results
+    console.log("✅ All questions completed, navigating to results...");
 
     // Navigate to results screen
     router.push({
       pathname: "/main/topicResults",
       params: { 
-        topicId: topicId.toString(),
+        topicId: effectiveTopicId.toString(),
         topicName: topic
       }
     } as any);
@@ -306,8 +291,17 @@ export default function CompletionQuestion() {
               )}
 
               <View style={styles.nextButtonRow}>
-                <TouchableOpacity style={styles.nextButton} onPress={handleNextQuestion}>
-                  <Text style={styles.nextButtonText}>{currentIndex + 1 >= 10 ? "Selesai" : "Selanjutnya"}</Text>
+                <TouchableOpacity 
+                  style={[styles.nextButton, { backgroundColor: '#6c757d', marginRight: 8, flex: 1 }]} 
+                  onPress={() => router.back()}
+                >
+                  <Text style={styles.nextButtonText}>Kembali ke Path</Text>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={[styles.nextButton, { flex: 1 }]} 
+                  onPress={handleNextQuestion}
+                >
+                  <Text style={styles.nextButtonText}>{currentIndex + 1 >= 10 ? "Selesai" : "Level Selanjutnya"}</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -316,3 +310,4 @@ export default function CompletionQuestion() {
     </SafeAreaView>
   );
 }
+

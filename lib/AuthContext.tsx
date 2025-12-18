@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
+import { quizAPI } from './api';
 import authService from './auth';
 
 interface User {
@@ -38,6 +39,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const storedToken = await AsyncStorage.getItem('authToken');
       if (storedToken) {
         setToken(storedToken);
+        // Sync token with quizAPI client
+        await quizAPI.setToken(storedToken);
         // Try to fetch user profile
         try {
           const profile = await authService.getUserProfile();
@@ -47,6 +50,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           // Token might be invalid, clear it
           await AsyncStorage.removeItem('authToken');
           setToken(null);
+          await quizAPI.setToken(null);
         }
       }
     } catch (error) {
@@ -60,18 +64,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const response = await authService.signIn(username, password);
     setToken(response.token);
     setUser(response.user);
+    // Sync token with quizAPI client
+    await quizAPI.setToken(response.token);
   };
 
   const signup = async (username: string, email: string, password: string, firstName?: string, lastName?: string) => {
     const response = await authService.signUp(username, email, password, firstName, lastName);
     setToken(response.token);
     setUser(response.user);
+    // Sync token with quizAPI client
+    await quizAPI.setToken(response.token);
   };
 
   const logout = async () => {
     await authService.signOut();
     setUser(null);
     setToken(null);
+    // Clear token from quizAPI client
+    await quizAPI.setToken(null);
   };
 
   const refreshUser = async () => {

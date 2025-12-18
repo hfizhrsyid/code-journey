@@ -1,12 +1,16 @@
 import { quizAPI } from "@/lib/api";
 import { styles } from "@/styles/multipleChoicesQuestion";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, Image, Modal, SafeAreaView, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { useQuestions } from "../../lib/QuestionContext";
 
 export default function MultipleChoicesQuestion() {
+  const params = useLocalSearchParams();
   const { questionSet, setQuestionSet, currentIndex, setCurrentIndex, difficulty, topic, topicId } = useQuestions();
+  
+  // Get topicId from params or context
+  const effectiveTopicId = params.topicId ? parseInt(params.topicId as string) : topicId;
 
   const [question, setQuestion] = useState<any | null>(null);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
@@ -28,45 +32,53 @@ export default function MultipleChoicesQuestion() {
       setExplanation("");
       setCorrectAnswerInfo(null);
 
+      console.log("🔍 loadQuestion called");
+      console.log("📦 questionSet.length:", questionSet.length);
+      console.log("📍 currentIndex:", currentIndex);
+      console.log("🎯 questionIndex from params:", params.questionIndex);
+      console.log("🎯 topicId from context:", topicId);
+      console.log("🎯 topicId from params:", params.topicId);
+      console.log("🎯 effectiveTopicId:", effectiveTopicId);
+
+      // Determine which question index to use
+      const targetIndex = params.questionIndex ? parseInt(params.questionIndex as string) : currentIndex;
+      console.log("🎯 Using targetIndex:", targetIndex);
+
+      // If questionSet is empty, fetch from API
+      if (questionSet.length === 0 && effectiveTopicId) {
+        console.log("📡 QuestionSet empty, fetching from API for topic:", effectiveTopicId);
+        try {
+          const questions = await quizAPI.getProgressiveQuestions(effectiveTopicId);
+          console.log("✅ Fetched", questions.length, "questions from API");
+          setQuestionSet(questions);
+          setCurrentIndex(targetIndex);
+          
+          if (questions.length > targetIndex) {
+            const targetQ = normalizeQuestion(questions[targetIndex]);
+            setQuestion(targetQ);
+          }
+          return;
+        } catch (fetchError) {
+          console.error("Failed to fetch questions:", fetchError);
+          setError("Failed to load questions");
+          return;
+        }
+      }
+
       // If we have a question set and the index exists, use it
-      if (questionSet.length > 0 && currentIndex < questionSet.length) {
-        let currentQuestion = questionSet[currentIndex];
+      if (questionSet.length > 0 && targetIndex < questionSet.length) {
+        let currentQuestion = questionSet[targetIndex];
         currentQuestion = normalizeQuestion(currentQuestion);
         console.log("✅ Loaded question from context:", currentQuestion);
         console.log("📋 Question options:", currentQuestion.options);
         setQuestion(currentQuestion);
+        setCurrentIndex(targetIndex); // Update context index to match
         return;
       }
 
-      // Fallback: request a single MCQ from backend and populate context
-      try {
-        const q = await quizAPI.generateQuestion(difficulty || 2, "mcq");
-        if (q) {
-          const nq = normalizeQuestion(q);
-          console.log("✅ Generated single MCQ:", nq);
-          setQuestionSet([nq]);
-          setCurrentIndex(0);
-          setQuestion(nq);
-          return;
-        }
-      } catch (genErr) {
-        console.warn("Fallback single-question generate failed:", genErr);
-      }
-
-      // If still not available, create a local mock single question so UI can continue
-      console.warn("Using local mock MCQ for UI because backend generation failed.");
-      const mock = {
-        question_id: 9999,
-        question_text: "Contoh (mock) soal pilihan ganda: Apa hasil dari print(1+1)?",
-        code_template: "",
-        options: ["1", "2", "3", "4"],
-        question_type: "mcq",
-        difficulty: difficulty || 2,
-      };
-      console.log("✅ Using mock MCQ:", mock);
-      setQuestionSet([mock]);
-      setCurrentIndex(0);
-      setQuestion(mock);
+      // No questions and no topicId - redirect to pathPage
+      console.warn("⚠️ No questions and no way to fetch, redirecting to pathPage...");
+      router.replace("/main/pathPage" as any);
       return;
     } catch (err: any) {
       console.error("Failed to load question:", err);
@@ -74,11 +86,11 @@ export default function MultipleChoicesQuestion() {
     } finally {
       setLoading(false);
     }
-  }, [questionSet, currentIndex, difficulty, setQuestionSet, setCurrentIndex]);
+  }, [questionSet, currentIndex, difficulty, setQuestionSet, setCurrentIndex, effectiveTopicId]);
 
   useEffect(() => {
     loadQuestion();
-  }, [loadQuestion]);
+  }, []); // Only run once on mount
 
   const handleSelectAnswer = async (optionId: string) => {
     if (selectedAnswer || !question || checking) return;
@@ -86,7 +98,10 @@ export default function MultipleChoicesQuestion() {
     setChecking(true);
 
     try {
-      const result = await quizAPI.submitAnswer(question.question_id, optionId);
+      console.log("📤 Submitting answer for question:", question);
+      console.log("📤 Question ID:", question.id || question.question_id);
+      const questionId = question.id || question.question_id;
+      const result = await quizAPI.submitAnswer(questionId, optionId);
       setAnswerStatus(result.correct ? "correct" : "wrong");
       setFeedback(result.feedback || "");
       setExplanation(result.explanation || "");
@@ -129,60 +144,42 @@ export default function MultipleChoicesQuestion() {
     const nextIndex = currentIndex + 1;
     console.log("handleNextQuestion: currentIndex=", currentIndex, "nextIndex=", nextIndex, "questionSet.length=", questionSet.length);
 
-    // Jika ada soal berikutnya dalam questionSet, pindah index dan navigasi bila tipe berbeda
+    // Jika ada soal berikutnya dalam questionSet, pindah index dan navigasi
     if (nextIndex < questionSet.length) {
       const nextQ = normalizeQuestion(questionSet[nextIndex]);
       console.log("Advancing to existing question at index", nextIndex, nextQ);
+      
+      // Update context for all question types
+      setCurrentIndex(nextIndex);
       const copy = [...questionSet];
       copy[nextIndex] = nextQ;
       setQuestionSet(copy);
-      // set local question immediately to avoid relying on batched state updates
-      setQuestion(nextQ);
-      setCurrentIndex(nextIndex);
 
       const nextPath = getQuestionScreenPath(nextQ.question_type);
+      
+      // If different question type, navigate
       if (nextPath !== "multipleChoicesQuestion") {
         router.push(`/level/${nextPath}` as any);
+      } else {
+        // Same type - update local state to show next question
+        setQuestion(nextQ);
+        setSelectedAnswer(null);
+        setAnswerStatus(null);
+        setFeedback("");
+        setExplanation("");
+        setCorrectAnswerInfo(null);
       }
       return;
     }
 
-    // Jika belum ada soal berikutnya, coba generate 1 soal lagi dari backend
-    try {
-      const nextType = (() => {
-        if (questionSet.length > 0) {
-          const lastType = questionSet[questionSet.length - 1].question_type;
-          if (lastType === "mcq") return "fill";
-          if (lastType === "fill") return "coding";
-          return "mcq";
-        }
-        return "mcq";
-      })() as "mcq" | "fill" | "coding";
+    // No more questions - navigate to results
+    console.log("✅ All questions completed, navigating to results...");
 
-      const newQuestion = await quizAPI.generateQuestion(difficulty || 2, nextType);
-      if (newQuestion) {
-        const nq = normalizeQuestion(newQuestion);
-        const updated = [...questionSet, nq];
-        setQuestionSet(updated);
-        // set local question immediately to avoid waiting for context propagation
-        setQuestion(nq);
-        setCurrentIndex(nextIndex);
-
-        const newPath = getQuestionScreenPath(nq.question_type);
-        if (newPath !== "multipleChoicesQuestion") {
-          router.push(`/level/${newPath}` as any);
-        }
-        return;
-      }
-    } catch (err) {
-      console.warn("Gagal generate soal berikutnya:", err);
-    }
-
-    // Jika tidak bisa generate soal lagi, anggap selesai
+    // Navigate to results screen
     router.push({
       pathname: "/main/topicResults",
       params: { 
-        topicId: topicId.toString(),
+        topicId: effectiveTopicId.toString(),
         topicName: topic
       }
     } as any);
@@ -361,8 +358,17 @@ export default function MultipleChoicesQuestion() {
               )}
 
               <View style={styles.nextButtonRow}>
-                <TouchableOpacity style={styles.nextButton} onPress={handleNextQuestion}>
-                  <Text style={styles.nextButtonText}>{currentIndex + 1 >= 10 ? "Selesai" : "Selanjutnya"}</Text>
+                <TouchableOpacity 
+                  style={[styles.nextButton, { backgroundColor: '#6c757d', marginRight: 8, flex: 1 }]} 
+                  onPress={() => router.back()}
+                >
+                  <Text style={styles.nextButtonText}>Kembali ke Path</Text>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={[styles.nextButton, { flex: 1 }]} 
+                  onPress={handleNextQuestion}
+                >
+                  <Text style={styles.nextButtonText}>{currentIndex + 1 >= 10 ? "Selesai" : "Level Selanjutnya"}</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -372,3 +378,4 @@ export default function MultipleChoicesQuestion() {
     </SafeAreaView>
   );
 }
+

@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 import os
+import json
 from dotenv import load_dotenv
 
 # Load environment variables
@@ -215,3 +216,24 @@ if not GROQ_API_KEY:
 # API Base URL (untuk frontend)
 # ============================================
 API_BASE_URL = os.getenv('API_BASE_URL', 'http://localhost:8000/api/')
+
+# ============================================
+# Question Distribution (admin configurable)
+# Default: 3 questions per difficulty 1..5 (total 15)
+# Example override via env: QUESTION_DISTRIBUTION='[{"difficulty":1,"count":2},{"difficulty":2,"count":3}]'
+QUESTION_DISTRIBUTION = None
+_dist_env = os.getenv('QUESTION_DISTRIBUTION')
+if _dist_env:
+    try:
+        QUESTION_DISTRIBUTION = json.loads(_dist_env)
+    except Exception:
+        QUESTION_DISTRIBUTION = None
+
+if QUESTION_DISTRIBUTION is None:
+    QUESTION_DISTRIBUTION = [
+        {"difficulty": 1, "count": 3},
+        {"difficulty": 2, "count": 3},
+        {"difficulty": 3, "count": 3},
+        {"difficulty": 4, "count": 3},
+        {"difficulty": 5, "count": 3},
+    ]
