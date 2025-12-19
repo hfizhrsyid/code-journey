@@ -1,7 +1,18 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios, { AxiosInstance } from "axios";
+import Constants from "expo-constants";
 
-const API_BASE_URL = `${process.env.EXPO_PUBLIC_API_URL || "http://localhost:8000"}/api/auth/`;
+const resolveAPIBase = () => {
+  const hostUri = Constants.expoConfig?.hostUri || (Constants.manifest2 as any)?.extra?.expoClient?.hostUri || Constants.manifest?.debuggerHost;
+
+  const host = hostUri?.split(":")[0];
+  const ip = host && /^\d+\.\d+\.\d+\.\d+$/.test(host) ? host : null;
+
+  const base = process.env.EXPO_PUBLIC_API_URL || (ip ? `http://${ip}:8000` : "http://localhost:8000");
+  return `${base}/api/auth/`;
+};
+
+const API_BASE_URL = resolveAPIBase();
 
 interface User {
   id: number;

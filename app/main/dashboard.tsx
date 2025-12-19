@@ -4,6 +4,7 @@ import { FontAwesome } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Alert, FlatList, Text, TouchableOpacity, View } from "react-native";
+import Svg, { Circle, Defs, LinearGradient, Stop } from "react-native-svg";
 
 interface Materi {
   id: number;
@@ -17,47 +18,36 @@ interface Materi {
 
 // Simple circular progress dengan background circle
 const CircularProgressDisplay = ({ percentage }: { percentage: number }) => {
-  const size = 70;
-  const borderWidth = 5;
-  const radius = (size - borderWidth) / 2;
+  const size = 60;
+  const strokeWidth = 6;
+  const clamped = Math.max(0, Math.min(100, Math.round(percentage || 0)));
+  const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
-  const strokeDashoffset = circumference - (percentage / 100) * circumference;
+  const offset = circumference - (clamped / 100) * circumference;
 
   return (
-    <View style={{ width: size, height: size, justifyContent: "center", alignItems: "center", position: "relative" }}>
-      {/* Background circle */}
-      <View
-        style={{
-          width: size,
-          height: size,
-          borderRadius: size / 2,
-          borderWidth: borderWidth,
-          borderColor: "#e0e0e0",
-          justifyContent: "center",
-          alignItems: "center",
-          position: "absolute",
-        }}
-      />
-      {/* Progress circle - menggunakan borderColor sebagai progress indicator */}
-      <View
-        style={{
-          width: size,
-          height: size,
-          borderRadius: size / 2,
-          borderWidth: borderWidth,
-          borderColor: "#4CAF50",
-          justifyContent: "center",
-          alignItems: "center",
-          borderTopColor: "#e0e0e0",
-          borderRightColor: "#e0e0e0",
-          borderBottomColor: percentage > 50 ? "#4CAF50" : "#e0e0e0",
-          transform: [{ rotate: `${(percentage / 100) * 360}deg` }],
-        }}
-      />
-      {/* Text di tengah */}
-      <Text style={{ fontSize: 14, fontWeight: "bold", color: "#333", position: "absolute" }}>
-        {percentage}%
-      </Text>
+    <View style={{ width: size, height: size, justifyContent: "center", alignItems: "center" }}>
+      <Svg width={size} height={size} style={{ transform: [{ rotate: "-90deg" }] }}>
+        <Defs>
+          <LinearGradient id="gradBlue" x1="0%" y1="0%" x2="100%" y2="100%">
+            <Stop offset="0%" stopColor="#3fa0e9" />
+            <Stop offset="100%" stopColor="#286292" />
+          </LinearGradient>
+        </Defs>
+        <Circle cx={size / 2} cy={size / 2} r={radius} stroke="#e2e8f0" strokeWidth={strokeWidth} fill="none" />
+        <Circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          stroke="url(#gradBlue)"
+          strokeWidth={strokeWidth}
+          strokeDasharray={`${circumference} ${circumference}`}
+          strokeDashoffset={offset}
+          strokeLinecap="round"
+          fill="none"
+        />
+      </Svg>
+      <Text style={{ position: "absolute", fontSize: 12, fontWeight: "700", color: "#1f2937" }}>{clamped}%</Text>
     </View>
   );
 };
@@ -99,6 +89,10 @@ export default function Dashboard() {
     } as any);
   };
 
+  const goToChatbot = () => {
+    router.push("/main/chatbot");
+  };
+
   if (loading) {
     return (
       <View style={[styles.container, { justifyContent: "center", alignItems: "center" }]}>
@@ -109,18 +103,20 @@ export default function Dashboard() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.brand}>CodeJourney</Text>
+      <View style={styles.header}>
+        <Text style={styles.brand}>CodeJourney</Text>
+        <TouchableOpacity onPress={goToChatbot} style={styles.chatButton} activeOpacity={0.85}>
+          <FontAwesome name="comments" size={16} color="#0f172a" />
+          <Text style={styles.chatButtonText}>AI Chat</Text>
+        </TouchableOpacity>
+      </View>
 
       <FlatList
         showsVerticalScrollIndicator={false}
         data={topics}
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => (
-          <TouchableOpacity
-            onPress={() => goToPath(item)}
-            style={[styles.card, item.is_locked && { opacity: 0.5, backgroundColor: "#e0e0e0" }]}
-            activeOpacity={0.75}
-          >
+          <TouchableOpacity onPress={() => goToPath(item)} style={[styles.card, item.is_locked && { opacity: 0.5, backgroundColor: "#e0e0e0" }]} activeOpacity={0.75}>
             <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
               <View style={{ flex: 1 }}>
                 <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
@@ -130,9 +126,7 @@ export default function Dashboard() {
               </View>
 
               {/* Right side - Progress indicator atau Report Card */}
-              {item.completion_percentage > 0 && item.completion_percentage < 100 && !item.is_locked && (
-                <CircularProgressDisplay percentage={item.completion_percentage} />
-              )}
+              {item.completion_percentage > 0 && item.completion_percentage < 100 && !item.is_locked && <CircularProgressDisplay percentage={item.completion_percentage} />}
 
               {item.completion_percentage === 100 && !item.is_locked && (
                 <TouchableOpacity

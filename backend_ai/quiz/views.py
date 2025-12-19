@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from .models import Question, QuestionAttempt, Topic, Badge, UserBadge
-from .services import generate_question, check_answer, generate_question_set
+from .services import generate_question, check_answer, generate_question_set, get_groq_client
 from .auth_views import add_cors_headers
 from django.views.decorators.csrf import csrf_exempt
 import random
@@ -789,3 +789,53 @@ def check_badge_unlock(request):
             {"error": f"Server error: {str(e)}"},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
+
+
+@api_view(["POST"])
+@csrf_exempt
+@add_cors_headers
+def chat_bot(request):
+    """
+    Chatbot endpoint for answering questions
+    
+    POST data:
+    {
+        "message": "user's question",
+        "topic": "optional topic filter",
+        "max_tokens": 220  // optional, default 220, max 400
+    }
+    """
+    message = (request.data.get("message") or "").strip()
+    topic = (request.data.get("topic") or "").strip()
+    try:
+        max_tokens = min(int(request.data.get("max_tokens", 220)), 400)
+    except Exception:
+        max_tokens = 220
+
+    if not message:
+        return Response({"error": "message is required"}, status=status.HTTP_400_BAD_REQUEST)
+    if len(message) > 500:
+        message = message[:500]
+
+    system_prompt = (
+        "Kamu tutor singkat untuk coding dan materi belajar di aplikasi. "
+        "Jawab ringkas (<80 kata), bahasa Indonesia, beri contoh kode jika perlu. "
+        "Jika pertanyaan di luar coding/materi, tolak dengan sopan dan singkat."
+    )
+    user_content = f"Topik: {topic}\nPertanyaan: {message}" if topic else message
+
+    try:
+        completion = get_groq_client().chat.completions.create(
+            model="llama-3.1-8b-instant",
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_content},
+            ],
+            temperature=0.35,
+            max_tokens=max_tokens,
+        )
+        answer = (completion.choices[0].message.content or "").strip()
+        return Response({"answer": answer, "usage": getattr(completion, "usage", None)})
+    except Exception as e:
+        logger.error(f"Chatbot error: {e}")
+        return Response({"error": "chatbot unavailable"}, status=status.HTTP_503_SERVICE_UNAVAILABLE)

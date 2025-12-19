@@ -30,8 +30,10 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-pnjb2%!1j01_sa$s^j1a*m^4cu
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1,192.168.1.11,0.0.0.0,10.0.2.2').split(',')
-
+if DEBUG:
+    ALLOWED_HOSTS = ["*"]
+else:
+    ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1,192.168.1.8,192.168.1.12,0.0.0.0,10.0.2.2').split(',')
 
 # Application definition
 
@@ -200,10 +202,10 @@ CSRF_TRUSTED_ORIGINS = os.getenv('CSRF_TRUSTED_ORIGINS', '').split(',') if os.ge
     "http://127.0.0.1:3000",
     "http://127.0.0.1:8081",
     "http://127.0.0.1:19006",
-    "http://192.168.1.12:3000",
-    "http://192.168.1.12:8081", 
-    "http://192.168.1.12:19006",
-    "http://192.168.1.12:19000",
+    "http://192.168.1.8:3000",
+    "http://192.168.1.8:8081", 
+    "http://192.168.1.8:19006",
+    "http://192.168.1.8:19000",
 ]
 
 # ============================================

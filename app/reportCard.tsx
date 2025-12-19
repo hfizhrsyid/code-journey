@@ -6,11 +6,31 @@ import { useEffect, useState } from "react";
 import { ActivityIndicator, Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import Svg, { Circle, Defs, LinearGradient, Stop, Text as SvgText } from "react-native-svg";
 
+const formatDuration = (ms: number) => {
+  if (ms <= 0) return "<1 menit";
+  const minutes = Math.round(ms / 60000);
+  if (minutes < 60) return `${minutes} menit`;
+  const hours = Math.round(ms / 3600000);
+  if (hours < 24) return `${hours} jam`;
+  const days = Math.round(ms / 86400000);
+  return `${days} hari`;
+};
+
+const formatDurationShort = (seconds: number) => {
+  if (seconds <= 0) return "<1 dtk";
+  if (seconds < 60) return `${Math.round(seconds)} dtk`;
+  const mins = Math.round(seconds / 60);
+  return `${mins} mnt`;
+};
+
 const CircleProgress = ({ percent }: { percent: number }) => {
   const radius = 40;
   const strokeWidth = 8;
   const circumference = 2 * Math.PI * radius;
-  const progress = circumference - (percent / 100) * circumference;
+  const clamped = Math.max(0, Math.min(100, Math.round(percent || 0)));
+  const progress = circumference - (clamped / 100) * circumference;
+  const percentLabel = `${clamped}%`;
+  const labelSize = percentLabel.length >= 4 ? 22 : 26; // keep text inside the circle on small screens
 
   return (
     <View style={{ justifyContent: "center", alignItems: "center", position: "relative" }}>
@@ -42,8 +62,8 @@ const CircleProgress = ({ percent }: { percent: number }) => {
         />
 
         {/* Angka persentase */}
-        <SvgText x="60" y="70" textAnchor="middle" fontSize="32" fontWeight="bold" fill="#286292">
-          {percent}%
+        <SvgText x="60" y="60" textAnchor="middle" alignmentBaseline="middle" fontSize={labelSize} fontWeight="bold" fill="#286292">
+          {percentLabel}
         </SvgText>
       </Svg>
     </View>
@@ -65,6 +85,8 @@ const ReportCard = () => {
     totalQuestions: 0,
     percentage: 0,
   });
+  const [durationText, setDurationText] = useState("-");
+  const [recapText, setRecapText] = useState("Belum ada data untuk topik ini.");
 
   useEffect(() => {
     loadStats();
@@ -94,6 +116,28 @@ const ReportCard = () => {
         totalQuestions,
         percentage,
       });
+
+      const timestamps = (attempts || [])
+        .map((a: any) => new Date(a.created_at).getTime())
+        .filter((t: number) => !Number.isNaN(t))
+        .sort((a: number, b: number) => a - b);
+
+      const durationMs = timestamps.length ? timestamps[timestamps.length - 1] - timestamps[0] : 0;
+      setDurationText(timestamps.length ? formatDuration(durationMs) : "-");
+
+      // Rekap dinamis
+      const totalAttempts = attempts.length;
+      const avgSecondsPerQuestion = totalQuestions && durationMs > 0 ? durationMs / 1000 / totalQuestions : 0;
+
+      if (!totalQuestions) {
+        setRecapText("Belum ada data untuk topik ini. Kerjakan dulu beberapa soal, ya.");
+      } else {
+        setRecapText(
+          `Kamu menyelesaikan ${totalQuestions} soal dengan akurasi ${percentage}% dalam ${formatDuration(durationMs)}. Rata-rata ${formatDurationShort(
+            avgSecondsPerQuestion
+          )} per soal dari ${totalAttempts} percobaan.`
+        );
+      }
     } catch (error) {
       console.error("Failed to load stats:", error);
     } finally {
@@ -172,7 +216,7 @@ const ReportCard = () => {
               <Text style={styles.labelSmall}>Akurasi</Text>
               <Text style={styles.percentageText}>{stats.percentage}%</Text>
               <Text style={styles.labelSmall}>Waktu</Text>
-              <Text style={styles.timeText}>5 hari</Text>
+              <Text style={styles.timeText}>{durationText}</Text>
             </View>
 
             <View style={styles.circleContainer}>
@@ -204,9 +248,7 @@ const ReportCard = () => {
         {/* SECTION 3: Rekapitulasi */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Rekapitulasi</Text>
-          <Text style={styles.recapText}>
-            Kamu belajar 30% lebih cepat (cepat/lambat) dibanding waktu materi {topicName}. Di materi ini, kamu berhasil kerja hingga tunggal level 5 kali. Terus Semangat!
-          </Text>
+          <Text style={styles.recapText}>{recapText}</Text>
         </View>
 
         {/* BUTTON */}

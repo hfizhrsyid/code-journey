@@ -26,11 +26,6 @@ export const styles = StyleSheet.create({
     marginBottom: 60,
   },
 
-  imagePath: {
-    width: 30,
-    height: 25,
-  },
-
   imageProfile: {
     width: 26,
     height: 28,

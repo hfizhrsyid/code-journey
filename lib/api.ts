@@ -1,12 +1,18 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios, { AxiosInstance } from "axios";
+import Constants from "expo-constants";
 
-const getAPIBaseURL = () => {
-  const baseURL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:8000";
-  return `${baseURL}/api/`;
+const resolveAPIBase = () => {
+  const hostUri = Constants.expoConfig?.hostUri || (Constants.manifest2 as any)?.extra?.expoClient?.hostUri || Constants.manifest?.debuggerHost;
+
+  const host = hostUri?.split(":")[0];
+  const ip = host && /^\d+\.\d+\.\d+\.\d+$/.test(host) ? host : null;
+
+  const base = process.env.EXPO_PUBLIC_API_URL || (ip ? `http://${ip}:8000` : "http://localhost:8000");
+  return `${base}/api/`;
 };
 
-const API_BASE_URL = getAPIBaseURL();
+const API_BASE_URL = resolveAPIBase();
 const FALLBACK_API_URL = "http://192.168.1.12:8000/api/";
 
 export interface Question {
@@ -273,6 +279,25 @@ class QuizAPI {
     } catch (error) {
       console.error("Error fetching all badges:", error);
       return [];
+    }
+  }
+
+  async askChatbot(message: string, topic?: string) {
+    try {
+      const response = await this.client.post("chat/", {
+        message,
+        topic,
+        max_tokens: 280, // keep responses short to save tokens
+      });
+
+      const answer = response.data?.answer || response.data?.message || response.data?.response;
+      return {
+        answer: answer || "",
+        usage: response.data?.usage,
+      };
+    } catch (error: any) {
+      console.error("Error asking chatbot:", error?.response?.data || error?.message || error);
+      throw error;
     }
   }
 

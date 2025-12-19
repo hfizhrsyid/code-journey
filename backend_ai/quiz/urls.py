@@ -12,6 +12,7 @@ from .views import (
     get_user_badges,
     get_all_badges,
     check_badge_unlock,
+    chat_bot,  # add
 )
 from .auth_views import (
     signup,
@@ -44,4 +45,6 @@ urlpatterns = [
     path("generate-question-set/", generate_question_set_view, name="generate_question_set"),
     path("check-answer/", check_answer_view, name="check_answer"),
     path("question/<int:question_id>/", get_question_view, name="get_question"),
+    
+    path("chat/", chat_bot, name="chat_bot"),  # add
 ]
