@@ -3,6 +3,7 @@ import { FontAwesome } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useMemo, useState } from "react";
+import { sessionStorage } from "@/lib/sessionStorage";
 import { ActivityIndicator, Alert, Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Svg, { Circle, Path } from "react-native-svg";
@@ -89,8 +90,30 @@ export default function PathPage() {
   const [loading, setLoading] = useState(false);
   const [loadingProgress, setLoadingProgress] = useState(true);
   const [topics, setTopics] = useState<Topic[]>([]);
+  const [loadingTopicId, setLoadingTopicId] = useState<number | null>(null);
 
-  // Reload progress when screen comes into focus (e.g., after completing questions)
+  // TAMBAH: Reset levels ke initial state ketika topicId berubah
+  useEffect(() => {
+    if (!showAllTopics && topicId) {
+      console.log(`🔄 TopicId changed to ${topicId}, resetting levels to initial state`);
+
+      // Reset ke initial levels (hanya level 1 open)
+      const newInitialLevels = Array.from({ length: 10 }).map((_, i) => ({
+        id: i + 1,
+        title: `Soal ${i + 1}`,
+        status: (i === 0 ? "open" : "locked") as LevelStatus,
+        imgLeft: imageLeft[i % imageLeft.length],
+        imgRight: imageRight[i % imageRight.length],
+        imgLeftSize: { width: 110, height: 70 },
+        imgRightSize: { width: 90, height: 90 },
+      }));
+
+      setLevels(newInitialLevels);
+      setLoadingProgress(true); // Set loading true saat reset
+    }
+  }, [topicId, showAllTopics]);
+
+  // Reload progress when screen comes into focus
   useFocusEffect(
     React.useCallback(() => {
       if (showAllTopics) {
@@ -105,83 +128,129 @@ export default function PathPage() {
     try {
       setLoadingProgress(true);
       const data = await quizAPI.getTopics();
-      setTopics(data);
-      
-      // Create levels based on topics
-      const topicLevels: LevelItem[] = data.map((t: Topic, i: number) => ({
+
+      // ✅ Ensure data is an array before sorting
+      const topicsArray = Array.isArray(data) ? data : [];
+
+      if (topicsArray.length === 0) {
+        console.warn("⚠️ No topics returned from API");
+        setTopics([]);
+        setLevels([]);
+        return;
+      }
+
+      // ✅ SORT BY ORDER!
+      const sortedData = topicsArray.sort((a: Topic, b: Topic) => (a.order || 0) - (b.order || 0));
+      setTopics(sortedData);
+
+      // Create levels based on sorted topics
+      const topicLevels: LevelItem[] = sortedData.map((t: Topic, i: number) => ({
         id: t.id,
         title: t.name,
-        status: t.is_locked ? "locked" : (t.completion_percentage === 100 ? "done" : "open") as LevelStatus,
+        status: t.is_locked ? "locked" : ((t.completion_percentage === 100 ? "done" : "open") as LevelStatus),
         imgLeft: imageLeft[i % imageLeft.length],
         imgRight: imageRight[i % imageRight.length],
         imgLeftSize: { width: 110, height: 70 },
         imgRightSize: { width: 90, height: 90 },
       }));
-      
+
       setLevels(topicLevels);
     } catch (error) {
       console.error("Failed to load topics:", error);
+      Alert.alert("Error", "Failed to load topics. Please try again.");
     } finally {
       setLoadingProgress(false);
     }
   };
 
+  /**
+   * Muat posisi terakhir dari AsyncStorage (jangan set state)
+   */
+  const loadSavedPosition = async (topicId: number): Promise<number | null> => {
+    const savedSession = await sessionStorage.loadPosition(topicId);
+    if (savedSession) {
+      // Hanya return, jangan set state
+      return savedSession.currentIndex;
+    }
+    return null;
+  };
+
+  // Jika jumlah soal bisa lebih dari 10, sesuaikan jumlah level
   const loadUserProgress = async () => {
     if (!isAuthenticated || !topicId) {
+      console.log("⚠️ Not authenticated or no topicId");
       setLoadingProgress(false);
       return;
     }
 
+    const currentTopicId = topicId; // ✅ Capture current topicId
+    setLoadingTopicId(currentTopicId);
+
     try {
       setLoadingProgress(true);
-      const attempts = await quizAPI.getUserAttempts(topicId);
-      
-      console.log("📊 User attempts loaded:", attempts?.length || 0);
-      
+      console.log(`📊 Loading progress for topicId: ${currentTopicId}`);
+
+      const attempts = await quizAPI.getUserAttempts(currentTopicId);
+
+      // ✅ IGNORE if topicId has changed during loading
+      if (currentTopicId !== topicId) {
+        console.log(`🚫 TopicId changed during loading (${currentTopicId} → ${topicId}), ignoring old response`);
+        setLoadingTopicId(null);
+        return;
+      }
+
+      console.log(`📊 User attempts loaded for topicId ${currentTopicId}: ${attempts?.length || 0} attempts`);
+
       if (attempts && attempts.length > 0) {
-        // Get unique questions answered correctly
-        const correctQuestionIds = new Set(
-          attempts.filter((a: any) => a.is_correct).map((a: any) => a.question_id)
-        );
-
-        // Get all unique questions attempted (both correct and incorrect)
-        const attemptedQuestionIds = new Set(
-          attempts.map((a: any) => a.question_id)
-        );
-
+        // Hitung soal yang sudah dijawab BENAR
+        const correctAttempts = attempts.filter((a: any) => a.is_correct);
+        const correctQuestionIds = new Set(correctAttempts.map((a: any) => a.question_id));
         const completedCount = correctQuestionIds.size;
-        const attemptedCount = attemptedQuestionIds.size;
 
-        console.log(`✅ Completed: ${completedCount}, 📝 Attempted: ${attemptedCount}`);
+        console.log(`✅ Completed (correct answers): ${completedCount}`);
 
-        // Update level status based on progress
-        // - Levels with correctly answered questions = "done"
-        // - Next level after completed ones = "open" 
-        // - Future levels = "locked"
-        setLevels(prev => prev.map((level, idx) => {
-          if (idx < completedCount) {
-            // Questions already answered correctly
-            return { ...level, status: "done" as LevelStatus };
-          } else if (idx === completedCount || (idx === 0 && completedCount === 0)) {
-            // Next available question, or first question if none completed
-            return { ...level, status: "open" as LevelStatus };
-          } else {
-            // Future questions
-            return { ...level, status: "locked" as LevelStatus };
-          }
-        }));
+        // Update level status - BATASI completed count ke total levels
+        const safeCompletedCount = Math.min(completedCount, 10);
+
+        setLevels((prev) =>
+          prev.map((level, idx) => {
+            if (idx < safeCompletedCount) {
+              return { ...level, status: "done" as LevelStatus };
+            } else if (idx === safeCompletedCount) {
+              return { ...level, status: "open" as LevelStatus };
+            } else {
+              return { ...level, status: "locked" as LevelStatus };
+            }
+          })
+        );
       } else {
-        // No attempts yet - only first level is open
-        console.log("📭 No attempts found, starting fresh");
-        setLevels(prev => prev.map((level, idx) => ({
-          ...level,
-          status: idx === 0 ? "open" : "locked" as LevelStatus
-        })));
+        // ✅ TOPIK BARU
+        console.log(`📭 No attempts for topicId ${currentTopicId}`);
+        setLevels((prev) =>
+          prev.map((level, idx) => ({
+            ...level,
+            status: idx === 0 ? ("open" as LevelStatus) : ("locked" as LevelStatus),
+          }))
+        );
       }
     } catch (error) {
-      console.error("Failed to load progress:", error);
+      console.error(`Failed to load progress for topicId ${topicId}:`, error);
+
+      // ✅ Only reset if still loading same topicId
+      if (currentTopicId === topicId) {
+        setLevels((prev) =>
+          prev.map((level, idx) => ({
+            ...level,
+            status: idx === 0 ? ("open" as LevelStatus) : ("locked" as LevelStatus),
+          }))
+        );
+      }
     } finally {
-      setLoadingProgress(false);
+      // ✅ Only clear if this is still the current loading topicId
+      if (currentTopicId === topicId) {
+        setLoadingProgress(false);
+      }
+      setLoadingTopicId(null);
     }
   };
 
@@ -221,22 +290,34 @@ export default function PathPage() {
   };
 
   const handlePress = async (node: LevelItem) => {
-    // If showing all topics, navigate to specific topic path
     if (showAllTopics) {
       if (node.status === "locked") {
-        Alert.alert("Terkunci", "Selesaikan topik sebelumnya untuk membuka topik ini");
+        // ✅ Find by order, not by index
+        const nodeTopic = topics.find((t) => t.id === node.id);
+        const nodeOrder = nodeTopic?.order || 999;
+        const previousTopic = topics.find((t) => t.order === nodeOrder - 1);
+
+        if (previousTopic) {
+          Alert.alert("Topik Terkunci", `Selesaikan "${previousTopic.name}" 100% terlebih dahulu.\n\nProgress: ${previousTopic.completion_percentage}%`, [{ text: "OK" }]);
+        }
         return;
       }
-      
-      const selectedTopic = topics.find(t => t.id === node.id);
+
+      const selectedTopic = topics.find((t) => t.id === node.id);
       if (selectedTopic) {
+        // ✅ SET CONTEXT BEFORE NAVIGATE!
+        setTopic(selectedTopic.name);
+        setTopicId(selectedTopic.id);
+        setDifficulty(2);
+
+        // THEN navigate
         router.push({
           pathname: "./pathPage",
           params: {
             id: selectedTopic.id.toString(),
             topic: selectedTopic.name,
-            difficulty: "2"
-          }
+            difficulty: "2",
+          },
         } as any);
       }
       return;
@@ -254,36 +335,65 @@ export default function PathPage() {
       try {
         let questions: any[] = [];
 
-        // Use database-first API - no AI generation fallback
+        // Try to load from database first
         try {
           questions = await quizAPI.getQuestions(topicId, difficulty);
-          console.log("✅ Loaded questions from database:", questions.length);
-        } catch (apiError) {
-          console.warn("⚠️ Database questions not available:", apiError);
-          // Show alert to inform user
-          Alert.alert(
-            "No Questions Available",
-            `No questions found for "${topic}". Please ask the admin to generate questions for this topic.`,
-            [{ text: "OK" }]
+          console.log(
+            `📦 Setting questionSet: ${questions.length} questions`,
+            questions.map((q) => q.question_id)
           );
-          setLoading(false);
-          return;
-        }
 
-        if (questions && questions.length > 0) {
+          // ✅ LOAD SAVED POSITION FIRST
+          const savedIndex = await sessionStorage.loadPosition(topicId);
+          let indexToUse = savedIndex?.currentIndex ?? 0;
+
+          // ✅ VALIDATE INDEX - tidak boleh melebihi panjang questions
+          if (indexToUse >= questions.length) {
+            console.warn(`⚠️ Saved index ${indexToUse} melebihi questions length ${questions.length}, reset ke 0`);
+            indexToUse = 0;
+          }
+
+          console.log(`📂 Using index: ${indexToUse + 1}/${questions.length}`);
+
+          // Set context with loaded questions and position
           setQuestionSet(questions);
-          // Navigate to the clicked level (not always level 0)
-          const targetIndex = Math.min(node.id - 1, questions.length - 1);
-          setCurrentIndex(targetIndex);
+          setCurrentIndex(indexToUse);
 
-          const screenPath = getQuestionScreenPath(questions[targetIndex].question_type);
-          router.push(`/level/${screenPath}` as any);
-        } else {
-          Alert.alert(
-            "No Questions",
-            "No questions available for this topic yet.",
-            [{ text: "OK" }]
-          );
+          // Wait for state to update, then navigate
+          setTimeout(() => {
+            // ✅ DOUBLE CHECK index validity
+            const safeIndex = Math.min(indexToUse, questions.length - 1);
+            if (safeIndex >= 0 && questions[safeIndex]) {
+              const screenPath = getQuestionScreenPath(questions[safeIndex].question_type);
+              router.push(`/level/${screenPath}`);
+            } else {
+              console.error("❌ No valid question found at index", safeIndex);
+              Alert.alert("Error", "Gagal memuat soal");
+            }
+          }, 100);
+        } catch (dbError) {
+          console.warn("⚠️ Database questions not available, trying AI generation:", dbError);
+
+          // Fallback: Generate questions using AI
+          try {
+            questions = await quizAPI.generateQuestionSet(topic, difficulty);
+            console.log("✅ Generated questions using AI:", questions.length);
+
+            setQuestionSet(questions);
+            setCurrentIndex(0);
+
+            setTimeout(() => {
+              if (questions.length > 0 && questions[0]) {
+                const screenPath = getQuestionScreenPath(questions[0].question_type);
+                router.push(`/level/${screenPath}`);
+              }
+            }, 100);
+          } catch (genError) {
+            console.error("❌ AI generation also failed:", genError);
+            Alert.alert("No Questions Available", `No questions found for "${topic}" and AI generation failed. Please try again later.`, [{ text: "OK" }]);
+            setLoading(false);
+            return;
+          }
         }
       } catch (error) {
         console.error("Error loading questions:", error);
@@ -307,14 +417,28 @@ export default function PathPage() {
     }
   };
 
+  const handleNextLevel = () => {
+    if (topicId && topic) {
+      router.push({
+        pathname: "/main/pathPage",
+        params: {
+          id: topicId.toString(),
+          topic: topic,
+          difficulty: "2",
+        },
+      } as any);
+    } else {
+      // Jika tidak ada topik berikutnya, kembali ke dashboard
+      router.push("/main/dashboard");
+    }
+  };
+
   if (loading || loadingProgress) {
     return (
       <SafeAreaView style={styles.safe}>
         <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
           <ActivityIndicator size="large" color="#0066cc" />
-          <Text style={{ marginTop: 10, color: "#666" }}>
-            {loading ? "Membuat soal..." : "Loading progress..."}
-          </Text>
+          <Text style={{ marginTop: 10, color: "#666" }}>{loading ? "Membuat soal..." : "Loading progress..."}</Text>
         </View>
       </SafeAreaView>
     );
@@ -323,38 +447,7 @@ export default function PathPage() {
   return (
     <SafeAreaView style={styles.safe}>
       <View style={{ flex: 1, position: "relative" }}>
-        <Text style={styles.header}>
-          {showAllTopics ? "CodeJourney - Semua Topik" : `CodeJourney - ${topic}`}
-        </Text>
-        {!showAllTopics && (
-          <View style={{ paddingHorizontal: 16, marginBottom: 8 }}>
-            <Text style={{ color: "#d9eefc", fontSize: 14, fontWeight: "500" }}>
-              Difficulty: {difficulty} | Soal: {questionSet.length}/10
-            </Text>
-            {isAuthenticated && (
-              <Text style={{ color: "#4CAF50", fontSize: 12, marginTop: 4 }}>
-                ✓ Progress saved to your account
-              </Text>
-            )}
-            {!isAuthenticated && (
-              <Text style={{ color: "#FF9800", fontSize: 12, marginTop: 4 }}>
-                ⚠ Login to save progress
-              </Text>
-            )}
-          </View>
-        )}
-        {showAllTopics && (
-          <View style={{ paddingHorizontal: 16, marginBottom: 8 }}>
-            <Text style={{ color: "#d9eefc", fontSize: 14, fontWeight: "500" }}>
-              Pilih topik untuk memulai belajar
-            </Text>
-            {isAuthenticated && (
-              <Text style={{ color: "#4CAF50", fontSize: 12, marginTop: 4 }}>
-                ✓ Progress Anda tersimpan
-              </Text>
-            )}
-          </View>
-        )}
+        <Text style={styles.header}>{showAllTopics ? "CodeJourney - Semua Topik" : `CodeJourney - ${topic}`}</Text>
 
         <ScrollView
           showsVerticalScrollIndicator={false}
@@ -448,20 +541,6 @@ export default function PathPage() {
                     ) : (
                       <Text style={styles.nodeNumber}>{showAllTopics ? idx + 1 : node.id}</Text>
                     )}
-                  </View>
-                  {/* Show caption below node */}
-                  <View style={{ position: "absolute", top: radius * 2 + 8, width: 120, left: -48 }}>
-                    <Text style={[styles.caption, { textAlign: "center" }]}>
-                      {showAllTopics ? node.title : `Soal ${node.id}`}
-                    </Text>
-                    {showAllTopics && node.status !== "locked" && (() => {
-                      const topicData = topics.find(t => t.id === node.id);
-                      return topicData && topicData.completion_percentage > 0 && (
-                        <Text style={[styles.caption, { textAlign: "center", fontSize: 11, color: "#4CAF50" }]}>
-                          {topicData.completion_percentage}%
-                        </Text>
-                      );
-                    })()}
                   </View>
                 </TouchableOpacity>
               </View>

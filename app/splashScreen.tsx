@@ -1,9 +1,11 @@
+import { useAuth } from "@/lib/AuthContext";
 import { styles } from "@/styles/splashScreen";
 import { router } from "expo-router";
 import { useEffect, useRef } from "react";
 import { Animated, Text, View } from "react-native";
 
 export default function Splash() {
+  const { isAuthenticated, isLoading } = useAuth();
   const progress = new Animated.Value(0);
   const logoOpacity = useRef(new Animated.Value(0)).current;
   const logoTranslate = useRef(new Animated.Value(20)).current;
@@ -15,7 +17,14 @@ export default function Splash() {
       duration: 3500,
       useNativeDriver: false,
     }).start(() => {
-      router.replace("/main/dashboard");
+      // Check auth after animation
+      if (!isLoading) {
+        if (isAuthenticated) {
+          router.replace("/main/dashboard");
+        } else {
+          router.replace("/login");
+        }
+      }
     });
 
     // Animasi teks Code Journey
@@ -31,7 +40,7 @@ export default function Splash() {
         useNativeDriver: true,
       }),
     ]).start();
-  }, []);
+  }, [isAuthenticated, isLoading]);
 
   const width = progress.interpolate({
     inputRange: [0, 1],

@@ -32,6 +32,7 @@ class Question(models.Model):
     answer_key = models.JSONField()
     explanation = models.TextField(null=True, blank=True)
     test_cases = models.JSONField(null=True, blank=True)  # For coding questions: [{"input": "...", "expected_output": "..."}]
+    question_hash = models.CharField(max_length=64, null=True, blank=True, db_index=True)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -41,7 +42,11 @@ class Question(models.Model):
         indexes = [
             models.Index(fields=['topic', 'difficulty', 'question_type']),
             models.Index(fields=['is_active']),
+            models.Index(fields=['topic', 'question_hash']),
         ]
+        unique_together = (
+            ('topic', 'question_hash'),
+        )
     
     def __str__(self):
         return f"{self.question_type} - Level {self.difficulty} - {self.topic}"
@@ -78,3 +83,45 @@ class QuestionAttempt(models.Model):
     
     def __str__(self):
         return f"Attempt by {self.user} on Q{self.question.id}"
+
+
+class Badge(models.Model):
+    """Badge definition for achievements"""
+    BADGE_TYPES = [
+        ("topic_100", "Topic Master - 100% Accuracy"),
+        ("progress_25", "Progress Milestone - 25%"),
+        ("progress_50", "Progress Milestone - 50%"),
+        ("progress_75", "Progress Milestone - 75%"),
+        ("progress_100", "Completion Master - 100%"),
+        ("streak", "Streak Warrior"),
+    ]
+    
+    name = models.CharField(max_length=100)
+    description = models.TextField()
+    icon = models.CharField(max_length=50)  # reference ke gambar (e.g., "badge-1.png")
+    badge_type = models.CharField(max_length=20, choices=BADGE_TYPES)
+    topic = models.ForeignKey(Topic, on_delete=models.SET_NULL, null=True, blank=True, related_name='badges')
+    requirement = models.JSONField(default=dict)  # Store requirement details (e.g., {"accuracy": 100, "topic_id": 1})
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['badge_type', 'id']
+        unique_together = ('badge_type', 'topic')  # Prevent duplicate badges per topic
+    
+    def __str__(self):
+        return f"{self.name} ({self.badge_type})"
+
+
+class UserBadge(models.Model):
+    """Track earned badges for users"""
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='earned_badges')
+    badge = models.ForeignKey(Badge, on_delete=models.CASCADE, related_name='earned_by')
+    earned_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['-earned_at']
+        unique_together = ('user', 'badge')  # Prevent duplicate earning of same badge
+    
+    def __str__(self):
+        return f"{self.user.username} - {self.badge.name}"

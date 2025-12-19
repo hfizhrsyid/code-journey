@@ -1,12 +1,14 @@
-import { Question, quizAPI } from "@/lib/api";
+import { Question, quizAPI, validateQuestion } from "@/lib/api";
 import { styles } from "@/styles/completionQuestion";
 import { router } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, Image, Modal, SafeAreaView, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Alert, Image, Modal, SafeAreaView, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { useQuestions } from "../../lib/QuestionContext";
+import { useFocusEffect } from "@react-navigation/native";
+import React from "react";
 
 export default function CompletionQuestion() {
-  const { questionSet, setQuestionSet, currentIndex, setCurrentIndex, difficulty, topic, topicId } = useQuestions();
+  const { questionSet, setQuestionSet, currentIndex, setCurrentIndex, difficulty, topic, topicId, savePosition } = useQuestions();
 
   const [question, setQuestion] = useState<Question | null>(null);
   const [answer, setAnswer] = useState("");
@@ -32,7 +34,16 @@ export default function CompletionQuestion() {
       }
 
       let currentQuestion = questionSet[currentIndex];
+      console.log(`📋 Loading Q${currentIndex}: ID=${currentQuestion.question_id}, Topic=${topic || "N/A"}`);
       currentQuestion = normalizeQuestion(currentQuestion);
+
+      // Validate question
+      const validation = validateQuestion(currentQuestion);
+      if (!validation.valid) {
+        setError(validation.error || "Soal tidak valid");
+        return;
+      }
+
       console.log("✅ Loaded question from context:", currentQuestion);
       console.log("📋 Question options:", currentQuestion.options);
       setQuestion(currentQuestion);
@@ -42,11 +53,21 @@ export default function CompletionQuestion() {
     } finally {
       setLoading(false);
     }
-  }, [questionSet, currentIndex]);
+  }, [questionSet, currentIndex, topicId]);
 
   useEffect(() => {
     loadQuestion();
   }, [loadQuestion]);
+
+  // ✅ RESET STATE KETIKA TOPIC BERUBAH
+  useEffect(() => {
+    setQuestion(null);
+    setAnswer("");
+    setFeedbackStatus(null);
+    setFeedback("");
+    setExplanation("");
+    setError(null);
+  }, [topicId]);
 
   const handleSubmit = async () => {
     if (!question || !answer.trim()) {
@@ -69,6 +90,11 @@ export default function CompletionQuestion() {
         setFeedbackStatus("wrong");
         setExplanation(result.explanation || "");
       }
+
+      if (result.newly_unlocked_badges && result.newly_unlocked_badges.length > 0) {
+        const badgeNames = result.newly_unlocked_badges.map((b) => b.badge_name).join("\n");
+        Alert.alert("🏆 Badge Baru!", `Selamat! Anda mendapatkan badge:\n\n${badgeNames}`, [{ text: "OK" }]);
+      }
     } catch (error: any) {
       console.error("Error submitting answer:", error);
       setFeedbackStatus("wrong");
@@ -86,15 +112,24 @@ export default function CompletionQuestion() {
   };
 
   const handleNextQuestion = async () => {
-    // reset any per-question UI state
-    setFeedbackStatus(null);
-    setExplanation("");
-    setFeedback("");
-    setSubmitting(false);
-
     const nextIndex = currentIndex + 1;
+    console.log(`🔄 handleNextQuestion: currentIndex=${currentIndex}, nextIndex=${nextIndex}, questionSet.length=${questionSet.length}`);
+
+    if (nextIndex >= 10) {
+      console.log("✅ Selesai 10 soal");
+      // Check if we've completed 10 questions - redirect to reportCard
+      router.push({
+        pathname: "/reportCard",
+        params: {
+          topicId: topicId.toString(),
+          topicName: topic,
+        },
+      } as any);
+      return;
+    }
 
     if (nextIndex < questionSet.length) {
+      console.log(`📋 Loading dari questionSet[${nextIndex}]`);
       const nextQ = normalizeQuestion(questionSet[nextIndex]);
       const copy = [...questionSet];
       copy[nextIndex] = nextQ;
@@ -108,6 +143,7 @@ export default function CompletionQuestion() {
       return;
     }
 
+    console.log("⚠️ nextIndex >= questionSet.length, generating new question!");
     try {
       const nextType = (() => {
         if (questionSet.length > 0) {
@@ -138,11 +174,11 @@ export default function CompletionQuestion() {
 
     // Navigate to results screen
     router.push({
-      pathname: "/main/topicResults",
-      params: { 
+      pathname: "/reportCard",
+      params: {
         topicId: topicId.toString(),
-        topicName: topic
-      }
+        topicName: topic,
+      },
     } as any);
   };
 
@@ -156,7 +192,7 @@ export default function CompletionQuestion() {
       if (q.options && typeof q.options === "string") {
         try {
           q.options = JSON.parse(q.options);
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
         } catch (e) {
           const s = String(q.options)
             .replace(/^\[|\]$/g, "")
@@ -172,6 +208,16 @@ export default function CompletionQuestion() {
     }
     return q;
   };
+
+  // ✅ SIMPAN POSISI SAAT KELUAR SCREEN
+  useFocusEffect(
+    React.useCallback(() => {
+      return () => {
+        // Ini dipanggil saat screen kehilangan focus (user keluar)
+        savePosition();
+      };
+    }, [topicId, currentIndex, topic, difficulty, savePosition])
+  );
 
   if (loading) {
     return (
@@ -306,13 +352,20 @@ export default function CompletionQuestion() {
               )}
 
               <View style={styles.nextButtonRow}>
-                <TouchableOpacity style={styles.nextButton} onPress={handleNextQuestion}>
+                <TouchableOpacity
+                  style={styles.nextButton}
+                  onPress={() => {
+                    console.log(`🎯 BEFORE handleNextQuestion: questionSet.length=${questionSet.length}`);
+                    handleNextQuestion();
+                  }}
+                >
                   <Text style={styles.nextButtonText}>{currentIndex + 1 >= 10 ? "Selesai" : "Selanjutnya"}</Text>
                 </TouchableOpacity>
               </View>
             </View>
           </View>
-        </View>    </Modal>
+        </View>{" "}
+      </Modal>
     </SafeAreaView>
   );
 }

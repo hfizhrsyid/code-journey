@@ -83,9 +83,9 @@ const TestResult = () => {
                                 <Text
                                     style={[
                                         styles.statusIcon,
-                                        { 
+                                        {
                                             color: q.correct
-                                                ? (isOpen ? "#0c7520ff" : "#53E071") 
+                                                ? (isOpen ? "#0c7520ff" : "#53E071")
                                                 : "#FF4A4A"
                                         }
                                     ]}

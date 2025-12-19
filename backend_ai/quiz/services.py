@@ -1,3 +1,4 @@
+import hashlib
 import json
 from groq import Groq
 from django.conf import settings
@@ -42,7 +43,6 @@ def get_groq_client() -> Groq:
             raise ValueError(
                 "GROQ_API_KEY not configured. Please set it in settings.py or .env file"
             )
-        
         try:
             _groq_client = Groq(api_key=api_key)
         except Exception as e:
@@ -51,53 +51,103 @@ def get_groq_client() -> Groq:
     
     return _groq_client
 
+
+def normalize_question_text(text: str) -> str:
+    """Normalize question text to a stable, comparable form for hashing."""
+    return " ".join((text or "").strip().lower().split())
+
+
+def hash_question(text: str, qtype: str) -> str:
+    """Build a deterministic hash for de-duplication keyed by type + normalized text."""
+    payload = f"{qtype}::{normalize_question_text(text)}"
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
+
 PROMPT_TEMPLATES = {
-    "mcq": """Buat 1 soal pilihan ganda pemrograman Python dalam bahasa Indonesia dengan materi perulangan. Untuk kode programnya tetap gunakan bahasa inggris atau bahasa pemrograman Python tanpa di translate ke bahasa indonesia.
-Difficulty level: {difficulty} (1-5, 1 = mudah, 5 = sulit).
+    "mcq": """Buatlah 1 soal pilihan ganda Pemrograman Python untuk topik: {topic}
+Tingkat kesulitan: {difficulty} (1=mudah, 5=sulit)
 
-PENTING: Kembalikan HANYA objek JSON valid tanpa teks lain.
+SYARAT SOAL:
+✓ Soal HARUS relevan dengan topik "{topic}"
+✓ Gunakan kode Python (jangan ditranslate)
+✓ 4 pilihan jawaban (A, B, C, D)
+✓ Hanya 1 jawaban yang benar
 
+CONTOH FORMAT:
+- Variabel: soal tentang deklarasi, tipe data, casting
+- Operator: soal tentang +, -, *, /, //, %, ==, !=, and, or
+- Percabangan: soal tentang if, elif, else, nested if
+- Perulangan: soal tentang for, while, range, break, continue
+- Pengurutan: soal tentang sorting, bubble sort, selection sort
+- Pencarian: soal tentang searching, linear search, binary search
+
+RETURN HANYA JSON (tanpa kode lain):
 {{
-  "question_text": "...",
-  "code_template": "...",
-  "options": ["...", "...", "...", "..."],
-  "answer_key": "randomly one of A, B, C, D",
-  "explanation": "Penjelasan singkat mengapa jawaban A benar"
-}}
-""",
+  "question_text": "Pertanyaan tentang {topic}...",
+  "code_template": "Python code example atau None",
+  "options": ["A. pilihan 1", "B. pilihan 2", "C. pilihan 3", "D. pilihan 4"],
+  "answer_key": "B",
+  "explanation": "Penjelasan mengapa B benar berdasarkan topik {topic}"
+}}""",
 
-    "fill": """Buat 1 soal isi-kosong pemrograman Python dalam bahasa Indonesia Python dalam bahasa Indonesia dengan materi perulangan. Untuk kode programnya tetap gunakan bahasa inggris atau bahasa pemrograman Python tanpa di translate ke bahasa indonesia.
-Difficulty level: {difficulty} (1-5).
+    "fill": """Buatlah 1 soal isi-kosong (completion) untuk topik: {topic}
+Tingkat kesulitan: {difficulty} (1=mudah, 5=sulit)
 
-PENTING: Kembalikan HANYA objek JSON valid tanpa teks lain.
+SYARAT SOAL:
+✓ Soal HARUS relevan dengan topik "{topic}"
+✓ Ada bagian kosong (___ atau ...) yang harus diisi
+✓ User harus mengisi kode atau nilai yang hilang
+✓ Jawaban singkat dan spesifik
 
+CONTOH:
+- Variabel: user mengisi tipe data atau deklarasi variabel
+- Operator: user mengisi hasil operasi atau operator
+- Percabangan: user mengisi kondisi atau statement
+- Perulangan: user mengisi range atau kondisi loop
+- Dll
+
+RETURN HANYA JSON:
 {{
-  "question_text": "...",
-  "code_template": "...",
-  "answer_key": "...",
-  "explanation": "...",
-  "options": null
-}}
-""",
+  "question_text": "Isilah ___ untuk membuat kode yang...",
+  "code_template": "x = ___\\nprint(x)",
+  "answer_key": "10",
+  "explanation": "Penjelasan singkat tentang jawaban dan topik {topic}"
+}}""",
 
-    "coding": """Buat 1 soal coding Python dalam bahasa Indonesia dengan materi perulangan. Untuk kode programnya tetap gunakan bahasa inggris atau bahasa pemrograman Python tanpa di translate ke bahasa indonesia..
-Difficulty level: {difficulty} (1-5).
+    "coding": """Buatlah 1 soal coding untuk topik: {topic}
+Tingkat kesulitan: {difficulty} (1=mudah, 5=sulit)
 
-PENTING: Kembalikan HANYA objek JSON valid tanpa teks lain.
+SYARAT SOAL:
+✓ Soal HARUS relevan dengan topik "{topic}"
+✓ User harus menulis fungsi atau program lengkap
+✓ Berikan template dasar
+✓ Jawaban harus jelas dan dapat ditest
 
+CONTOH:
+- Variabel: program yang bekerja dengan variabel tipe data
+- Operator: program yang menggunakan operator aritmatika/logika
+- Percabangan: program dengan if-else berdasarkan kondisi
+- Perulangan: program dengan loop for/while
+- Dll
+
+RETURN HANYA JSON:
 {{
-  "question_text": "...",
-  "code_template": "...",
-  "answer_key": "...",
-  "explanation": "...",
-  "options": null
-}}
-"""
+  "question_text": "Buatlah fungsi yang [deskripsi task]...",
+  "code_template": "def solution():\\n    # Write your code here\\n    pass",
+  "answer_key": "def solution():\\n    return 42",
+  "explanation": "Penjelasan solusi dan konsep {topic}"
+}}"""
 }
 
 
-def generate_question(difficulty: int, question_type: str) -> Dict[str, Any]:
-    """Generate a programming question using Groq API"""
+def generate_question(difficulty: int, question_type: str, topic: str = "Pemrograman Python") -> Dict[str, Any]:
+    """Generate a programming question using Groq API
+    
+    Args:
+        difficulty: Question difficulty (1-5)
+        question_type: Type of question (mcq, fill, coding)
+        topic: Topic/subject for the question
+    """
     
     if question_type not in PROMPT_TEMPLATES:
         raise ValueError(f"Invalid question type: {question_type}")
@@ -105,7 +155,7 @@ def generate_question(difficulty: int, question_type: str) -> Dict[str, Any]:
     if not 1 <= difficulty <= 5:
         raise ValueError("Difficulty must be between 1 and 5")
     
-    prompt = PROMPT_TEMPLATES[question_type].format(difficulty=difficulty)
+    prompt = PROMPT_TEMPLATES[question_type].format(difficulty=difficulty, topic=topic)
     
     try:
         logger.info(f"Generating {question_type} question with difficulty {difficulty}")
@@ -302,7 +352,7 @@ def check_answer(user_answer: str, correct_answer: Any, question_type: str, expl
     return result
 
 
-def _generate_question_with_retry(qtype: str, difficulty: int, max_retries: int = 3) -> Tuple[str, Dict[str, Any]]:
+def _generate_question_with_retry(qtype: str, difficulty: int, topic: str, max_retries: int = 3) -> Tuple[str, Dict[str, Any]]:
     """Helper function to generate single question with retry logic"""
     tries = 0
     parsed = None
@@ -311,7 +361,7 @@ def _generate_question_with_retry(qtype: str, difficulty: int, max_retries: int 
     while tries < max_retries and parsed is None:
         tries += 1
         try:
-            parsed = generate_question(difficulty, qtype)
+            parsed = generate_question(difficulty, qtype, topic)
         except Exception as e:
             last_error = e
             logger.warning(f"Generate question attempt {tries}/{max_retries} failed for {qtype}: {e}")
@@ -321,12 +371,12 @@ def _generate_question_with_retry(qtype: str, difficulty: int, max_retries: int 
     return (qtype, parsed, last_error if parsed is None else None)
 
 
-def generate_question_set(topic: str, difficulty: int, count: int = 10, mcq_count: int = 5, max_workers: int = 3) -> list:
+def generate_question_set(topic_name: str, difficulty: int, count: int = 10, mcq_count: int = 5, max_workers: int = 3) -> list:
     """
     Generate a set of questions with mixed types using parallelization.
     
     Args:
-        topic: Topic for the questions
+        topic_name: Topic name for the questions
         difficulty: Difficulty level (1-5)
         count: Total number of questions to generate (max 20)
         mcq_count: Number of MCQ questions (max = count)
@@ -346,8 +396,28 @@ def generate_question_set(topic: str, difficulty: int, count: int = 10, mcq_coun
     if max_workers < 1 or max_workers > 5:
         max_workers = min(max(max_workers, 1), 5)
     
+    # Get or create Topic instance
+    try:
+        from .models import Topic
+        topic_instance, _ = Topic.objects.get_or_create(name=topic_name)
+    except Exception as e:
+        logger.error(f"Error getting/creating topic '{topic_name}': {e}")
+        # Fallback (though this might fail later if topic is required)
+        topic_instance = None
+
     created = []
     types_pool = []
+
+    # Collect existing hashes to avoid duplicates in the same topic
+    existing_hashes = set(
+        Question.objects.filter(topic=topic_instance)
+        .exclude(question_hash__isnull=True)
+        .exclude(question_hash="")
+        .values_list("question_hash", flat=True)
+    ) if topic_instance else set()
+
+    # Track hashes created in this batch to avoid intra-batch duplicates
+    new_hashes = set()
 
     # Add mcq_count mcq
     types_pool += ["mcq"] * mcq_count
@@ -359,13 +429,14 @@ def generate_question_set(topic: str, difficulty: int, count: int = 10, mcq_coun
     # Shuffle to mix order
     random.shuffle(types_pool)
 
-    logger.info(f"Generating {count} questions ({mcq_count} MCQ) for topic '{topic}' with difficulty {difficulty} using {max_workers} workers")
+    logger.info(f"Generating {count} questions ({mcq_count} MCQ) for topic '{topic_name}' with difficulty {difficulty} using {max_workers} workers")
     
     # Generate questions in parallel using ThreadPoolExecutor
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
         # Submit all generation tasks
-        future_to_qtype = {
-            executor.submit(_generate_question_with_retry, qtype, difficulty): qtype 
+        # Pass topic_name to the prompt generator
+        future_to_task = {
+            executor.submit(_generate_question_with_retry, qtype, difficulty, topic_name): qtype 
             for qtype in types_pool
         }
         
@@ -373,7 +444,7 @@ def generate_question_set(topic: str, difficulty: int, count: int = 10, mcq_coun
         successful_count = 0
         failed_count = 0
         
-        for future in as_completed(future_to_qtype):
+        for future in as_completed(future_to_task):
             qtype, parsed, error = future.result()
             
             if parsed is None:
@@ -382,17 +453,27 @@ def generate_question_set(topic: str, difficulty: int, count: int = 10, mcq_coun
                 continue
             
             try:
+                question_text = parsed.get("question_text", "")
+                qhash = hash_question(question_text, qtype)
+
+                # Skip duplicates (existing in DB or already generated in this batch)
+                if qhash in existing_hashes or qhash in new_hashes:
+                    logger.info("Skipping duplicate question for topic '%s'", topic_name)
+                    continue
+
                 # Save question to database
                 q = Question.objects.create(
                     question_type=qtype,
                     difficulty=difficulty,
-                    topic=topic,
-                    question_text=parsed.get("question_text", ""),
+                    topic=topic_instance,  # Use the instance
+                    question_text=question_text,
                     code_template=parsed.get("code_template"),
                     options=parsed.get("options"),
                     answer_key=parsed.get("answer_key"),
-                    explanation=parsed.get("explanation", "")
+                    explanation=parsed.get("explanation", ""),
+                    question_hash=qhash,
                 )
+                new_hashes.add(qhash)
                 created.append({
                     "question_id": q.id,
                     "question_type": qtype,

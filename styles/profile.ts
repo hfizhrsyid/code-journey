@@ -168,6 +168,7 @@ export const styles = StyleSheet.create({
         marginHorizontal: 20,
         marginBottom: 30,
         gap: 8,
+        zIndex: 10,
     },
 
     textButton: {

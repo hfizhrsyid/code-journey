@@ -1,12 +1,13 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios, { AxiosInstance } from "axios";
 
-// For different platforms:
-// 1. Chrome browser (Expo web): "http://localhost:8000/api/"
-// 2. Android emulator: "http://10.0.2.2:8000/api/"  
-// 3. Physical device: "http://192.168.1.12:8000/api/"
-// 4. iOS simulator: "http://localhost:8000/api/"
-const API_BASE_URL = "http://localhost:8000/api/";
+const getAPIBaseURL = () => {
+  const baseURL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:8000";
+  return `${baseURL}/api/`;
+};
+
+const API_BASE_URL = getAPIBaseURL();
+const FALLBACK_API_URL = "http://192.168.1.12:8000/api/";
 
 export interface Question {
   question_id: number;
@@ -21,11 +22,21 @@ export interface CheckAnswerResponse {
   correct: boolean;
   feedback: string;
   correct_answer: string;
-  explanation?: string; // tambah ini
+  explanation?: string;
+  saved?: boolean;
+  authenticated?: boolean;
+  newly_unlocked_badges?: Array<{
+    badge_id: number;
+    badge_name: string;
+    badge_type: string;
+    icon: string;
+    topic_name?: string;
+  }>;
 }
 
 class QuizAPI {
   private client: AxiosInstance;
+  private useFallback = false;
 
   constructor() {
     this.client = axios.create({
@@ -36,32 +47,60 @@ class QuizAPI {
       },
     });
 
-    // Add token to requests if available
-    this.loadToken();
+    this.setupInterceptor();
+    this.setupFallbackInterceptor();
   }
 
-  private async loadToken() {
-    try {
-      const token = await AsyncStorage.getItem('authToken');
-      if (token) {
-        this.client.defaults.headers.common['Authorization'] = `Token ${token}`;
+  private setupInterceptor() {
+    this.client.interceptors.request.use(
+      async (config) => {
+        try {
+          const token = await AsyncStorage.getItem("authToken");
+          if (token) {
+            config.headers.Authorization = `Token ${token}`;
+            console.log("✅ Auth token added to request");
+          }
+        } catch (error) {
+          console.error("Error loading token for request:", error);
+        }
+        return config;
+      },
+      (error) => Promise.reject(error)
+    );
+  }
+
+  private setupFallbackInterceptor() {
+    this.client.interceptors.response.use(
+      (response) => response,
+      async (error) => {
+        // Jika request gagal dan belum coba fallback, coba dengan IP
+        if (!this.useFallback && error.config && (error.code === "ECONNREFUSED" || error.code === "ENOTFOUND" || error.message === "Network Error" || !error.response)) {
+          console.log("🔄 localhost gagal, mencoba IP fallback...");
+          this.useFallback = true;
+
+          // Switch ke fallback URL
+          this.client.defaults.baseURL = FALLBACK_API_URL;
+
+          // Retry request
+          error.config.baseURL = FALLBACK_API_URL;
+          return this.client(error.config);
+        }
+
+        throw error;
       }
-    } catch (error) {
-      console.error('Error loading token in API client:', error);
-    }
+    );
   }
 
   async setToken(token: string | null) {
     if (token) {
-      this.client.defaults.headers.common['Authorization'] = `Token ${token}`;
+      await AsyncStorage.setItem("authToken", token);
+      console.log("✅ Token saved to AsyncStorage");
     } else {
-      delete this.client.defaults.headers.common['Authorization'];
+      await AsyncStorage.removeItem("authToken");
+      console.log("✅ Token removed from AsyncStorage");
     }
   }
 
-  /**
-   * Generate a new question from AI
-   */
   async generateQuestion(difficulty: number, questionType: "mcq" | "fill" | "coding"): Promise<Question> {
     try {
       const response = await this.client.post("generate-question/", {
@@ -70,13 +109,11 @@ class QuizAPI {
       });
 
       if (response.data.success) {
-        // Defensive normalization: ensure `options` is an array when present
         const data = { ...response.data };
         if (data.options && typeof data.options === "string") {
           try {
             data.options = JSON.parse(data.options);
           } catch {
-            // Try a forgiving split if API returned a simple comma list
             const s = data.options.replace(/^\[|\]$/g, "").replace(/"/g, "");
             data.options = s
               .split(",")
@@ -93,9 +130,6 @@ class QuizAPI {
     }
   }
 
-  /**
-   * Generate a set of 10 questions for a topic
-   */
   async generateQuestionSet(topic: string, difficulty: number) {
     try {
       const response = await this.client.post("generate-question-set/", {
@@ -111,9 +145,6 @@ class QuizAPI {
     }
   }
 
-  /**
-   * Check user answer
-   */
   async checkAnswer(questionId: number, answer: string): Promise<CheckAnswerResponse> {
     try {
       const response = await this.client.post("check-answer/", {
@@ -125,7 +156,7 @@ class QuizAPI {
         correct: response.data.correct || false,
         feedback: response.data.feedback || "",
         correct_answer: response.data.correct_answer || "",
-        explanation: response.data.explanation || "", // tambah ini
+        explanation: response.data.explanation || "",
       };
     } catch (error) {
       console.error("Error checking answer:", error);
@@ -133,9 +164,6 @@ class QuizAPI {
     }
   }
 
-  /**
-   * Get a specific question by ID
-   */
   async getQuestion(questionId: number): Promise<Question> {
     try {
       const response = await this.client.get(`question/${questionId}/`);
@@ -146,9 +174,6 @@ class QuizAPI {
     }
   }
 
-  /**
-   * Get all topics
-   */
   async getTopics() {
     try {
       const response = await this.client.get("topics/");
@@ -159,22 +184,18 @@ class QuizAPI {
     }
   }
 
-  /**
-   * Get questions for a topic (by topic ID or name)
-   */
   async getQuestions(topicIdOrName: string | number, difficulty?: number) {
     try {
       const params: any = {};
-      
-      // If topicIdOrName is a number, use topic_id, otherwise use topic name
-      if (typeof topicIdOrName === 'number') {
+
+      if (typeof topicIdOrName === "number") {
         params.topic_id = topicIdOrName;
       } else {
         params.topic = topicIdOrName;
       }
-      
+
       if (difficulty) params.difficulty = difficulty;
-      
+
       const response = await this.client.get("questions/", { params });
       return response.data.questions || [];
     } catch (error) {
@@ -183,9 +204,6 @@ class QuizAPI {
     }
   }
 
-  /**
-   * Submit answer (replaces old checkAnswer)
-   */
   async submitAnswer(questionId: number, answer: string): Promise<CheckAnswerResponse> {
     try {
       const response = await this.client.post("questions/submit/", {
@@ -197,6 +215,9 @@ class QuizAPI {
         feedback: response.data.feedback || "",
         correct_answer: response.data.correct_answer || "",
         explanation: response.data.explanation || "",
+        saved: response.data.saved,
+        authenticated: response.data.authenticated,
+        newly_unlocked_badges: response.data.newly_unlocked_badges || [],
       };
     } catch (error) {
       console.error("Error submitting answer:", error);
@@ -204,9 +225,6 @@ class QuizAPI {
     }
   }
 
-  /**
-   * Run code with test cases
-   */
   async runCode(questionId: number, code: string) {
     try {
       const response = await this.client.post("questions/run/", {
@@ -226,13 +244,10 @@ class QuizAPI {
     }
   }
 
-  /**
-   * Get user's attempts for a topic
-   */
   async getUserAttempts(topicId: number) {
     try {
       const response = await this.client.get("questions/attempts/", {
-        params: { topic_id: topicId }
+        params: { topic_id: topicId },
       });
       return response.data.attempts || [];
     } catch (error) {
@@ -241,13 +256,57 @@ class QuizAPI {
     }
   }
 
-  /**
-   * Set custom base URL (useful for testing different servers)
-   */
+  async getUserBadges() {
+    try {
+      const response = await this.client.get("user/badges/");
+      return response.data || { earned: [], progress: {}, total_earned: 0 };
+    } catch (error) {
+      console.error("Error fetching user badges:", error);
+      return { earned: [], progress: {}, total_earned: 0 };
+    }
+  }
+
+  async getAllBadges() {
+    try {
+      const response = await this.client.get("badges/");
+      return response.data.badges || [];
+    } catch (error) {
+      console.error("Error fetching all badges:", error);
+      return [];
+    }
+  }
+
   setBaseURL(url: string): void {
     this.client.defaults.baseURL = url;
   }
 }
 
-// Export singleton instance
+export function validateQuestion(question: any): { valid: boolean; error?: string } {
+  if (!question) {
+    return { valid: false, error: "Soal tidak ditemukan" };
+  }
+
+  if (!question.question_text || typeof question.question_text !== "string" || question.question_text.trim() === "") {
+    return { valid: false, error: "Teks soal kosong" };
+  }
+
+  if (!question.question_type || !["mcq", "fill", "coding"].includes(question.question_type)) {
+    return { valid: false, error: "Tipe soal tidak valid" };
+  }
+
+  if (question.question_type === "mcq") {
+    if (!question.options || !Array.isArray(question.options) || question.options.length < 2) {
+      return { valid: false, error: "Soal MCQ harus memiliki minimal 2 pilihan" };
+    }
+  }
+
+  if (question.question_type === "coding") {
+    if (!question.code_template || typeof question.code_template !== "string") {
+      return { valid: false, error: "Template kode tidak ditemukan" };
+    }
+  }
+
+  return { valid: true };
+}
+
 export const quizAPI = new QuizAPI();

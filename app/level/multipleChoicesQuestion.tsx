@@ -1,12 +1,14 @@
-import { quizAPI } from "@/lib/api";
+import { quizAPI, validateQuestion } from "@/lib/api";
 import { styles } from "@/styles/multipleChoicesQuestion";
 import { router } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, Image, Modal, SafeAreaView, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Alert, Image, Modal, SafeAreaView, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { useFocusEffect } from "@react-navigation/native";
 import { useQuestions } from "../../lib/QuestionContext";
+import React from "react";
 
 export default function MultipleChoicesQuestion() {
-  const { questionSet, setQuestionSet, currentIndex, setCurrentIndex, difficulty, topic, topicId } = useQuestions();
+  const { questionSet, setQuestionSet, currentIndex, setCurrentIndex, difficulty, topic, topicId, savePosition } = useQuestions();
 
   const [question, setQuestion] = useState<any | null>(null);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
@@ -32,6 +34,14 @@ export default function MultipleChoicesQuestion() {
       if (questionSet.length > 0 && currentIndex < questionSet.length) {
         let currentQuestion = questionSet[currentIndex];
         currentQuestion = normalizeQuestion(currentQuestion);
+
+        // Validate question
+        const validation = validateQuestion(currentQuestion);
+        if (!validation.valid) {
+          setError(validation.error || "Soal tidak valid");
+          return;
+        }
+
         console.log("✅ Loaded question from context:", currentQuestion);
         console.log("📋 Question options:", currentQuestion.options);
         setQuestion(currentQuestion);
@@ -43,6 +53,14 @@ export default function MultipleChoicesQuestion() {
         const q = await quizAPI.generateQuestion(difficulty || 2, "mcq");
         if (q) {
           const nq = normalizeQuestion(q);
+
+          // Validate generated question
+          const validation = validateQuestion(nq);
+          if (!validation.valid) {
+            setError(validation.error || "Soal yang dihasilkan tidak valid");
+            return;
+          }
+
           console.log("✅ Generated single MCQ:", nq);
           setQuestionSet([nq]);
           setCurrentIndex(0);
@@ -74,11 +92,22 @@ export default function MultipleChoicesQuestion() {
     } finally {
       setLoading(false);
     }
-  }, [questionSet, currentIndex, difficulty, setQuestionSet, setCurrentIndex]);
+  }, [questionSet, currentIndex, topicId, setQuestionSet, setCurrentIndex]);
 
   useEffect(() => {
     loadQuestion();
   }, [loadQuestion]);
+
+  // ✅ RESET STATE KETIKA TOPIC BERUBAH
+  useEffect(() => {
+    setQuestion(null);
+    setSelectedAnswer(null);
+    setAnswerStatus(null);
+    setFeedback("");
+    setExplanation("");
+    setCorrectAnswerInfo(null);
+    setError(null);
+  }, [topicId]);
 
   const handleSelectAnswer = async (optionId: string) => {
     if (selectedAnswer || !question || checking) return;
@@ -87,6 +116,23 @@ export default function MultipleChoicesQuestion() {
 
     try {
       const result = await quizAPI.submitAnswer(question.question_id, optionId);
+
+      // Show badge notification if any new badges unlocked
+      if (result.newly_unlocked_badges && result.newly_unlocked_badges.length > 0) {
+        const badgeNames = result.newly_unlocked_badges.map((b) => b.badge_name).join("\n");
+        Alert.alert("🏆 Badge Baru!", `Selamat! Anda mendapatkan badge:\n\n${badgeNames}`, [{ text: "OK" }]);
+      }
+
+      // Check if attempt was saved
+      if (result.saved === false) {
+        console.warn("⚠️ Attempt was not saved! User may not be authenticated.");
+        if (!result.authenticated) {
+          Alert.alert("Progress Tidak Tersimpan", "Anda perlu login untuk menyimpan progress. Jawaban Anda tidak akan terekam.", [{ text: "OK" }]);
+        }
+      } else {
+        console.log("✅ Attempt saved successfully");
+      }
+
       setAnswerStatus(result.correct ? "correct" : "wrong");
       setFeedback(result.feedback || "");
       setExplanation(result.explanation || "");
@@ -128,6 +174,19 @@ export default function MultipleChoicesQuestion() {
 
     const nextIndex = currentIndex + 1;
     console.log("handleNextQuestion: currentIndex=", currentIndex, "nextIndex=", nextIndex, "questionSet.length=", questionSet.length);
+
+    // Check if we've completed 10 questions - redirect to reportCard
+    if (nextIndex >= 10) {
+      console.log("✅ Completed 10 questions, navigating to reportCard");
+      router.push({
+        pathname: "/reportCard",
+        params: {
+          topicId: topicId.toString(),
+          topicName: topic,
+        },
+      } as any);
+      return;
+    }
 
     // Jika ada soal berikutnya dalam questionSet, pindah index dan navigasi bila tipe berbeda
     if (nextIndex < questionSet.length) {
@@ -180,11 +239,11 @@ export default function MultipleChoicesQuestion() {
 
     // Jika tidak bisa generate soal lagi, anggap selesai
     router.push({
-      pathname: "/main/topicResults",
-      params: { 
+      pathname: "/reportCard",
+      params: {
         topicId: topicId.toString(),
-        topicName: topic
-      }
+        topicName: topic,
+      },
     } as any);
   };
 
@@ -213,6 +272,16 @@ export default function MultipleChoicesQuestion() {
     }
     return q;
   };
+
+  // ✅ SIMPAN POSISI SAAT KELUAR SCREEN
+  useFocusEffect(
+    React.useCallback(() => {
+      return () => {
+        // Ini dipanggil saat screen kehilangan focus (user keluar)
+        savePosition();
+      };
+    }, [topicId, currentIndex, topic, difficulty, savePosition])
+  );
 
   if (loading) {
     return (
@@ -285,7 +354,7 @@ export default function MultipleChoicesQuestion() {
 
             return (
               <TouchableOpacity key={optionId} style={buttonStyle} disabled={selectedAnswer !== null || checking} onPress={() => handleSelectAnswer(optionId)}>
-                <Text style={textStyle}>{`${optionId}. ${optionText}`}</Text>
+                <Text style={textStyle}>{`${optionId}. ${optionText} `}</Text>
               </TouchableOpacity>
             );
           })}

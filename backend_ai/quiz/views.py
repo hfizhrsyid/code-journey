@@ -3,7 +3,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from .models import Question, QuestionAttempt, Topic
+from .models import Question, QuestionAttempt, Topic, Badge, UserBadge
 from .services import generate_question, check_answer, generate_question_set
 from .auth_views import add_cors_headers
 from django.views.decorators.csrf import csrf_exempt
@@ -240,6 +240,7 @@ def generate_question_set_view(request):
 def get_questions(request):
     """
     Get questions from database with filters
+    If questions for the topic are insufficient (< 5), auto-generate them.
     
     Query params:
     - topic: Topic name (optional)
@@ -257,35 +258,69 @@ def get_questions(request):
         limit_param = request.GET.get("limit") or request.query_params.get("limit") or "10"
         limit = int(limit_param)
         
-        # Build query
-        questions = Question.objects.filter(is_active=True)
+        target_topic = None
         
-        # Filter by topic_id (preferred) or topic name
+        # 1. Resolve Topic
         if topic_id:
             try:
-                questions = questions.filter(topic_id=int(topic_id))
-            except ValueError:
+                target_topic = Topic.objects.get(id=int(topic_id))
+            except (ValueError, Topic.DoesNotExist):
                 return Response(
-                    {"error": "topic_id must be an integer"},
+                    {"error": "Invalid topic_id or topic not found"},
                     status=status.HTTP_400_BAD_REQUEST
                 )
         elif topic_name:
-            questions = questions.filter(topic__name__iexact=topic_name)
+            target_topic = Topic.objects.filter(name__iexact=topic_name).first()
+            
+        # 2. Auto-generation logic (Generate Once)
+        if target_topic:
+            # Check current question count for this topic
+            current_count = Question.objects.filter(topic=target_topic, is_active=True).count()
+            
+            # If less than 5 questions, generate more (target 10 total)
+            if current_count < 5:
+                logger.info(f"Topic '{target_topic.name}' has only {current_count} questions. Generating more...")
+                try:
+                    # Use a default difficulty of 2 if not provided
+                    gen_diff = int(difficulty) if difficulty else 2
+                    generate_question_set(
+                        topic_name=target_topic.name,
+                        difficulty=gen_diff,
+                        count=10, 
+                        mcq_count=5, 
+                        max_workers=3
+                    )
+                except Exception as e:
+                    logger.error(f"Auto-generation failed: {e}")
+                    # Continue to try to return what we have
         
-        if difficulty:
-            try:
-                difficulty = int(difficulty)
-                questions = questions.filter(difficulty=difficulty)
-            except ValueError:
-                return Response(
-                    {"error": "Difficulty must be integer 1-5"},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
+        # 3. Build query for result
+        questions = Question.objects.filter(is_active=True)
         
+        if target_topic:
+             questions = questions.filter(topic=target_topic)
+             
         if question_type:
             questions = questions.filter(question_type=question_type)
-        
-        # Get random questions
+
+        # DEBUG LOGS - Print to console immediately
+        print(f"🔍🔍🔍 DEBUG: target_topic = {target_topic}")
+        print(f"🔍🔍🔍 DEBUG: target_topic.id = {target_topic.id if target_topic else 'None'}")
+        total = questions.count()
+        print(f"🔍🔍🔍 DEBUG: Total questions after filter = {total}")
+        if total > 0:
+            sample_topics = list(questions.values_list('topic_id', flat=True)[:10])
+            print(f"🔍🔍🔍 DEBUG: Sample topic_ids in result = {sample_topics}")
+            sample_ids = list(questions.values_list('id', flat=True)[:10])
+            print(f"🔍🔍🔍 DEBUG: Sample question_ids = {sample_ids}")
+        total = questions.count()
+        logger.info(f"🔍 DEBUG: Total questions after filter = {total}")
+        if total > 0:
+            sample_topics = list(questions.values_list('topic_id', flat=True)[:5])
+            logger.info(f"🔍 DEBUG: Sample topic_ids in result = {sample_topics}")
+
+        # Get questions in consistent order (by ID)
+        questions = questions.order_by('id')
         total = questions.count()
         if total == 0:
             return Response(
@@ -293,15 +328,15 @@ def get_questions(request):
                 status=status.HTTP_404_NOT_FOUND
             )
         
-        # Get random sample
+        # Get first N questions in order (no randomization)
         limit = min(limit, total)
-        random_questions = random.sample(list(questions), limit)
+        ordered_questions = list(questions[:limit])
         
         return Response({
-            "count": len(random_questions),
+            "count": len(ordered_questions),
             "questions": [
                 {
-                    "id": q.id,
+                    "question_id": q.id,
                     "question_type": q.question_type,
                     "difficulty": q.difficulty,
                     "question_text": q.question_text,
@@ -309,7 +344,7 @@ def get_questions(request):
                     "options": q.options,
                     "topic": q.topic.name if q.topic else None,
                 }
-                for q in random_questions
+                for q in ordered_questions
             ]
         })
     
@@ -362,7 +397,10 @@ def submit_answer(request):
         
         # Track attempt (only if user is logged in)
         attempt_id = None
+        newly_unlocked_badges = []
+        
         if request.user and request.user.is_authenticated:
+            logger.info(f"✅ Saving attempt for user {request.user.username}, Q{question_id}, correct={check_result['correct']}")
             attempt = QuestionAttempt.objects.create(
                 user=request.user,
                 question=question,
@@ -370,13 +408,25 @@ def submit_answer(request):
                 is_correct=check_result["correct"]
             )
             attempt_id = attempt.id
+            
+            # Auto-trigger badge check
+            from .badge_service import BadgeService
+            newly_unlocked_badges = BadgeService.check_and_unlock_badges(request.user, question)
+            
+            if newly_unlocked_badges:
+                logger.info(f"🏆 Badges unlocked for {request.user.username}: {[b['badge_name'] for b in newly_unlocked_badges]}")
+        else:
+            logger.warning(f"⚠️ Attempt NOT saved - user not authenticated. request.user: {request.user}, is_authenticated: {request.user.is_authenticated if request.user else 'N/A'}")
         
         return Response({
             "attempt_id": attempt_id,
             "correct": check_result["correct"],
             "feedback": check_result["feedback"],
             "correct_answer": check_result["correct_answer"],
-            "explanation": question.explanation or ""
+            "explanation": question.explanation or "",
+            "saved": attempt_id is not None,  # Indicate if attempt was saved
+            "authenticated": request.user.is_authenticated if request.user else False,  # Auth status
+            "newly_unlocked_badges": newly_unlocked_badges  # New badges unlocked
         }, status=status.HTTP_201_CREATED)
     
     except Exception as e:
@@ -460,7 +510,7 @@ def run_code(request):
 @csrf_exempt
 @add_cors_headers
 def get_user_attempts(request):
-    """Get current user's question attempts"""
+    """Get current user's question attempts for a specific topic or all topics"""
     try:
         # If no user is logged in, return empty results
         if not request.user or not request.user.is_authenticated:
@@ -470,12 +520,63 @@ def get_user_attempts(request):
                 "incorrect": 0,
                 "attempts": []
             })
+        
+        # ✅ GET topic_id dari query params
+        topic_id = request.GET.get("topic_id") or request.query_params.get("topic_id")
+        
+        # ✅ JIKA topic_id tidak ada, kosong, 0, atau "all" = ambil semua topics
+        if not topic_id or topic_id == "0" or topic_id == "all":
+            # AMBIL SEMUA ATTEMPTS
+            attempts = QuestionAttempt.objects.filter(
+                user=request.user
+            ).select_related('question', 'question__topic')
             
-        attempts = QuestionAttempt.objects.filter(user=request.user).select_related('question')
+            correct_attempts = attempts.filter(is_correct=True)
+            
+            return Response({
+                "count": attempts.count(),
+                "correct": correct_attempts.count(),
+                "incorrect": attempts.filter(is_correct=False).count(),
+                "attempts": [
+                    {
+                        "id": a.id,
+                        "question_id": a.question.id,
+                        "question_text": a.question.question_text[:100],
+                        "is_correct": a.is_correct,
+                        "user_answer": a.answer,
+                        "topic_id": a.question.topic.id if a.question.topic else None,
+                        "topic_name": a.question.topic.name if a.question.topic else None,
+                        "created_at": a.created_at.isoformat(),
+                    }
+                    for a in attempts[:50]  # Limit to last 50
+                ]
+            })
+        
+        # ✅ JIKA topic_id ada = validasi dan filter untuk topic specific
+        try:
+            topic_id = int(topic_id)
+            # Verify topic exists
+            topic = Topic.objects.get(id=topic_id)
+        except (ValueError, Topic.DoesNotExist):
+            return Response({
+                "error": "Invalid topic_id",
+                "count": 0,
+                "correct": 0,
+                "incorrect": 0,
+                "attempts": []
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # ✅ FILTER ATTEMPTS hanya untuk questions dalam topic ini
+        attempts = QuestionAttempt.objects.filter(
+            user=request.user,
+            question__topic_id=topic_id
+        ).select_related('question', 'question__topic')
+        
+        correct_attempts = attempts.filter(is_correct=True)
         
         return Response({
             "count": attempts.count(),
-            "correct": attempts.filter(is_correct=True).count(),
+            "correct": correct_attempts.count(),
             "incorrect": attempts.filter(is_correct=False).count(),
             "attempts": [
                 {
@@ -484,6 +585,8 @@ def get_user_attempts(request):
                     "question_text": a.question.question_text[:100],
                     "is_correct": a.is_correct,
                     "user_answer": a.answer,
+                    "topic_id": a.question.topic.id if a.question.topic else None,
+                    "topic_name": a.question.topic.name if a.question.topic else None,
                     "created_at": a.created_at.isoformat(),
                 }
                 for a in attempts[:50]  # Limit to last 50
@@ -505,8 +608,7 @@ def get_topics(request):
     try:
         user = request.user if request.user.is_authenticated else None
         topics = Topic.objects.all().values('id', 'name', 'description', 'order')
-        
-        # Include question count, completion percentage, and lock status per topic
+                # Include question count, completion percentage, and lock status per topic
         result = []
         for topic in topics:
             # Get question count
@@ -515,57 +617,59 @@ def get_topics(request):
             
             # Calculate completion percentage if user is authenticated
             completion_percentage = 0
+            completed_count = 0
             is_locked = False
             
             if user:
                 # Get user's attempts for this topic
                 topic_questions = Question.objects.filter(topic_id=topic['id'], is_active=True)
-                total_questions = topic_questions.count()
                 
-                if total_questions > 0:
-                    # Count correct attempts (only the most recent attempt per question)
-                    correct_count = 0
-                    for question in topic_questions:
-                        # Get latest attempt for this question
-                        latest_attempt = QuestionAttempt.objects.filter(
-                            user=user,
-                            question=question
-                        ).order_by('-created_at').first()
-                        
-                        if latest_attempt and latest_attempt.is_correct:
-                            correct_count += 1
+                # Count correct attempts (only the most recent attempt per question)
+                correct_count = 0
+                for question in topic_questions:
+                    # Get latest attempt for this question
+                    latest_attempt = QuestionAttempt.objects.filter(
+                        user=user,
+                        question=question
+                    ).order_by('-created_at').first()
                     
-                    completion_percentage = int((correct_count / total_questions) * 100)
+                    if latest_attempt and latest_attempt.is_correct:
+                        correct_count += 1
+                
+                # Calculate completion based on 10 questions max (not total in database)
+                # This ensures users can unlock next topic after completing 10 questions
+                completed_count = min(correct_count, 10)
+                completion_percentage = int((completed_count / 10) * 100)
                 
                 # Check if topic is locked (previous topic must be completed)
                 if topic['order'] > 1:
                     # Get previous topic
                     previous_topic = Topic.objects.filter(order=topic['order'] - 1).first()
                     if previous_topic:
-                        # Check if previous topic is completed (>= 80% correct)
+                        # Check if previous topic is completed (10 questions correct)
                         prev_questions = Question.objects.filter(topic_id=previous_topic.id, is_active=True)
-                        prev_total = prev_questions.count()
                         
-                        if prev_total > 0:
-                            prev_correct = 0
-                            for question in prev_questions:
-                                latest_attempt = QuestionAttempt.objects.filter(
-                                    user=user,
-                                    question=question
-                                ).order_by('-created_at').first()
-                                
-                                if latest_attempt and latest_attempt.is_correct:
-                                    prev_correct += 1
+                        prev_correct = 0
+                        for question in prev_questions:
+                            latest_attempt = QuestionAttempt.objects.filter(
+                                user=user,
+                                question=question
+                            ).order_by('-created_at').first()
                             
-                            prev_completion = int((prev_correct / prev_total) * 100)
-                            is_locked = prev_completion < 80  # Lock if previous topic < 80%
-                        else:
-                            is_locked = True  # Lock if previous topic has no questions
+                            if latest_attempt and latest_attempt.is_correct:
+                                prev_correct += 1
+                        
+                        # Previous topic must have at least 10 correct answers to unlock
+                        prev_completed = min(prev_correct, 10)
+                        is_locked = prev_completed < 10  # Lock if previous topic has less than 10 correct
+                    else:
+                        is_locked = True  # Lock if previous topic doesn't exist
             else:
                 # Not authenticated - lock all topics except the first one
                 is_locked = topic['order'] > 1
             
             topic['completion_percentage'] = completion_percentage
+            topic['completed_count'] = completed_count  # Add completed count (X/10)
             topic['is_locked'] = is_locked
             result.append(topic)
         
@@ -579,6 +683,108 @@ def get_topics(request):
     
     except Exception as e:
         logger.error(f"Error fetching topics: {str(e)}")
+        return Response(
+            {"error": f"Server error: {str(e)}"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+# ============================================
+# BADGE ENDPOINTS
+# ============================================
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+@add_cors_headers
+def get_user_badges(request):
+    """
+    Get user's earned badges and progress towards all badges
+    
+    Returns:
+    {
+        "earned": [...list of earned badges],
+        "progress": {...progress data},
+        "total_earned": 5
+    }
+    """
+    try:
+        from .badge_service import BadgeService
+        
+        badge_data = BadgeService.get_user_badges(request.user)
+        
+        return Response(badge_data)
+    
+    except Exception as e:
+        logger.error(f"Error fetching user badges: {str(e)}")
+        return Response(
+            {"error": f"Server error: {str(e)}"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+@add_cors_headers
+def get_all_badges(request):
+    """
+    Get all available badges
+    
+    Returns list of all badges with their requirements
+    """
+    try:
+        from .serializers import BadgeSerializer
+        
+        badges = Badge.objects.filter(is_active=True).order_by('badge_type')
+        serializer = BadgeSerializer(badges, many=True)
+        
+        return Response({
+            "count": badges.count(),
+            "badges": serializer.data
+        })
+    
+    except Exception as e:
+        logger.error(f"Error fetching badges: {str(e)}")
+        return Response(
+            {"error": f"Server error: {str(e)}"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+@csrf_exempt
+@add_cors_headers
+def check_badge_unlock(request):
+    """
+    Manually trigger badge check (optional, biasanya auto-triggered saat submit answer)
+    
+    POST data:
+    {
+        "question_id": 123  // optional, untuk check topic-specific badges
+    }
+    """
+    try:
+        from .badge_service import BadgeService
+        
+        question_id = request.data.get("question_id")
+        question = None
+        
+        if question_id:
+            try:
+                question = Question.objects.get(id=question_id)
+            except Question.DoesNotExist:
+                pass
+        
+        # Check dan unlock badges
+        newly_unlocked = BadgeService.check_and_unlock_badges(request.user, question)
+        
+        return Response({
+            "newly_unlocked": newly_unlocked,
+            "count": len(newly_unlocked)
+        })
+    
+    except Exception as e:
+        logger.error(f"Error checking badges: {str(e)}")
         return Response(
             {"error": f"Server error: {str(e)}"},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR

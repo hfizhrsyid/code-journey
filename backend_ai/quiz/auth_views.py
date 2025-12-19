@@ -32,7 +32,7 @@ def add_cors_headers(view_func):
         response = view_func(request, *args, **kwargs)
         
         # Add CORS headers to the response
-        response['Access-Control-Allow-Origin'] = 'http://localhost:8081'
+        response['Access-Control-Allow-Origin'] = '*'
         response['Access-Control-Allow-Credentials'] = 'true'
         response['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS'
         response['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, X-CSRFToken'

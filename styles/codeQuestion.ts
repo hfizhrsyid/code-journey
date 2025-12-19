@@ -1,32 +1,16 @@
 import { StyleSheet } from "react-native";
 
-const COLORS = {
-  background: "#1A233A",
-  card: "#FFFFFF",
-  primaryButton: "#3b82f6",
-  successButton: "#10b981",
-  text: "#374151",
-  headerText: "#FFFFFF",
-  secondaryButton: "transparent",
-  border: "#e5e7eb",
-  codeText: "#1f2937",
-  codeBg: "#f3f4f6",
-  placeholder: "#9ca3af",
-};
-
 export const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: "#1A233A",
   },
   container: {
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: 20,
-    paddingHorizontal: 16,
+    paddingBottom: 24,
   },
-
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -38,67 +22,67 @@ export const styles = StyleSheet.create({
   headerText: {
     fontSize: 22,
     fontWeight: "700",
-    color: COLORS.headerText,
+    color: "#ffffff",
     letterSpacing: -0.5,
   },
   primaryButton: {
-    backgroundColor: COLORS.primaryButton,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 4,
+    backgroundColor: "#3b82f6",
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
   },
   primaryButtonText: {
-    color: "#FFFFFF",
+    color: "#ffffff",
+    fontSize: 13,
     fontWeight: "700",
-    fontSize: 11,
-    letterSpacing: 0.5,
+    letterSpacing: 0.3,
   },
 
   card: {
-    backgroundColor: COLORS.card,
+    backgroundColor: "#ffffff",
     marginHorizontal: 24,
     padding: 20,
     borderRadius: 12,
-    marginBottom: 16,
+    marginBottom: 24,
   },
   cardText: {
     fontSize: 16,
     lineHeight: 24,
-    color: COLORS.text,
+    color: "#374151",
     fontWeight: "400",
   },
   sectionLabel: {
     fontSize: 13,
     fontWeight: "700",
-    color: COLORS.primaryButton,
+    color: "#3b82f6",
     marginBottom: 10,
     textTransform: "uppercase",
     letterSpacing: 1,
   },
 
   inputCard: {
-    backgroundColor: COLORS.card,
+    backgroundColor: "#ffffff",
     marginHorizontal: 24,
     borderRadius: 12,
     padding: 16,
-    marginBottom: 16,
+    marginBottom: 24,
   },
   codeBlock: {
-    backgroundColor: COLORS.codeBg,
+    backgroundColor: "#f3f4f6",
     padding: 16,
     borderRadius: 8,
     marginBottom: 12,
   },
   instructionText: {
     fontSize: 14,
-    color: COLORS.text,
+    color: "#374151",
     marginBottom: 12,
     lineHeight: 21,
     fontWeight: "400",
   },
   helperText: {
     fontSize: 13,
-    color: COLORS.placeholder,
+    color: "#9ca3af",
     marginTop: 8,
     fontStyle: "italic",
     lineHeight: 18,
@@ -107,7 +91,7 @@ export const styles = StyleSheet.create({
   textInput: {
     flex: 1,
     fontSize: 15,
-    color: COLORS.codeText,
+    color: "#1f2937",
     fontFamily: "monospace",
     padding: 12,
     borderWidth: 0,
@@ -115,55 +99,7 @@ export const styles = StyleSheet.create({
     fontWeight: "400",
   },
 
-  footer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    backgroundColor: COLORS.card,
-    borderTopWidth: 1,
-    borderTopColor: COLORS.border,
-  },
-  runButton: {
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 4,
-    backgroundColor: COLORS.successButton,
-    flex: 1,
-    marginRight: 8,
-  },
-  nextButton: {
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 4,
-    backgroundColor: COLORS.primaryButton,
-    flex: 1,
-    marginLeft: 8,
-  },
-  footerButtonText: {
-    color: "#FFFFFF",
-    fontSize: 15,
-    fontWeight: "700",
-    textAlign: "center",
-    letterSpacing: 0.3,
-  },
-  runButtonText: {
-    color: "#FFFFFF",
-    fontSize: 15,
-    fontWeight: "700",
-    textAlign: "center",
-    letterSpacing: 0.3,
-  },
-  nextButtonText: {
-    color: "#FFFFFF",
-    fontSize: 15,
-    fontWeight: "700",
-    textAlign: "center",
-    letterSpacing: 0.3,
-  },
-  
-  // Submit button styles (matching completionQuestion)
+  // Submit button styles
   submitButtonContainer: {
     paddingHorizontal: 24,
     paddingBottom: 40,
@@ -181,12 +117,11 @@ export const styles = StyleSheet.create({
   },
   submitText: {
     color: "#ffffff",
-    fontSize: 16,
-    fontWeight: "700",
-    letterSpacing: 0.3,
+    fontSize: 14,
+    fontWeight: "600",
   },
 
-  // Modal styles (matching completionQuestion)
+  // Modal styles
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0, 0, 0, 0.6)",
@@ -197,6 +132,7 @@ export const styles = StyleSheet.create({
   modalPositionWrapper: {
     width: "100%",
     paddingBottom: 32,
+    position: "relative",
   },
   modalEmojiImage: {
     width: 70,
@@ -208,111 +144,60 @@ export const styles = StyleSheet.create({
     resizeMode: "contain",
   },
   modalContent: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 20,
+    backgroundColor: "#D4E3F7",
+    borderRadius: 16,
     padding: 24,
-    paddingTop: 30,
-    position: "relative",
+    paddingTop: 20,
   },
   closeLabel: {
-    position: "absolute",
-    top: 12,
-    left: 12,
     flexDirection: "row",
     alignItems: "center",
-    zIndex: 10,
+    gap: 4,
+    marginBottom: 12,
   },
   closeIcon: {
     fontSize: 18,
-    color: "#8898AA",
-    marginRight: 4,
+    color: "#ef4444",
     fontWeight: "700",
   },
   closeText: {
     fontSize: 14,
-    color: "#8898AA",
-    fontWeight: "500",
+    color: "#ef4444",
+    fontWeight: "600",
   },
   modalTitle: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: "700",
-    color: "#1A233A",
-    marginBottom: 8,
-    textAlign: "center",
-    letterSpacing: -0.5,
+    color: "#1f2937",
+    marginBottom: 12,
+    lineHeight: 24,
   },
   modalSubtitle: {
-    fontSize: 15,
-    color: "#666",
-    textAlign: "center",
+    fontSize: 14,
+    color: "#374151",
     lineHeight: 22,
-    fontWeight: "400",
+    marginBottom: 16,
+    textAlign: "justify",
   },
   nextButtonRow: {
-    marginTop: 20,
-    alignItems: "center",
+    width: "100%",
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    marginTop: 8,
   },
-
-  statusContainerWrapper: {
-    minHeight: 40,
+  nextButton: {
     backgroundColor: "transparent",
-    /* naikkan container supaya pill overlap ke outputCard */
-    marginLeft: 24,
-    marginRight: 24,
-    flexDirection: "row",
-  },
-  statusContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
+    borderColor: "#286292",
+    borderWidth: 1.5,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 40,
     alignItems: "center",
-    paddingLeft: 0,
-    marginTop: 0,
-    marginBottom: 0,
+    justifyContent: "center",
   },
-  statusPill: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 10,
-    marginRight: 8,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    /* beri radius atas dan flat bawah supaya menyatu dengan card */
-    borderTopLeftRadius: 10,
-    borderTopRightRadius: 10,
-    borderBottomLeftRadius: 0,
-    borderBottomRightRadius: 0,
-    backgroundColor: "#263043",
-  },
-  statusText: {
-    color: "#FFFFFF",
+  nextButtonText: {
+    color: "#286292",
+    fontWeight: "600",
     fontSize: 14,
-    marginRight: 4,
-  },
-  icon: {
-    fontSize: 14,
-    fontWeight: "bold",
-  },
-
-  /* outputCard: tarik ke atas sedikit supaya pill tampak menempel */
-  outputCard: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 10,
-    padding: 15,
-    paddingTop: 28, // beri ruang di dalam supaya teks tidak tertutup pill
-    minHeight: 180,
-    marginTop: -10, // tarik ke atas supaya pill overlap
-    borderTopWidth: 1,
-    borderTopColor: "#FFFFFF",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  outputText: {
-    color: "#999",
-    fontSize: 14,
-    // fontFamily: "monospace",
-    lineHeight: 20,
   },
 });

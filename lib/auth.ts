@@ -1,8 +1,7 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios, { AxiosInstance } from "axios";
 
-// For Chrome browser (Expo web), use localhost
-const API_BASE_URL = "http://localhost:8000/api/auth/";
+const API_BASE_URL = `${process.env.EXPO_PUBLIC_API_URL || "http://localhost:8000"}/api/auth/`;
 
 interface User {
   id: number;
@@ -25,60 +24,50 @@ class AuthService {
   constructor() {
     this.client = axios.create({
       baseURL: API_BASE_URL,
-      timeout: 10000,
+      timeout: 15000, // Naikkan timeout
       headers: {
         "Content-Type": "application/json",
       },
     });
 
-    // Load token from storage on init
     this.loadToken();
   }
 
   private async loadToken() {
     try {
-      const token = await AsyncStorage.getItem('authToken');
+      const token = await AsyncStorage.getItem("authToken");
       if (token) {
         this.token = token;
         this.setAuthHeader(token);
       }
     } catch (error) {
-      console.error('Error loading token:', error);
+      console.error("Error loading token:", error);
     }
   }
 
   private setAuthHeader(token: string) {
-    this.client.defaults.headers.common['Authorization'] = `Token ${token}`;
+    this.client.defaults.headers.common["Authorization"] = `Token ${token}`;
   }
 
   private async saveToken(token: string) {
     this.token = token;
     this.setAuthHeader(token);
-    await AsyncStorage.setItem('authToken', token);
+    await AsyncStorage.setItem("authToken", token);
   }
 
   async clearToken() {
     this.token = null;
-    delete this.client.defaults.headers.common['Authorization'];
-    await AsyncStorage.removeItem('authToken');
+    delete this.client.defaults.headers.common["Authorization"];
+    await AsyncStorage.removeItem("authToken");
   }
 
   getToken(): string | null {
     return this.token;
   }
 
-  /**
-   * Sign up a new user
-   */
-  async signUp(
-    username: string,
-    email: string,
-    password: string,
-    firstName?: string,
-    lastName?: string
-  ): Promise<AuthResponse> {
+  async signUp(username: string, email: string, password: string, firstName?: string, lastName?: string): Promise<AuthResponse> {
     try {
-      console.log("🔄 Signing up with:", { username, email });
+      console.log("🔄 Signup to:", API_BASE_URL);
       const response = await this.client.post("signup/", {
         username,
         email,
@@ -88,74 +77,62 @@ class AuthService {
         last_name: lastName || "",
       });
 
-      console.log("✅ Signup response:", response.data);
-      
-      // Save token
+      console.log("✅ Signup success");
+
       if (response.data.token) {
         await this.saveToken(response.data.token);
       }
-      
+
       return response.data;
     } catch (error: any) {
-      console.error("❌ Signup error:", error);
-      console.error("Response status:", error.response?.status);
-      console.error("Response data:", error.response?.data);
-      console.error("Error message:", error.message);
-      
-      // Try to extract a meaningful error message
-      const errorData = error.response?.data;
-      if (typeof errorData === 'object') {
-        console.error("Full error object:", JSON.stringify(errorData, null, 2));
-      }
-      
-      throw errorData || { error: error.message || "Signup failed" };
+      console.error("❌ Signup error:", error.message);
+      console.error("Status:", error.response?.status);
+      console.error("Data:", error.response?.data);
+      throw error.response?.data || { error: error.message };
     }
   }
 
-  /**
-   * Sign in with username and password
-   */
   async signIn(username: string, password: string): Promise<AuthResponse> {
     try {
+      console.log("🔄 Login to:", API_BASE_URL);
+      console.log("Username:", username);
+
       const response = await this.client.post("login/", {
         username,
         password,
       });
 
-      // Save token
+      console.log("✅ Login success");
+
       if (response.data.token) {
         await this.saveToken(response.data.token);
       }
 
       return response.data;
     } catch (error: any) {
-      console.error("Login error details:", error.response?.data || error.message);
-      throw error.response?.data || { error: "Login failed" };
+      console.error("❌ Login error:", error.message);
+      console.error("Status:", error.response?.status);
+      console.error("Data:", error.response?.data);
+      console.error("Code:", error.code);
+      throw error.response?.data || { error: error.message };
     }
   }
 
-  /**
-   * Get current user profile (requires authentication)
-   */
   async getUserProfile(): Promise<User> {
     try {
       const response = await this.client.get("profile/");
       return response.data.user;
     } catch (error: any) {
-      throw error.response?.data || { error: "Failed to fetch profile" };
+      throw error.response?.data || { error: error.message };
     }
   }
 
-  /**
-   * Sign out the current user
-   */
   async signOut(): Promise<void> {
     try {
       await this.client.post("logout/");
     } catch (error: any) {
       console.error("Logout error:", error);
     } finally {
-      // Always clear token on logout
       await this.clearToken();
     }
   }

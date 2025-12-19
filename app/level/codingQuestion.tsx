@@ -1,9 +1,11 @@
-import { Question, quizAPI } from "@/lib/api";
+import { Question, quizAPI, validateQuestion } from "@/lib/api";
 import { styles } from "@/styles/codeQuestion";
 import { router } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, Image, Modal, SafeAreaView, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Image, Modal, SafeAreaView, ScrollView, Text, TextInput, TouchableOpacity, View, Alert } from "react-native";
 import { useQuestions } from "../../lib/QuestionContext";
+import { useFocusEffect } from "@react-navigation/native";
+import React from "react";
 
 // helper: pastikan options selalu berupa array (toleran terhadap string JSON atau comma-list)
 const normalizeQuestion = (q: any) => {
@@ -12,7 +14,7 @@ const normalizeQuestion = (q: any) => {
     if (q.options && typeof q.options === "string") {
       try {
         q.options = JSON.parse(q.options);
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (e) {
         const s = String(q.options)
           .replace(/^\[|\]$/g, "")
@@ -30,7 +32,7 @@ const normalizeQuestion = (q: any) => {
 };
 
 export default function CodingQuestion() {
-  const { questionSet, setQuestionSet, currentIndex, setCurrentIndex, difficulty, topic, topicId } = useQuestions();
+  const { questionSet, setQuestionSet, currentIndex, setCurrentIndex, difficulty, topic, topicId, savePosition } = useQuestions();
 
   const [question, setQuestion] = useState<Question | null>(null);
   const [answer, setAnswer] = useState("");
@@ -54,6 +56,14 @@ export default function CodingQuestion() {
       if (questionSet.length > 0 && currentIndex < questionSet.length) {
         let currentQuestion = questionSet[currentIndex];
         currentQuestion = normalizeQuestion(currentQuestion);
+
+        // Validate question
+        const validation = validateQuestion(currentQuestion);
+        if (!validation.valid) {
+          setError(validation.error || "Soal tidak valid");
+          return;
+        }
+
         console.log("✅ Loaded coding question from context:", currentQuestion);
         setQuestion(currentQuestion as any);
         return;
@@ -64,6 +74,14 @@ export default function CodingQuestion() {
         const q = await quizAPI.generateQuestion(difficulty || 2, "coding");
         if (q) {
           const nq = normalizeQuestion(q);
+
+          // Validate generated question
+          const validation = validateQuestion(nq);
+          if (!validation.valid) {
+            setError(validation.error || "Soal yang dihasilkan tidak valid");
+            return;
+          }
+
           console.log("✅ Generated single coding question:", nq);
           setQuestionSet([nq]);
           setCurrentIndex(0);
@@ -93,12 +111,22 @@ export default function CodingQuestion() {
     } finally {
       setLoading(false);
     }
-  }, [questionSet, currentIndex, difficulty, setQuestion, setQuestionSet, setCurrentIndex, setLoading, setError, setAnswer, setFeedbackStatus, setFeedbackMessage]);
+  }, [questionSet, currentIndex, difficulty, topicId, setQuestion, setQuestionSet, setCurrentIndex, setLoading, setError, setAnswer, setFeedbackStatus, setFeedbackMessage]);
 
   // Load question on component mount
   useEffect(() => {
     loadQuestion();
   }, [loadQuestion]);
+
+  // ✅ RESET STATE KETIKA TOPIC BERUBAH
+  useEffect(() => {
+    setQuestion(null);
+    setAnswer("");
+    setFeedbackStatus(null);
+    setFeedbackMessage("");
+    setTestResults([]);
+    setError(null);
+  }, [topicId]);
 
   const handleSubmit = async () => {
     if (!question || !answer.trim()) {
@@ -120,6 +148,12 @@ export default function CodingQuestion() {
         // If runCode fails (e.g., no test cases), fall back to simple submit
         console.log("No test cases, using simple submit:", runError);
         const result = await quizAPI.submitAnswer(question.question_id, answer.trim().toLowerCase());
+
+        if (result.newly_unlocked_badges && result.newly_unlocked_badges.length > 0) {
+          const badgeNames = result.newly_unlocked_badges.map((b) => b.badge_name).join("\n");
+          Alert.alert("🏆 Badge Baru!", `Selamat! Anda mendapatkan badge:\n\n${badgeNames}`, [{ text: "OK" }]);
+        }
+
         setFeedbackMessage(result.feedback);
         setFeedbackStatus(result.correct ? "correct" : "wrong");
       }
@@ -148,6 +182,19 @@ export default function CodingQuestion() {
     setSubmitting(false);
 
     const nextIndex = currentIndex + 1;
+
+    // Check if we've completed 10 questions - redirect to reportCard
+    if (nextIndex >= 10) {
+      console.log("✅ Completed 10 questions, navigating to reportCard");
+      router.push({
+        pathname: "/reportCard",
+        params: {
+          topicId: topicId.toString(),
+          topicName: topic,
+        },
+      } as any);
+      return;
+    }
 
     // Jika ada soal berikutnya dalam questionSet, pindah index dan navigasi bila tipe berbeda
     if (nextIndex < questionSet.length) {
@@ -195,13 +242,23 @@ export default function CodingQuestion() {
 
     // Navigate to results screen
     router.push({
-      pathname: "/main/topicResults",
-      params: { 
+      pathname: "/reportCard",
+      params: {
         topicId: topicId.toString(),
-        topicName: topic
-      }
+        topicName: topic,
+      },
     } as any);
   };
+
+  // ✅ SIMPAN POSISI SAAT KELUAR SCREEN
+  useFocusEffect(
+    React.useCallback(() => {
+      return () => {
+        // Ini dipanggil saat screen kehilangan focus (user keluar)
+        savePosition();
+      };
+    }, [topicId, currentIndex, topic, difficulty, savePosition])
+  );
 
   if (loading) {
     return (
@@ -218,13 +275,13 @@ export default function CodingQuestion() {
     return (
       <SafeAreaView style={styles.safeArea}>
         <View style={{ flex: 1, justifyContent: "center", alignItems: "center", paddingHorizontal: 20 }}>
-          <Text style={{ color: "red", marginBottom: 20, textAlign: "center" }}>{error || "Gagal memuat soal"}</Text>
+          <Text style={{ color: "#ff0000", fontSize: 16, textAlign: "center", marginBottom: 20 }}>{error || "Gagal memuat soal"}</Text>
           <TouchableOpacity
             style={{
-              paddingHorizontal: 15,
-              paddingVertical: 10,
+              paddingHorizontal: 20,
+              paddingVertical: 12,
               backgroundColor: "#0066cc",
-              borderRadius: 5,
+              borderRadius: 8,
             }}
             onPress={loadQuestion}
           >
@@ -235,34 +292,37 @@ export default function CodingQuestion() {
     );
   }
 
+  const emojiWrongSource = require("../../assets/images/emoji-wrong-answer.png");
+  const emojiCorrectSource = require("../../assets/images/emoji-correct-answer.png");
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
-        <View style={styles.header}>
-          <Text style={styles.headerText}>
-            Soal {currentIndex + 1}/{Math.max(questionSet.length, 1)}
-          </Text>
-          <TouchableOpacity style={styles.primaryButton}>
-            <Text style={styles.primaryButtonText}>Coding</Text>
-          </TouchableOpacity>
-        </View>
-
         <ScrollView contentContainerStyle={styles.scrollContent}>
+          <View style={styles.header}>
+            <Text style={styles.headerText}>Soal {currentIndex + 1}/10</Text>
+            <TouchableOpacity style={styles.primaryButton}>
+              <Text style={styles.primaryButtonText}>Coding</Text>
+            </TouchableOpacity>
+          </View>
+
           {/* Question Card */}
           <View style={styles.card}>
             <Text style={styles.cardText}>{question.question_text}</Text>
-            
+
             {/* Code Template - Read Only Reference */}
             {question.code_template && (
               <View style={{ marginTop: 16 }}>
                 <Text style={styles.sectionLabel}>Template Kode</Text>
                 <View style={styles.codeBlock}>
-                  <Text style={{ 
-                    fontFamily: "monospace", 
-                    fontSize: 13, 
-                    color: "#1f2937",
-                    lineHeight: 20
-                  }}>
+                  <Text
+                    style={{
+                      fontFamily: "monospace",
+                      fontSize: 15,
+                      color: "#1f2937",
+                      lineHeight: 22,
+                    }}
+                  >
                     {question.code_template}
                   </Text>
                 </View>
@@ -280,6 +340,7 @@ export default function CodingQuestion() {
               value={answer}
               onChangeText={setAnswer}
               multiline
+              numberOfLines={8}
               autoCorrect={false}
               autoCapitalize="none"
               spellCheck={false}
@@ -298,7 +359,7 @@ export default function CodingQuestion() {
       <Modal transparent visible={feedbackStatus === "wrong"} animationType="fade">
         <View style={styles.modalOverlay}>
           <View style={styles.modalPositionWrapper}>
-            <Image source={require("../../assets/images/emoji-wrong-answer.png")} style={styles.modalEmojiImage} />
+            <Image source={emojiWrongSource} style={styles.modalEmojiImage} />
             <View style={styles.modalContent}>
               <TouchableOpacity
                 style={styles.closeLabel}
@@ -318,9 +379,7 @@ export default function CodingQuestion() {
                 {/* Test Results Display in Modal */}
                 {testResults.length > 0 && (
                   <View style={{ marginTop: 10 }}>
-                    <Text style={{ fontWeight: "600", marginBottom: 8, color: "#374151" }}>
-                      Hasil Test:
-                    </Text>
+                    <Text style={{ fontWeight: "600", marginBottom: 8, color: "#374151" }}>Hasil Test:</Text>
                     {testResults.map((result, index) => (
                       <View
                         key={index}
@@ -336,22 +395,10 @@ export default function CodingQuestion() {
                         <Text style={{ fontWeight: "600", marginBottom: 4, color: result.passed ? "#065f46" : "#991b1b", fontSize: 12 }}>
                           {result.passed ? "✓" : "✗"} Test Case {result.test_num}
                         </Text>
-                        {result.input && (
-                          <Text style={{ fontSize: 10, color: "#6b7280", fontFamily: "monospace" }}>
-                            Input: {result.input}
-                          </Text>
-                        )}
-                        <Text style={{ fontSize: 10, color: "#6b7280", fontFamily: "monospace" }}>
-                          Expected: {result.expected}
-                        </Text>
-                        <Text style={{ fontSize: 10, color: "#6b7280", fontFamily: "monospace" }}>
-                          Got: {result.actual || "(no output)"}
-                        </Text>
-                        {result.error && (
-                          <Text style={{ fontSize: 10, color: "#991b1b", marginTop: 4, fontFamily: "monospace" }}>
-                            Error: {result.error}
-                          </Text>
-                        )}
+                        {result.input && <Text style={{ fontSize: 10, color: "#6b7280", fontFamily: "monospace" }}>Input: {result.input}</Text>}
+                        <Text style={{ fontSize: 10, color: "#6b7280", fontFamily: "monospace" }}>Expected: {result.expected}</Text>
+                        <Text style={{ fontSize: 10, color: "#6b7280", fontFamily: "monospace" }}>Got: {result.actual || "(no output)"}</Text>
+                        {result.error && <Text style={{ fontSize: 10, color: "#991b1b", marginTop: 4, fontFamily: "monospace" }}>Error: {result.error}</Text>}
                       </View>
                     ))}
                   </View>
@@ -366,7 +413,7 @@ export default function CodingQuestion() {
       <Modal transparent visible={feedbackStatus === "correct"} animationType="fade">
         <View style={styles.modalOverlay}>
           <View style={styles.modalPositionWrapper}>
-            <Image source={require("../../assets/images/emoji-correct-answer.png")} style={styles.modalEmojiImage} />
+            <Image source={emojiCorrectSource} style={styles.modalEmojiImage} />
             <View style={styles.modalContent}>
               <TouchableOpacity
                 style={styles.closeLabel}
@@ -384,9 +431,7 @@ export default function CodingQuestion() {
               {/* Test Results Display in Modal */}
               {testResults.length > 0 && (
                 <View style={{ marginTop: 10 }}>
-                  <Text style={{ fontWeight: "600", marginBottom: 8, color: "#374151" }}>
-                    Hasil Test:
-                  </Text>
+                  <Text style={{ fontWeight: "600", marginBottom: 8, color: "#374151" }}>Hasil Test:</Text>
                   {testResults.map((result, index) => (
                     <View
                       key={index}
@@ -402,17 +447,9 @@ export default function CodingQuestion() {
                       <Text style={{ fontWeight: "600", marginBottom: 4, color: result.passed ? "#065f46" : "#991b1b", fontSize: 12 }}>
                         {result.passed ? "✓" : "✗"} Test Case {result.test_num}
                       </Text>
-                      {result.input && (
-                        <Text style={{ fontSize: 10, color: "#6b7280", fontFamily: "monospace" }}>
-                          Input: {result.input}
-                        </Text>
-                      )}
-                      <Text style={{ fontSize: 10, color: "#6b7280", fontFamily: "monospace" }}>
-                        Expected: {result.expected}
-                      </Text>
-                      <Text style={{ fontSize: 10, color: "#6b7280", fontFamily: "monospace" }}>
-                        Got: {result.actual || "(no output)"}
-                      </Text>
+                      {result.input && <Text style={{ fontSize: 10, color: "#6b7280", fontFamily: "monospace" }}>Input: {result.input}</Text>}
+                      <Text style={{ fontSize: 10, color: "#6b7280", fontFamily: "monospace" }}>Expected: {result.expected}</Text>
+                      <Text style={{ fontSize: 10, color: "#6b7280", fontFamily: "monospace" }}>Got: {result.actual || "(no output)"}</Text>
                     </View>
                   ))}
                 </View>

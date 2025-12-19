@@ -1,4 +1,5 @@
 import React, { createContext, ReactNode, useState } from "react";
+import { sessionStorage } from "./sessionStorage";
 
 export interface QuestionData {
   question_id: number;
@@ -21,6 +22,8 @@ interface QuestionContextType {
   difficulty: number;
   setDifficulty: (difficulty: number) => void;
   goToNextQuestion: () => boolean;
+  savePosition: () => Promise<void>;
+  loadSavedPosition: (topicId: number) => Promise<number | null>;
   reset: () => void;
 }
 
@@ -39,6 +42,27 @@ export function QuestionProvider({ children }: { children: ReactNode }) {
       return true;
     }
     return false;
+  };
+
+  /**
+   * Simpan posisi saat ini ke AsyncStorage
+   */
+  const savePosition = async () => {
+    if (topicId > 0) {
+      await sessionStorage.savePosition(topicId, currentIndex, topic, difficulty);
+    }
+  };
+
+  /**
+   * Muat posisi terakhir dari AsyncStorage
+   */
+  const loadSavedPosition = async (topicId: number): Promise<number | null> => {
+    const savedSession = await sessionStorage.loadPosition(topicId);
+    if (savedSession) {
+      setCurrentIndex(savedSession.currentIndex);
+      return savedSession.currentIndex;
+    }
+    return null;
   };
 
   const reset = () => {
@@ -63,6 +87,8 @@ export function QuestionProvider({ children }: { children: ReactNode }) {
         difficulty,
         setDifficulty,
         goToNextQuestion,
+        savePosition,
+        loadSavedPosition,
         reset,
       }}
     >
