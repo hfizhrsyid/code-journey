@@ -2,10 +2,10 @@ import { StyleSheet } from "react-native";
 
 export const styles = StyleSheet.create({
   container: {
-    flexDirection: 'row',
-    justifyContent: 'space-evenly',
-    alignItems: 'center',
-    backgroundColor: '#286292',
+    flexDirection: "row",
+    justifyContent: "space-evenly",
+    alignItems: "center",
+    backgroundColor: "#286292",
     height: 63,
     borderTopLeftRadius: 25,
     borderTopRightRadius: 25,
@@ -18,7 +18,7 @@ export const styles = StyleSheet.create({
   },
 
   homeButton: {
-    backgroundColor: '#286292',
+    backgroundColor: "#286292",
     padding: 15,
     borderRadius: 40,
     borderColor: "#1A233A",
