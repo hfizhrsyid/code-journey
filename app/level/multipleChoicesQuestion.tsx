@@ -1,6 +1,6 @@
 import { quizAPI, validateQuestion } from "@/lib/api";
 import { styles } from "@/styles/multipleChoicesQuestion";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, Alert, Image, Modal, SafeAreaView, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
@@ -8,7 +8,28 @@ import { useQuestions } from "../../lib/QuestionContext";
 import React from "react";
 
 export default function MultipleChoicesQuestion() {
-  const { questionSet, setQuestionSet, currentIndex, setCurrentIndex, difficulty, topic, topicId, savePosition } = useQuestions();
+  const params = useLocalSearchParams();
+
+  const {
+    questionSet,
+    setQuestionSet,
+    currentIndex,
+    setCurrentIndex,
+    difficulty,
+    topic,
+    topicId,
+    savePosition,
+    mode,
+    recordPretestAnswer,
+    pretestAnswers,
+    getWeakestPretestTopic,
+    getNextPretestTopic,
+    popPretestQuestion,
+    clearPretestTopic,
+  } = useQuestions();
+
+  // ✅ READ questionIndex dari params jika ada (user klik node lama)
+  const paramQuestionIndex = params.questionIndex ? parseInt(params.questionIndex as string) : null;
 
   const [question, setQuestion] = useState<any | null>(null);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
@@ -19,6 +40,42 @@ export default function MultipleChoicesQuestion() {
   const [explanation, setExplanation] = useState<string>("");
   const [correctAnswerInfo, setCorrectAnswerInfo] = useState<{ option: string; text: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [autoRetried, setAutoRetried] = useState(false);
+  const [prevTopicId, setPrevTopicId] = useState<number | null>(null);
+  const [hasAppliedParamIndex, setHasAppliedParamIndex] = useState(false);
+  const PRETEST_MAX_QUESTIONS = 3;
+  const PRETEST_TARGET_CORRECT = 2;
+  const PRETEST_TARGET_WRONG = 2;
+  const REVEAL_DELAY_MS = 650;
+  const MAX_QUESTIONS = 10;
+
+  const finishPretest = (target?: { id: number; name: string }) => {
+    const fallback = getWeakestPretestTopic();
+    const destId = target?.id ?? fallback?.id ?? (question?.topic_id || topicId);
+    const destName = target?.name ?? fallback?.name ?? (question?.topic_name || topic);
+
+    router.push({
+      pathname: "/reportCardPreTest",
+      params: {
+        topicId: destId.toString(),
+        topicName: destName,
+        targetTopicId: destId.toString(),
+        targetTopicName: destName,
+      },
+    } as any);
+  };
+
+  const resolvePretestTarget = (answers: { correct: boolean }[], testedTopicId: number, testedTopicName: string) => {
+    const totalAnswered = answers.length;
+    const allCorrect = totalAnswered >= PRETEST_MAX_QUESTIONS && answers.every((a) => a.correct);
+
+    if (allCorrect) {
+      const next = getNextPretestTopic(testedTopicId);
+      if (next) return next;
+    }
+
+    return getWeakestPretestTopic() ?? { id: testedTopicId, name: testedTopicName };
+  };
 
   const loadQuestion = useCallback(async () => {
     try {
@@ -30,9 +87,40 @@ export default function MultipleChoicesQuestion() {
       setExplanation("");
       setCorrectAnswerInfo(null);
 
+      const indexToUse = !hasAppliedParamIndex && paramQuestionIndex !== null ? paramQuestionIndex : currentIndex;
+      console.log(`📖 [MCQ] Loading question: index=${indexToUse}, fromParam=${paramQuestionIndex !== null}`);
+
+      const safeIndex = questionSet.length > 0 ? Math.min(Math.max(indexToUse, 0), questionSet.length - 1) : 0;
+
+      // ✅ ALWAYS sync currentIndex with the index we're using
+      // This ensures context state matches the actual question being displayed
+      if (safeIndex !== currentIndex) {
+        setCurrentIndex(safeIndex);
+      }
+      if (!hasAppliedParamIndex && paramQuestionIndex !== null) {
+        setHasAppliedParamIndex(true);
+      }
+
+      const hydrateFromServer = async () => {
+        try {
+          const fetched = await quizAPI.getQuestions(topicId || topic, difficulty || 2);
+          if (fetched && fetched.length > 0) {
+            const normalized = fetched.map((q: any) => normalizeQuestion(q));
+            const nextSafe = Math.min(Math.max(safeIndex, 0), normalized.length - 1);
+            setQuestionSet(normalized);
+            setCurrentIndex(nextSafe);
+            setQuestion(normalized[nextSafe]);
+            return true;
+          }
+        } catch (fetchErr) {
+          console.warn("Hydrate MCQ from server failed:", fetchErr);
+        }
+        return false;
+      };
+
       // If we have a question set and the index exists, use it
-      if (questionSet.length > 0 && currentIndex < questionSet.length) {
-        let currentQuestion = questionSet[currentIndex];
+      if (questionSet.length > 0 && safeIndex < questionSet.length) {
+        let currentQuestion = questionSet[safeIndex];
         currentQuestion = normalizeQuestion(currentQuestion);
 
         // Validate question
@@ -48,9 +136,13 @@ export default function MultipleChoicesQuestion() {
         return;
       }
 
+      // Try to hydrate from server before generating
+      const hydrated = await hydrateFromServer();
+      if (hydrated) return;
+
       // Fallback: request a single MCQ from backend and populate context
       try {
-        const q = await quizAPI.generateQuestion(difficulty || 2, "mcq");
+        const q = await quizAPI.generateQuestion(difficulty || 2, "mcq", { id: topicId, name: topic });
         if (q) {
           const nq = normalizeQuestion(q);
 
@@ -92,22 +184,42 @@ export default function MultipleChoicesQuestion() {
     } finally {
       setLoading(false);
     }
-  }, [questionSet, currentIndex, topicId, setQuestionSet, setCurrentIndex]);
+  }, [questionSet, paramQuestionIndex, currentIndex, mode, difficulty, topicId, topic, setQuestionSet, setCurrentIndex, recordPretestAnswer, hasAppliedParamIndex]);
 
   useEffect(() => {
     loadQuestion();
   }, [loadQuestion]);
 
-  // ✅ RESET STATE KETIKA TOPIC BERUBAH
+  // Trigger loadQuestion ketika screen fokus untuk memastikan data selalu fresh
+  useFocusEffect(
+    React.useCallback(() => {
+      loadQuestion();
+    }, [loadQuestion])
+  );
+
+  // Auto-retry sekali ketika ada error dan belum pernah coba ulang
   useEffect(() => {
-    setQuestion(null);
-    setSelectedAnswer(null);
-    setAnswerStatus(null);
-    setFeedback("");
-    setExplanation("");
-    setCorrectAnswerInfo(null);
-    setError(null);
-  }, [topicId]);
+    if (!loading && error && !autoRetried) {
+      setAutoRetried(true);
+      loadQuestion();
+    }
+  }, [loading, error, autoRetried, loadQuestion]);
+
+  // ✅ RESET STATE HANYA KETIKA TOPIC BENAR-BENAR BERUBAH
+  useEffect(() => {
+    if (prevTopicId !== null && topicId !== prevTopicId) {
+      console.log(`🔄 Topic changed from ${prevTopicId} to ${topicId}, resetting state`);
+      setQuestion(null);
+      setSelectedAnswer(null);
+      setAnswerStatus(null);
+      setFeedback("");
+      setExplanation("");
+      setCorrectAnswerInfo(null);
+      setError(null);
+      setAutoRetried(false);
+    }
+    setPrevTopicId(topicId);
+  }, [topicId, prevTopicId]);
 
   const handleSelectAnswer = async (optionId: string) => {
     if (selectedAnswer || !question || checking) return;
@@ -136,6 +248,37 @@ export default function MultipleChoicesQuestion() {
       setAnswerStatus(result.correct ? "correct" : "wrong");
       setFeedback(result.feedback || "");
       setExplanation(result.explanation || "");
+
+      if (mode === "pretest") {
+        const topicKey = question.topic_id || topicId;
+        const nextAnswer = {
+          topicId: topicKey,
+          topicName: question.topic_name || topic,
+          questionId: question.question_id,
+          correct: !!result.correct,
+        };
+
+        const mergedAnswers = [...pretestAnswers.filter((a) => a.questionId !== nextAnswer.questionId), nextAnswer];
+
+        recordPretestAnswer(nextAnswer);
+
+        const wrong = mergedAnswers.filter((a) => !a.correct).length;
+        const correctCount = mergedAnswers.filter((a) => a.correct).length;
+        const answered = mergedAnswers.length;
+
+        const shouldEndEarly = wrong >= PRETEST_TARGET_WRONG || correctCount >= PRETEST_TARGET_CORRECT;
+        const reachedCap = answered >= PRETEST_MAX_QUESTIONS;
+
+        const targetTopic = resolvePretestTarget(mergedAnswers, topicKey, question.topic_name || topic);
+
+        setTimeout(() => {
+          if (shouldEndEarly || reachedCap) {
+            finishPretest(targetTopic);
+          } else {
+            handleNextQuestion();
+          }
+        }, REVEAL_DELAY_MS);
+      }
 
       if (!result.correct && question.options && question.answer_key) {
         try {
@@ -175,9 +318,9 @@ export default function MultipleChoicesQuestion() {
     const nextIndex = currentIndex + 1;
     console.log("handleNextQuestion: currentIndex=", currentIndex, "nextIndex=", nextIndex, "questionSet.length=", questionSet.length);
 
-    // Check if we've completed 10 questions - redirect to reportCard
-    if (nextIndex >= 10) {
-      console.log("✅ Completed 10 questions, navigating to reportCard");
+    // ✅ CEK APAKAH SUDAH MENCAPAI LIMIT 10 SOAL (hanya untuk learning mode)
+    if (mode !== "pretest" && nextIndex >= MAX_QUESTIONS) {
+      console.log(`✅ Sudah mencapai ${MAX_QUESTIONS} soal, navigasi ke reportCard`);
       router.push({
         pathname: "/reportCard",
         params: {
@@ -195,7 +338,6 @@ export default function MultipleChoicesQuestion() {
       const copy = [...questionSet];
       copy[nextIndex] = nextQ;
       setQuestionSet(copy);
-      // set local question immediately to avoid relying on batched state updates
       setQuestion(nextQ);
       setCurrentIndex(nextIndex);
 
@@ -218,12 +360,11 @@ export default function MultipleChoicesQuestion() {
         return "mcq";
       })() as "mcq" | "fill" | "coding";
 
-      const newQuestion = await quizAPI.generateQuestion(difficulty || 2, nextType);
+      const newQuestion = await quizAPI.generateQuestion(difficulty || 2, nextType, { id: topicId, name: topic });
       if (newQuestion) {
         const nq = normalizeQuestion(newQuestion);
         const updated = [...questionSet, nq];
         setQuestionSet(updated);
-        // set local question immediately to avoid waiting for context propagation
         setQuestion(nq);
         setCurrentIndex(nextIndex);
 
@@ -237,14 +378,18 @@ export default function MultipleChoicesQuestion() {
       console.warn("Gagal generate soal berikutnya:", err);
     }
 
-    // Jika tidak bisa generate soal lagi, anggap selesai
-    router.push({
-      pathname: "/reportCard",
-      params: {
-        topicId: topicId.toString(),
-        topicName: topic,
-      },
-    } as any);
+    // Jika tidak bisa generate soal lagi, akhiri sesi
+    if (mode === "pretest") {
+      finishPretest();
+    } else {
+      router.push({
+        pathname: "/reportCard",
+        params: {
+          topicId: topicId.toString(),
+          topicName: topic,
+        },
+      } as any);
+    }
   };
 
   const emojiWrongSource = require("../../assets/images/emoji-wrong-answer.png");
@@ -267,6 +412,11 @@ export default function MultipleChoicesQuestion() {
             .filter(Boolean);
         }
       }
+
+      // ensure topic metadata sticks to generated/fallback questions
+      if (!q.topic_id) q.topic_id = topicId;
+      if (!q.topic_name && q.topic) q.topic_name = q.topic;
+      if (!q.topic_name) q.topic_name = topic;
     } catch (e) {
       console.warn("normalizeQuestion error:", e);
     }
@@ -362,7 +512,7 @@ export default function MultipleChoicesQuestion() {
       </ScrollView>
 
       {/* Feedback Modal - Wrong */}
-      <Modal transparent visible={answerStatus === "wrong"} animationType="fade">
+      <Modal transparent visible={mode !== "pretest" && answerStatus === "wrong"} animationType="fade">
         <View style={styles.modalOverlay}>
           <View style={styles.modalPositionWrapper}>
             <Image source={emojiWrongSource} style={styles.modalEmojiImage} />
@@ -404,7 +554,7 @@ export default function MultipleChoicesQuestion() {
       </Modal>
 
       {/* Feedback Modal - Correct */}
-      <Modal transparent visible={answerStatus === "correct"} animationType="fade">
+      <Modal transparent visible={mode !== "pretest" && answerStatus === "correct"} animationType="fade">
         <View style={styles.modalOverlay}>
           <View style={styles.modalPositionWrapper}>
             <Image source={emojiCorrectSource} style={styles.modalEmojiImage} />
@@ -431,7 +581,7 @@ export default function MultipleChoicesQuestion() {
 
               <View style={styles.nextButtonRow}>
                 <TouchableOpacity style={styles.nextButton} onPress={handleNextQuestion}>
-                  <Text style={styles.nextButtonText}>{currentIndex + 1 >= 10 ? "Selesai" : "Selanjutnya"}</Text>
+                  <Text style={styles.nextButtonText}>Selanjutnya</Text>
                 </TouchableOpacity>
               </View>
             </View>

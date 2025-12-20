@@ -1,0 +1,197 @@
+====================================================================================================
+DAFTAR SOAL DAN JAWABAN
+Export: 2025-12-20 18:54:07
+Total soal: 8
+====================================================================================================
+
+
+[SOAL #1]
+ID: 371
+Topik: Variabel dan Tipe Data
+Tipe: FILL
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Isilah ___ untuk membuat kode yang menampilkan nilai 10 sebagai tipe data integer
+
+CODE TEMPLATE:
+x = ___
+print(x)
+print(type(x))
+
+JAWABAN:
+10
+
+PENJELASAN:
+Penjelasan singkat tentang jawaban dan topik Variabel dan Tipe Data: Pada kode tersebut, kita menggunakan tipe data integer yang dideklarasikan dengan menulis nilai secara langsung tanpa tanda petik.
+
+====================================================================================================
+
+[SOAL #2]
+ID: 370
+Topik: Variabel dan Tipe Data
+Tipe: MCQ
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Apa yang dimaksud dengan mutable dan immutable dalam konteks variabel dan tipe data di Python?
+
+OPSI:
+  A. Mutable merujuk pada variabel yang tidak dapat diubah, sedangkan immutable merujuk pada variabel yang dapat diubah.
+  B. Mutable dan immutable keduanya merujuk pada kemampuan variabel untuk diubah, tetapi mutable lebih cepat.
+  C. Mutable merujuk pada tipe data yang dapat diubah, seperti list, sedangkan immutable merujuk pada tipe data yang tidak dapat diubah, seperti integer.
+  D. Mutable merujuk pada tipe data yang dapat diubah secara internal, seperti list, sedangkan immutable merujuk pada tipe data yang tidak dapat diubah secara internal, seperti string dan integer.
+
+JAWABAN:
+D
+
+PENJELASAN:
+Jawaban D benar karena mutable dan immutable merujuk pada kemampuan suatu tipe data untuk diubah secara internal. Tipe data mutable seperti list dan dictionary dapat diubah secara internal setelah dibuat, sedangkan tipe data immutable seperti integer, float, dan string tidak dapat diubah secara internal setelah dibuat. Opsi A salah karena mutable sebenarnya merujuk pada kemampuan untuk diubah, bukan tidak dapat diubah. Opsi B salah karena tidak ada perbedaan kecepatan antara mutable dan immutable. Opsi C salah karena, meskipun list adalah contoh tipe data mutable, dan integer adalah contoh tipe data immutable, definisi ini tidak lengkap dan tidak mencakup semua kasus.
+
+====================================================================================================
+
+[SOAL #3]
+ID: 369
+Topik: Variabel dan Tipe Data
+Tipe: CODING
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Buatlah fungsi yang mengambil dua buah variabel berupa bilangan bulat dan mengembalikan hasil penjumlahan dan perkalian dari kedua variabel tersebut dalam bentuk dictionary.
+
+CODE TEMPLATE:
+def solution(a, b):
+    # Write your code here
+    pass
+
+JAWABAN:
+def solution(a, b):
+    return {"penjumlahan": a + b, "perkalian": a * b}
+
+PENJELASAN:
+Penjelasan solusi dan konsep Variabel dan Tipe Data: Pada soal ini, kita diminta untuk membuat fungsi yang dapat mengambil dua buah variabel berupa bilangan bulat dan mengembalikan hasil penjumlahan dan perkalian dari kedua variabel tersebut dalam bentuk dictionary. Jawaban yang benar menggunakan fungsi dictionary untuk mengembalikan hasil penjumlahan dan perkalian. Test case pertama menggunakan input 2 dan 3, sedangkan test case kedua menggunakan input 5 dan 6.
+
+====================================================================================================
+
+[SOAL #4]
+ID: 368
+Topik: Variabel dan Tipe Data
+Tipe: FILL
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Isilah ___ untuk membuat kode yang mendeklarasikan variabel dengan tipe data integer
+
+CODE TEMPLATE:
+x = ___
+print(type(x))
+
+JAWABAN:
+5
+
+PENJELASAN:
+Penjelasan singkat tentang jawaban dan topik Variabel dan Tipe Data: Pada kode tersebut, kita perlu mengisi kode dengan nilai tertentu agar variabel x memiliki tipe data integer. Dengan mengisi kode tersebut dengan '5', maka variabel x akan memiliki tipe data integer.
+
+====================================================================================================
+
+[SOAL #5]
+ID: 367
+Topik: Variabel dan Tipe Data
+Tipe: FILL
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Isilah ___ untuk membuat kode yang menampilkan teks 'Halo, Dunia!' sebagai string
+
+CODE TEMPLATE:
+x = ___
+print(x)
+
+JAWABAN:
+'Halo, Dunia!'
+
+PENJELASAN:
+Penjelasan: Pada kode tersebut, kita perlu mengisi variabel x dengan string 'Halo, Dunia!' agar ketika dicetak dengan print(x), program akan menampilkan teks 'Halo, Dunia!' sebagai output.
+
+====================================================================================================
+
+[SOAL #6]
+ID: 366
+Topik: Variabel dan Tipe Data
+Tipe: MCQ
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Apa perbedaan antara tipe data integer dan float dalam Python?
+
+CODE TEMPLATE:
+null
+
+OPSI:
+  A. Integer digunakan untuk bilangan bulat, float untuk bilangan kompleks
+  B. Integer dan float keduanya digunakan untuk bilangan bulat
+  C. Float digunakan untuk bilangan bulat, integer untuk bilangan desimal
+  D. Integer digunakan untuk bilangan bulat, float untuk bilangan desimal
+
+JAWABAN:
+D
+
+PENJELASAN:
+Perbedaan antara tipe data integer dan float dalam Python adalah bahwa integer digunakan untuk menyimpan bilangan bulat, seperti 1, 2, 3, sedangkan float digunakan untuk menyimpan bilangan desimal, seperti 3.14 atau -0.5. Jawaban D benar karena integer memang digunakan untuk bilangan bulat dan float untuk bilangan desimal. Opsi A salah karena float tidak digunakan untuk bilangan kompleks, melainkan untuk bilangan desimal. Opsi B salah karena integer dan float memiliki kegunaan yang berbeda. Opsi C salah karena float digunakan untuk bilangan desimal, bukan bilangan bulat.
+
+====================================================================================================
+
+[SOAL #7]
+ID: 365
+Topik: Variabel dan Tipe Data
+Tipe: MCQ
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Apa perbedaan antara tipe data 'list' dan 'tuple' dalam Python?
+
+CODE TEMPLATE:
+null
+
+OPSI:
+  A. List dapat diubah, tuple tidak dapat diubah, dan list lebih lambat
+  B. Tuple dapat diubah, list tidak dapat diubah, dan tuple lebih cepat
+  C. Keduanya dapat diubah, tapi list lebih cepat
+  D. List dapat diubah, tuple tidak dapat diubah, dan tuple lebih cepat
+
+JAWABAN:
+D
+
+PENJELASAN:
+Perbedaan utama antara list dan tuple adalah bahwa list dapat diubah (mutable), sedangkan tuple tidak dapat diubah (immutable). Selain itu, tuple lebih cepat daripada list karena Python dapat melakukan optimasi yang lebih baik pada struktur data yang immutable. Oleh karena itu, opsi D adalah jawaban yang benar.
+
+====================================================================================================
+
+[SOAL #8]
+ID: 364
+Topik: Variabel dan Tipe Data
+Tipe: FILL
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Isilah ___ untuk membuat kode yang mendeklarasikan variabel dengan tipe data string
+
+CODE TEMPLATE:
+x = ___
+print(type(x))
+
+JAWABAN:
+'hello'
+
+PENJELASAN:
+Tipe data string di Python dideklarasikan dengan menggunakan tanda kutip. Dalam contoh ini, variabel x dideklarasikan dengan tipe data string 'hello'.
+
+====================================================================================================

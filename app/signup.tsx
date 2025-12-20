@@ -93,8 +93,8 @@ export default function Signup() {
                 username, // firstName
                 ""        // lastName
             );
-            // Signup successful, AuthContext is updated, navigate to dashboard
-            router.replace("/main/dashboard");
+            // Arahkan user baru ke onboarding pertanyaan awal sebelum dashboard
+            router.replace("/homePage");
         } catch (error: any) {
             const errorMsg = error?.message || error?.error || error?.detail || "Signup failed";
             setSignupError(typeof errorMsg === 'string' ? errorMsg : JSON.stringify(errorMsg));

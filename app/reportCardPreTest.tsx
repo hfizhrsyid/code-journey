@@ -1,5 +1,6 @@
 import { useAuth } from "@/lib/AuthContext";
 import { quizAPI } from "@/lib/api";
+import { sessionStorage } from "@/lib/sessionStorage";
 import { styles } from "@/styles/reportCard";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
@@ -69,10 +70,13 @@ const ReportCardPreTest = () => {
     const params = useLocalSearchParams();
     const { user } = useAuth();
 
-    const topicId = parseInt(params.topicId as string) || 0;
+    const topicId = parseInt(params.topicId as string) || 0; // tested topic
     const topicName = (params.topicName as string) || "Topic";
+    const targetTopicId = parseInt(params.targetTopicId as string) || topicId;
+    const targetTopicName = (params.targetTopicName as string) || topicName;
 
     const [loading, setLoading] = useState(true);
+    const [unlocking, setUnlocking] = useState(false);
     const [stats, setStats] = useState({
         correctAnswers: 0,
         totalQuestions: 0,
@@ -112,6 +116,30 @@ const ReportCardPreTest = () => {
             console.error("Failed to load stats:", error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleStartLearning = async () => {
+        setUnlocking(true);
+        try {
+            await sessionStorage.clearPosition(targetTopicId);
+            await sessionStorage.savePretestCap(targetTopicId);
+            await quizAPI.unlockTopicsUpTo(targetTopicId);
+            router.replace({
+                pathname: "/main/pathPage",
+                params: {
+                    id: targetTopicId.toString(),
+                    topic: targetTopicName,
+                    difficulty: "2",
+                    unlockCapId: targetTopicId.toString(),
+                    resetProgress: "1",
+                },
+            } as any);
+        } catch (err) {
+            console.error("Failed to unlock topics:", err);
+            router.replace("/main/dashboard");
+        } finally {
+            setUnlocking(false);
         }
     };
 
@@ -157,7 +185,7 @@ const ReportCardPreTest = () => {
                 <Text style={styles.descText}>Petualangan belajarmu dimulai dari materi</Text>
 
                 <View style={styles.badge}>
-                    <Text style={styles.badgeText}>{topicName}</Text>
+                    <Text style={styles.badgeText}>{targetTopicName}</Text>
                 </View>
 
                 {/* BUTTON */}
@@ -171,9 +199,10 @@ const ReportCardPreTest = () => {
 
                     <TouchableOpacity
                         style={styles.outlineButton}
-                        onPress={() => router.push("/main/dashboard")}
+                        onPress={handleStartLearning}
+                        disabled={unlocking}
                     >
-                        <Text style={styles.outlineText}>Mulai Belajar</Text>
+                        <Text style={styles.outlineText}>{unlocking ? "Membuka..." : "Mulai Belajar"}</Text>
                     </TouchableOpacity>
                 </View>
             </View>

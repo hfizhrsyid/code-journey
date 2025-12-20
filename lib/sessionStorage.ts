@@ -9,6 +9,7 @@ export interface SessionData {
 }
 
 const SESSION_KEY = "question_session";
+const PRETEST_CAP_KEY = "pretest_cap_topic";
 
 export const sessionStorage = {
   /**
@@ -71,6 +72,35 @@ export const sessionStorage = {
       console.log(`🗑️ All positions cleared`);
     } catch (error) {
       console.error("Error clearing all positions:", error);
+    }
+  },
+
+  async savePretestCap(topicId: number) {
+    try {
+      await AsyncStorage.setItem(PRETEST_CAP_KEY, String(topicId));
+      console.log(`💾 Pretest cap saved for topic ${topicId}`);
+    } catch (error) {
+      console.error("Error saving pretest cap:", error);
+    }
+  },
+
+  async loadPretestCap(): Promise<number | null> {
+    try {
+      const raw = await AsyncStorage.getItem(PRETEST_CAP_KEY);
+      const parsed = raw ? parseInt(raw) : NaN;
+      return Number.isFinite(parsed) ? parsed : null;
+    } catch (error) {
+      console.error("Error loading pretest cap:", error);
+      return null;
+    }
+  },
+
+  async clearPretestCap() {
+    try {
+      await AsyncStorage.removeItem(PRETEST_CAP_KEY);
+      console.log("🗑️ Pretest cap cleared");
+    } catch (error) {
+      console.error("Error clearing pretest cap:", error);
     }
   },
 };

@@ -1,6 +1,6 @@
 import { Question, quizAPI, validateQuestion } from "@/lib/api";
 import { styles } from "@/styles/completionQuestion";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, Alert, Image, Modal, SafeAreaView, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { useQuestions } from "../../lib/QuestionContext";
@@ -8,7 +8,28 @@ import { useFocusEffect } from "@react-navigation/native";
 import React from "react";
 
 export default function CompletionQuestion() {
-  const { questionSet, setQuestionSet, currentIndex, setCurrentIndex, difficulty, topic, topicId, savePosition } = useQuestions();
+  const params = useLocalSearchParams();
+
+  const {
+    questionSet,
+    setQuestionSet,
+    currentIndex,
+    setCurrentIndex,
+    difficulty,
+    topic,
+    topicId,
+    savePosition,
+    mode,
+    recordPretestAnswer,
+    pretestAnswers,
+    getWeakestPretestTopic,
+    getNextPretestTopic,
+    popPretestQuestion,
+    clearPretestTopic,
+  } = useQuestions();
+
+  // ✅ READ questionIndex dari params jika ada (user klik node lama)
+  const paramQuestionIndex = params.questionIndex ? parseInt(params.questionIndex as string) : null;
 
   const [question, setQuestion] = useState<Question | null>(null);
   const [answer, setAnswer] = useState("");
@@ -18,6 +39,44 @@ export default function CompletionQuestion() {
   const [explanation, setExplanation] = useState<string>("");
   const [feedback, setFeedback] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [autoRetried, setAutoRetried] = useState(false);
+  const [prevTopicId, setPrevTopicId] = useState<number | null>(null);
+  const [hasAppliedParamIndex, setHasAppliedParamIndex] = useState(false);
+
+  const PRETEST_MAX_QUESTIONS = 3;
+  const PRETEST_TARGET_CORRECT = 2;
+  const PRETEST_TARGET_WRONG = 2;
+  const REVEAL_DELAY_MS = 650;
+  const MAX_QUESTIONS = 10;
+  const totalQuestions = mode === "pretest" ? Math.min(questionSet.length, PRETEST_MAX_QUESTIONS) : Math.max(questionSet.length, 10);
+
+  const finishPretest = (target?: { id: number; name: string }) => {
+    const fallback = getWeakestPretestTopic();
+    const destId = target?.id ?? fallback?.id ?? topicId;
+    const destName = target?.name ?? fallback?.name ?? topic;
+
+    router.push({
+      pathname: "/reportCardPreTest",
+      params: {
+        topicId: destId.toString(),
+        topicName: destName,
+        targetTopicId: destId.toString(),
+        targetTopicName: destName,
+      },
+    } as any);
+  };
+
+  const resolvePretestTarget = (answers: { correct: boolean }[], testedTopicId: number, testedTopicName: string) => {
+    const totalAnswered = answers.length;
+    const allCorrect = totalAnswered >= PRETEST_MAX_QUESTIONS && answers.every((a) => a.correct);
+
+    if (allCorrect) {
+      const next = getNextPretestTopic(testedTopicId);
+      if (next) return next;
+    }
+
+    return getWeakestPretestTopic() ?? { id: testedTopicId, name: testedTopicName };
+  };
 
   const loadQuestion = useCallback(async () => {
     try {
@@ -28,13 +87,85 @@ export default function CompletionQuestion() {
       setFeedbackStatus(null);
       setFeedback("");
 
+      // Helper: try to fetch questions from server if context is empty or index invalid
+      const hydrateFromServer = async () => {
+        try {
+          const fetched = await quizAPI.getQuestions(topicId || topic, difficulty || 2);
+          if (fetched && fetched.length > 0) {
+            const normalized = fetched.map((q: any) => normalizeQuestion(q));
+            const safeIndex = Math.min(Math.max(currentIndex, 0), normalized.length - 1);
+            setQuestionSet(normalized);
+            setCurrentIndex(safeIndex);
+            setQuestion(normalized[safeIndex]);
+            return true;
+          }
+        } catch (fetchErr) {
+          console.warn("Hydrate from server failed (completion):", fetchErr);
+        }
+        return false;
+      };
+
       if (questionSet.length === 0 || currentIndex >= questionSet.length) {
+        // coba ambil antrean pretest (jika ada)
+        const pending = mode === "pretest" ? popPretestQuestion(topicId) : null;
+        if (pending) {
+          const nq = normalizeQuestion(pending);
+          setQuestionSet([nq]);
+          setCurrentIndex(0);
+          setQuestion(nq);
+          setLoading(false);
+          return;
+        }
+
+        // coba muat ulang dari server (gunakan topik saat ini)
+        const hydrated = await hydrateFromServer();
+        if (hydrated) {
+          setLoading(false);
+          return;
+        }
+
+        // fallback generate 1 soal baru supaya user tidak perlu klik "Coba Lagi"
+        try {
+          const q = await quizAPI.generateQuestion(difficulty || 2, "fill", { id: topicId, name: topic });
+          if (q) {
+            const nq = normalizeQuestion(q);
+
+            const validation = validateQuestion(nq);
+            if (!validation.valid) {
+              setError(validation.error || "Soal yang dihasilkan tidak valid");
+              return;
+            }
+
+            setQuestionSet([nq]);
+            setCurrentIndex(0);
+            setQuestion(nq);
+            return;
+          }
+        } catch (genErr) {
+          console.warn("Fallback generate fill question failed:", genErr);
+        }
+
+        // terakhir, tampilkan error agar UI tetap merespons
         setError("Soal tidak ditemukan");
         return;
       }
 
-      let currentQuestion = questionSet[currentIndex];
-      console.log(`📋 Loading Q${currentIndex}: ID=${currentQuestion.question_id}, Topic=${topic || "N/A"}`);
+      const indexToUse = !hasAppliedParamIndex && paramQuestionIndex !== null ? paramQuestionIndex : currentIndex;
+      console.log(`📖 [Completion] Loading question: index=${indexToUse}, fromParam=${paramQuestionIndex !== null}`);
+
+      const safeIndex = questionSet.length > 0 ? Math.min(Math.max(indexToUse, 0), questionSet.length - 1) : 0;
+
+      // ✅ ALWAYS sync currentIndex with the index we're using
+      // This ensures context state matches the actual question being displayed
+      if (safeIndex !== currentIndex) {
+        setCurrentIndex(safeIndex);
+      }
+      if (!hasAppliedParamIndex && paramQuestionIndex !== null) {
+        setHasAppliedParamIndex(true);
+      }
+
+      let currentQuestion = questionSet[safeIndex];
+      console.log(`📋 Loading Q${safeIndex}: ID=${currentQuestion?.question_id}, Topic=${topic || "N/A"}`);
       currentQuestion = normalizeQuestion(currentQuestion);
 
       // Validate question
@@ -53,21 +184,41 @@ export default function CompletionQuestion() {
     } finally {
       setLoading(false);
     }
-  }, [questionSet, currentIndex, topicId]);
+  }, [questionSet, paramQuestionIndex, currentIndex, mode, difficulty, topicId, topic, setQuestionSet, setCurrentIndex, recordPretestAnswer, hasAppliedParamIndex]);
 
   useEffect(() => {
     loadQuestion();
   }, [loadQuestion]);
 
-  // ✅ RESET STATE KETIKA TOPIC BERUBAH
+  // Trigger loadQuestion ketika screen fokus untuk memastikan data selalu fresh
+  useFocusEffect(
+    React.useCallback(() => {
+      loadQuestion();
+    }, [loadQuestion])
+  );
+
+  // Auto-retry sekali bila terjadi error untuk menghindari klik manual
   useEffect(() => {
-    setQuestion(null);
-    setAnswer("");
-    setFeedbackStatus(null);
-    setFeedback("");
-    setExplanation("");
-    setError(null);
-  }, [topicId]);
+    if (!loading && error && !autoRetried) {
+      setAutoRetried(true);
+      loadQuestion();
+    }
+  }, [loading, error, autoRetried, loadQuestion]);
+
+  // ✅ RESET STATE HANYA KETIKA TOPIC BENAR-BENAR BERUBAH
+  useEffect(() => {
+    if (prevTopicId !== null && topicId !== prevTopicId) {
+      console.log(`🔄 Topic changed from ${prevTopicId} to ${topicId}, resetting state`);
+      setQuestion(null);
+      setAnswer("");
+      setFeedbackStatus(null);
+      setFeedback("");
+      setExplanation("");
+      setError(null);
+      setAutoRetried(false);
+    }
+    setPrevTopicId(topicId);
+  }, [topicId, prevTopicId]);
 
   const handleSubmit = async () => {
     if (!question || !answer.trim()) {
@@ -89,6 +240,37 @@ export default function CompletionQuestion() {
         setFeedback(result.feedback || "Coba cek kembali format jawaban dan konsep dasarnya.");
         setFeedbackStatus("wrong");
         setExplanation(result.explanation || "");
+      }
+
+      if (mode === "pretest") {
+        const topicKey = topicId;
+        const nextAnswer = {
+          topicId: topicKey,
+          topicName: topic,
+          questionId: question.question_id,
+          correct: !!result.correct,
+        };
+
+        const mergedAnswers = [...pretestAnswers.filter((a) => a.questionId !== nextAnswer.questionId), nextAnswer];
+
+        recordPretestAnswer(nextAnswer);
+
+        const wrong = mergedAnswers.filter((a) => !a.correct).length;
+        const correctCount = mergedAnswers.filter((a) => a.correct).length;
+        const answered = mergedAnswers.length;
+
+        const shouldEndEarly = wrong >= PRETEST_TARGET_WRONG || correctCount >= PRETEST_TARGET_CORRECT;
+        const reachedCap = answered >= PRETEST_MAX_QUESTIONS;
+
+        const target = resolvePretestTarget(mergedAnswers, topicKey, topic);
+
+        setTimeout(() => {
+          if (shouldEndEarly || reachedCap) {
+            finishPretest(target);
+          } else {
+            handleNextQuestion();
+          }
+        }, REVEAL_DELAY_MS);
       }
 
       if (result.newly_unlocked_badges && result.newly_unlocked_badges.length > 0) {
@@ -115,9 +297,9 @@ export default function CompletionQuestion() {
     const nextIndex = currentIndex + 1;
     console.log(`🔄 handleNextQuestion: currentIndex=${currentIndex}, nextIndex=${nextIndex}, questionSet.length=${questionSet.length}`);
 
-    if (nextIndex >= 10) {
-      console.log("✅ Selesai 10 soal");
-      // Check if we've completed 10 questions - redirect to reportCard
+    // ✅ CEK APAKAH SUDAH MENCAPAI LIMIT 10 SOAL (hanya untuk learning mode)
+    if (mode !== "pretest" && nextIndex >= MAX_QUESTIONS) {
+      console.log(`✅ Sudah mencapai ${MAX_QUESTIONS} soal, navigasi ke reportCard`);
       router.push({
         pathname: "/reportCard",
         params: {
@@ -134,6 +316,7 @@ export default function CompletionQuestion() {
       const copy = [...questionSet];
       copy[nextIndex] = nextQ;
       setQuestionSet(copy);
+      setQuestion(nextQ as any);
       setCurrentIndex(nextIndex);
 
       const nextPath = getQuestionScreenPath(nextQ.question_type);
@@ -155,11 +338,12 @@ export default function CompletionQuestion() {
         return "mcq";
       })() as "mcq" | "fill" | "coding";
 
-      const newQuestion = await quizAPI.generateQuestion(difficulty || 2, nextType);
+      const newQuestion = await quizAPI.generateQuestion(difficulty || 2, nextType, { id: topicId, name: topic });
       if (newQuestion) {
         const nq = normalizeQuestion(newQuestion);
         const updated = [...questionSet, nq];
         setQuestionSet(updated);
+        setQuestion(nq as any);
         setCurrentIndex(nextIndex);
 
         const newPath = getQuestionScreenPath(nq.question_type);
@@ -172,14 +356,18 @@ export default function CompletionQuestion() {
       console.warn("Gagal generate soal berikutnya (completion):", err);
     }
 
-    // Navigate to results screen
-    router.push({
-      pathname: "/reportCard",
-      params: {
-        topicId: topicId.toString(),
-        topicName: topic,
-      },
-    } as any);
+    // Jika tidak ada soal baru yang bisa diambil, akhiri sesi
+    if (mode === "pretest") {
+      finishPretest();
+    } else {
+      router.push({
+        pathname: "/reportCard",
+        params: {
+          topicId: topicId.toString(),
+          topicName: topic,
+        },
+      } as any);
+    }
   };
 
   const emojiWrongSource = require("../../assets/images/emoji-wrong-answer.png");
@@ -203,6 +391,11 @@ export default function CompletionQuestion() {
             .filter(Boolean);
         }
       }
+
+      // carry topic metadata forward for pretest/reporting correctness
+      if (!q.topic_id) q.topic_id = topicId;
+      if (!q.topic_name && q.topic) q.topic_name = q.topic;
+      if (!q.topic_name) q.topic_name = topic;
     } catch (e) {
       console.warn("normalizeQuestion error:", e);
     }
@@ -255,7 +448,9 @@ export default function CompletionQuestion() {
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
-          <Text style={styles.headerText}>Soal {currentIndex + 1}/10</Text>
+          <Text style={styles.headerText}>
+            Soal {currentIndex + 1}/{Math.max(questionSet.length, 1)}
+          </Text>
           <TouchableOpacity style={styles.rulesButton}>
             <Text style={styles.rulesButtonText}>Isi Kosong</Text>
           </TouchableOpacity>
@@ -293,7 +488,7 @@ export default function CompletionQuestion() {
       </View>
 
       {/* Feedback Modal - Wrong */}
-      <Modal transparent visible={feedbackStatus === "wrong"} animationType="fade">
+      <Modal transparent visible={mode !== "pretest" && feedbackStatus === "wrong"} animationType="fade">
         <View style={styles.modalOverlay}>
           <View style={styles.modalPositionWrapper}>
             <Image source={emojiWrongSource} style={styles.modalEmojiImage} />
@@ -326,7 +521,7 @@ export default function CompletionQuestion() {
       </Modal>
 
       {/* Feedback Modal - Correct */}
-      <Modal transparent visible={feedbackStatus === "correct"} animationType="fade">
+      <Modal transparent visible={mode !== "pretest" && feedbackStatus === "correct"} animationType="fade">
         <View style={styles.modalOverlay}>
           <View style={styles.modalPositionWrapper}>
             <Image source={emojiCorrectSource} style={styles.modalEmojiImage} />
@@ -359,7 +554,7 @@ export default function CompletionQuestion() {
                     handleNextQuestion();
                   }}
                 >
-                  <Text style={styles.nextButtonText}>{currentIndex + 1 >= 10 ? "Selesai" : "Selanjutnya"}</Text>
+                  <Text style={styles.nextButtonText}>Selanjutnya</Text>
                 </TouchableOpacity>
               </View>
             </View>

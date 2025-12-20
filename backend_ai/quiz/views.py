@@ -3,7 +3,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from .models import Question, QuestionAttempt, Topic, Badge, UserBadge
+from .models import Question, QuestionAttempt, Topic, Badge, UserBadge, TopicUnlock
 from .services import generate_question, check_answer, generate_question_set, get_groq_client
 from .auth_views import add_cors_headers
 from django.views.decorators.csrf import csrf_exempt
@@ -20,6 +20,9 @@ def generate_question_view(request):
     try:
         difficulty = request.data.get("difficulty")
         question_type = request.data.get("question_type")
+        topic_id = request.data.get("topic_id")
+        topic_name = (request.data.get("topic_name") or request.data.get("topic") or "").strip()
+        target_topic = None
         
         if not difficulty or not question_type:
             return Response(
@@ -34,9 +37,24 @@ def generate_question_view(request):
                 {"error": "Difficulty must be integer 1-5"},
                 status=status.HTTP_400_BAD_REQUEST
             )
+
+        # Resolve topic (optional). Accept topic_id or topic name; default to generic name.
+        if topic_id:
+            try:
+                target_topic = Topic.objects.get(id=int(topic_id))
+                topic_name = target_topic.name
+            except (ValueError, Topic.DoesNotExist):
+                return Response(
+                    {"error": "Invalid topic_id"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        elif topic_name:
+            target_topic, _ = Topic.objects.get_or_create(name=topic_name)
+        else:
+            topic_name = "Pemrograman Python"
         
         try:
-            parsed = generate_question(difficulty, question_type)
+            parsed = generate_question(difficulty, question_type, topic_name)
         except ValueError as e:
             return Response(
                 {"error": str(e)},
@@ -52,10 +70,12 @@ def generate_question_view(request):
         q = Question.objects.create(
             question_type=question_type,
             difficulty=difficulty,
+            topic=target_topic,
             question_text=parsed.get("question_text", ""),
             code_template=parsed.get("code_template"),
             options=parsed.get("options"),
             answer_key=parsed.get("answer_key"),
+            test_cases=parsed.get("test_cases"),  # ✅ TAMBAHKAN INI
             explanation=parsed.get("explanation", "")  # SIMPAN EXPLANATION
         )
         
@@ -68,7 +88,9 @@ def generate_question_view(request):
                 "options": parsed.get("options"),
                 "explanation": parsed.get("explanation", ""),  # KIRIM EXPLANATION
                 "question_type": question_type,
-                "difficulty": difficulty
+                "difficulty": difficulty,
+                "topic_id": q.topic.id if q.topic else None,
+                "topic_name": q.topic.name if q.topic else topic_name,
             },
             status=status.HTTP_201_CREATED
         )
@@ -106,12 +128,13 @@ def check_answer_view(request):
         # Get explanation dari database
         explanation = q.explanation or ""
         
-        # Check answer
+        # Check answer (pass question instance for test_cases access)
         check_result = check_answer(
             str(user_answer),
             q.answer_key,
             q.question_type,
-            explanation
+            q.explanation,
+            question_instance=q  # ✅ PASS INSTANCE
         )
         
         # Save attempt
@@ -392,7 +415,8 @@ def submit_answer(request):
             str(user_answer),
             question.answer_key,
             question.question_type,
-            question.explanation
+            question.explanation,
+            question_instance=question  # ✅ TAMBAHKAN
         )
         
         # Track attempt (only if user is logged in)
@@ -608,7 +632,12 @@ def get_topics(request):
     try:
         user = request.user if request.user.is_authenticated else None
         topics = Topic.objects.all().values('id', 'name', 'description', 'order')
-                # Include question count, completion percentage, and lock status per topic
+        unlocked_ids = set()
+        if user:
+            unlocked_ids = set(
+                TopicUnlock.objects.filter(user=user).values_list('topic_id', flat=True)
+            )
+
         result = []
         for topic in topics:
             # Get question count
@@ -641,29 +670,27 @@ def get_topics(request):
                 completed_count = min(correct_count, 10)
                 completion_percentage = int((completed_count / 10) * 100)
                 
-                # Check if topic is locked (previous topic must be completed)
+                # Lock check based on actual completion of previous topic (do not auto-complete unlocked topics)
                 if topic['order'] > 1:
-                    # Get previous topic
                     previous_topic = Topic.objects.filter(order=topic['order'] - 1).first()
                     if previous_topic:
-                        # Check if previous topic is completed (10 questions correct)
                         prev_questions = Question.objects.filter(topic_id=previous_topic.id, is_active=True)
-                        
                         prev_correct = 0
                         for question in prev_questions:
                             latest_attempt = QuestionAttempt.objects.filter(
                                 user=user,
                                 question=question
                             ).order_by('-created_at').first()
-                            
                             if latest_attempt and latest_attempt.is_correct:
                                 prev_correct += 1
-                        
-                        # Previous topic must have at least 10 correct answers to unlock
                         prev_completed = min(prev_correct, 10)
-                        is_locked = prev_completed < 10  # Lock if previous topic has less than 10 correct
+                        is_locked = prev_completed < 10
                     else:
                         is_locked = True  # Lock if previous topic doesn't exist
+
+                # Current topic unlock: honor explicit unlock record regardless of previous, but keep real completion %
+                if topic['id'] in unlocked_ids:
+                    is_locked = False
             else:
                 # Not authenticated - lock all topics except the first one
                 is_locked = topic['order'] > 1
@@ -687,6 +714,50 @@ def get_topics(request):
             {"error": f"Server error: {str(e)}"},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+@csrf_exempt
+@add_cors_headers
+def unlock_topics(request):
+    """
+    Unlock all topics up to (and including) the given topic_id for the authenticated user.
+    Body: {"topic_id": <int>} or {"target_topic_id": <int>}
+    """
+    try:
+        target_id = request.data.get("topic_id") or request.data.get("target_topic_id")
+        if not target_id:
+            return Response({"error": "topic_id is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            target_id = int(target_id)
+            target_topic = Topic.objects.get(id=target_id)
+        except (ValueError, Topic.DoesNotExist):
+            return Response({"error": "topic not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        cutoff_order = target_topic.order or 0
+        topics_to_unlock = Topic.objects.filter(order__lte=cutoff_order)
+
+        created = 0
+        for t in topics_to_unlock:
+            _, was_created = TopicUnlock.objects.get_or_create(
+                user=request.user,
+                topic=t,
+                defaults={"source": "pretest"}
+            )
+            if was_created:
+                created += 1
+
+        return Response({
+            "unlocked_count": topics_to_unlock.count(),
+            "new_unlocks": created,
+            "target_topic_id": target_topic.id,
+            "target_topic_name": target_topic.name,
+        })
+    except Exception as e:
+        logger.error(f"Error unlocking topics: {str(e)}")
+        return Response({"error": f"Server error: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 # ============================================

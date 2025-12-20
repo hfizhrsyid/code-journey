@@ -8,6 +8,7 @@ from .views import (
     submit_answer,
     get_user_attempts,
     get_topics,
+    unlock_topics,
     run_code,
     get_user_badges,
     get_all_badges,
@@ -34,6 +35,7 @@ urlpatterns = [
     path("questions/run/", run_code, name="run_code"),  # New: Run code with test cases
     path("questions/attempts/", get_user_attempts, name="get_user_attempts"),
     path("topics/", get_topics, name="get_topics"),
+    path("topics/unlock/", unlock_topics, name="unlock_topics"),
     
     # Badge endpoints
     path("badges/", get_all_badges, name="get_all_badges"),

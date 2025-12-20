@@ -1,0 +1,83 @@
+import { StyleSheet } from "react-native";
+
+export const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        backgroundColor: "#121b34",
+        alignItems: "center",
+        justifyContent: "center",
+        paddingHorizontal: 24,
+    },
+    title: {
+        color: "#ffffff",
+        fontSize: 18,
+        fontWeight: "bold",
+        marginBottom: 18,
+        textAlign: "center",
+    },
+    card: {
+        backgroundColor: "#286292",
+        paddingVertical: 24,
+        paddingHorizontal: 20,
+        borderRadius: 18,
+        width: "90%",
+        alignItems: "center",
+        shadowColor: "#000",
+        shadowOpacity: 0.25,
+        shadowRadius: 8,
+        shadowOffset: { width: 0, height: 4 },
+        elevation: 6,
+    },
+    question: {
+        color: "#ffffff",
+        fontSize: 16,
+        fontWeight: "bold",
+        textAlign: "center",
+        marginBottom: 24,
+        lineHeight: 22,
+    },
+    sliderWrapper: {
+        width: "100%",
+        alignItems: "center",
+        justifyContent: "center",
+        position: "relative",
+        marginBottom: 24,
+    },
+    customTrack: {
+        position: "absolute",
+        width: "100%",
+        height: 20,
+        backgroundColor: "#FFFFFF",
+        borderRadius: 10,
+    },
+    slider: {
+        width: "100%",
+        height: 40,
+    },
+    labelBox: {
+        position: "absolute",
+        top: 46,
+        backgroundColor: "#B0C4DE",
+        paddingHorizontal: 14,
+        paddingVertical: 6,
+        borderRadius: 12,
+    },
+    sliderLabel: {
+        color: "#1d3557",
+        fontSize: 12,
+        fontWeight: "700",
+    },
+    button: {
+        marginTop: 8,
+        width: "70%",
+        backgroundColor: "#ffffff",
+        paddingVertical: 12,
+        borderRadius: 14,
+        alignItems: "center",
+    },
+    buttonText: {
+        color: "#1d3557",
+        fontSize: 15,
+        fontWeight: "bold",
+    },
+});

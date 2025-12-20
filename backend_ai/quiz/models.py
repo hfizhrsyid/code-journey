@@ -125,3 +125,23 @@ class UserBadge(models.Model):
     
     def __str__(self):
         return f"{self.user.username} - {self.badge.name}"
+
+
+class TopicUnlock(models.Model):
+    """Manual/unlocked topics per user (e.g., via pre-test)."""
+    SOURCE_CHOICES = [
+        ("pretest", "Pre-test"),
+        ("manual", "Manual"),
+    ]
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="topic_unlocks")
+    topic = models.ForeignKey(Topic, on_delete=models.CASCADE, related_name="unlocked_by")
+    source = models.CharField(max_length=20, choices=SOURCE_CHOICES, default="pretest")
+    unlocked_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ("user", "topic")
+        ordering = ["topic__order", "unlocked_at"]
+
+    def __str__(self):
+        return f"{self.user.username} unlocked {self.topic.name} ({self.source})"

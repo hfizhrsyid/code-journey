@@ -1,0 +1,369 @@
+====================================================================================================
+DAFTAR SOAL DAN JAWABAN
+Export: 2025-12-20 16:23:30
+Total soal: 14
+====================================================================================================
+
+
+[SOAL #1]
+ID: 296
+Topik: Variabel dan Tipe Data
+Tipe: MCQ
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Apa perbedaan utama antara tipe data list dan tuple dalam Python?
+
+OPSI:
+  List dapat diubah, tetapi tuple tidak dapat diubah dan lebih cepat
+  Tuple dapat diubah, tetapi list tidak dapat diubah dan lebih lambat
+  Keduanya sama, hanya nama berbeda
+  List hanya untuk angka, tuple hanya untuk string
+
+JAWABAN:
+A
+
+PENJELASAN:
+Perbedaan utama antara list dan tuple dalam Python adalah bahwa list dapat diubah (mutable), sedangkan tuple tidak dapat diubah (immutable). Ini berarti Anda bisa menambah, menghapus, atau mengubah elemen dalam list, tetapi tidak bisa melakukannya dalam tuple. Selain itu, tuple umumnya lebih cepat dan lebih efisien dalam hal penggunaan memori dibandingkan dengan list karena sifatnya yang tidak dapat diubah.
+
+====================================================================================================
+
+[SOAL #2]
+ID: 295
+Topik: Variabel dan Tipe Data
+Tipe: CODING
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Buatlah fungsi yang menghitung luas persegi panjang dengan menggunakan variabel dan tipe data yang tepat. Fungsi tersebut harus mengambil dua parameter, panjang dan lebar, dan mengembalikan luas persegi panjang.
+
+CODE TEMPLATE:
+def hitung_luas(panjang, lebar):
+    # Write your code here
+    pass
+
+JAWABAN:
+def hitung_luas(panjang, lebar):
+    return panjang * lebar
+
+PENJELASAN:
+Pada soal ini, kita menggunakan fungsi dengan dua parameter, panjang dan lebar, kemudian mengembalikan hasil perkalian antara panjang dan lebar. Hasil ini merupakan luas persegi panjang. Fungsi ini dapat diuji dengan beberapa test case untuk memastikan bahwa fungsi tersebut bekerja dengan benar.
+
+====================================================================================================
+
+[SOAL #3]
+ID: 294
+Topik: Variabel dan Tipe Data
+Tipe: FILL
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Isilah ___ untuk membuat kode yang menampilkan tipe data string
+
+CODE TEMPLATE:
+x = ___
+print(type(x))
+
+JAWABAN:
+'hello'
+
+PENJELASAN:
+Tipe data string di Python ditandai dengan kutipan tunggal atau ganda, sehingga 'hello' adalah contoh variabel dengan tipe data string.
+
+====================================================================================================
+
+[SOAL #4]
+ID: 253
+Topik: Variabel dan Tipe Data
+Tipe: CODING
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Buatlah fungsi yang mengambil sebuah string sebagai input dan mengembalikan sebuah dictionary dengan informasi tentang tipedata dari setiap karakter dalam string tersebut.
+
+CODE TEMPLATE:
+def solution(input_str):
+    # Write your code here
+    pass
+
+JAWABAN:
+def solution(input_str):
+    result = {}
+    for char in input_str:
+        if isinstance(char, str):
+            if 'string' in result:
+                result['string'] += 1
+            else:
+                result['string'] = 1
+        elif isinstance(char, int):
+            if 'integer' in result:
+                result['integer'] += 1
+            else:
+                result['integer'] = 1
+        else:
+            if 'other' in result:
+                result['other'] += 1
+            else:
+                result['other'] = 1
+    return result
+
+PENJELASAN:
+Penjelasan solusi dan konsep Variabel dan Tipe Data: Fungsi ini menggunakan perulangan untuk memeriksa setiap karakter dalam string input. Kemudian, ia menggunakan metode isinstance() untuk memeriksa tipedata dari setiap karakter dan mengupdate dictionary result berdasarkan tipedata tersebut.
+
+====================================================================================================
+
+[SOAL #5]
+ID: 251
+Topik: Variabel dan Tipe Data
+Tipe: CODING
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Buatlah fungsi yang mengambil dua buah parameter, kemudian mengembalikan hasil penjumlahan dan perkalian dari kedua parameter tersebut. Pastikan Anda menggunakan tipe data yang tepat untuk variabel-variabel Anda.
+
+CODE TEMPLATE:
+def solution(a, b):
+    # Write your code here
+    pass
+
+JAWABAN:
+def solution(a, b):
+    penjumlahan = a + b
+    perkalian = a * b
+    return penjumlahan, perkalian
+
+PENJELASAN:
+Dalam solusi ini, kita menggunakan fungsi solution() yang mengambil dua parameter a dan b. Kita lalu melakukan penjumlahan dan perkalian dari a dan b, dan mengembalikan hasilnya. Tipe data yang digunakan adalah integer, karena kita melakukan operasi aritmatika. Hasilnya dikembalikan dalam bentuk tuple.
+
+====================================================================================================
+
+[SOAL #6]
+ID: 250
+Topik: Variabel dan Tipe Data
+Tipe: MCQ
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Apa perbedaan antara tipe data list dan tuple dalam Python?
+
+OPSI:
+  List dapat diubah, sedangkan tuple tidak dapat diubah, namun keduanya dapat diakses dengan indeks
+  List dan tuple sama-sama dapat diubah dan diakses dengan indeks
+  List hanya dapat diakses dengan indeks, sedangkan tuple dapat diubah
+  List dapat diubah dan diakses dengan metode, sedangkan tuple tidak dapat diubah dan hanya dapat diakses dengan indeks
+
+JAWABAN:
+A
+
+PENJELASAN:
+Perbedaan utama antara list dan tuple dalam Python adalah bahwa list dapat diubah setelah dibuat, sedangkan tuple tidak dapat diubah. Keduanya dapat diakses dengan indeks, namun karena sifat imutabilitas tuple, beberapa operasi yang berlaku untuk list tidak berlaku untuk tuple. Ini membuat pilihan A sebagai jawaban yang benar.
+
+====================================================================================================
+
+[SOAL #7]
+ID: 249
+Topik: Variabel dan Tipe Data
+Tipe: FILL
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Isilah ___ untuk membuat kode yang menunjukkan perbedaan antara tipe data integer dan float
+
+CODE TEMPLATE:
+x = 10
+y = ___
+print(type(x))
+print(type(y))
+
+JAWABAN:
+10.5
+
+PENJELASAN:
+Penjelasan singkat tentang jawaban: Dalam kode tersebut, variabel x memiliki tipe data integer karena nilainya adalah 10, sedangkan variabel y memiliki tipe data float karena nilainya adalah 10.5. Hal ini menunjukkan perbedaan antara tipe data integer dan float.
+
+====================================================================================================
+
+[SOAL #8]
+ID: 248
+Topik: Variabel dan Tipe Data
+Tipe: MCQ
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Apa yang dimaksud dengan tipe data mutable dan immutable dalam Python?
+
+OPSI:
+  Mutable adalah tidak dapat diubah, sedangkan immutable adalah dapat diubah
+  Mutable dan immutable adalah istilah yang sama untuk tipe data yang dapat diubah
+  Mutable merujuk pada tipe data yang dapat diubah, sedangkan immutable merujuk pada tipe data yang tidak dapat diubah
+  Mutable hanya berlaku untuk daftar, sedangkan immutable hanya berlaku untuk string
+
+JAWABAN:
+C
+
+PENJELASAN:
+Tipe data mutable dalam Python merujuk pada tipe data yang dapat diubah setelah dibuat, seperti daftar (list) dan kamus (dictionary). Tipe data immutable merujuk pada tipe data yang tidak dapat diubah setelah dibuat, seperti string, tuple, dan integer. Contoh ini menunjukkan konsep dasar tentang tipe data dalam Python dan pentingnya memahami perbedaan antara mutable dan immutable.
+
+====================================================================================================
+
+[SOAL #9]
+ID: 247
+Topik: Variabel dan Tipe Data
+Tipe: CODING
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Buatlah fungsi yang mengambil sebuah string sebagai input dan mengembalikan jenis tipe data dari setiap karakter dalam string tersebut.
+
+CODE TEMPLATE:
+def tipe_data_karakter(input_str):
+    # Write your code here
+    pass
+
+JAWABAN:
+def tipe_data_karakter(input_str):
+    result = {}
+    for char in input_str:
+        if char.isdigit():
+            result[char] = 'Integer'
+        elif char.isalpha():
+            result[char] = 'String'
+        else:
+            result[char] = 'Simbol'
+    return result
+
+PENJELASAN:
+Fungsi ini menggunakan metode isdigit() dan isalpha() untuk menentukan apakah sebuah karakter adalah digit atau huruf. Jika karakter tersebut bukan digit atau huruf, maka dianggap sebagai simbol.
+
+====================================================================================================
+
+[SOAL #10]
+ID: 246
+Topik: Variabel dan Tipe Data
+Tipe: CODING
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Buatlah fungsi yang menghitung luas persegi panjang dengan menggunakan variabel dan tipe data yang tepat. Fungsi ini harus mengambil dua argumen, panjang dan lebar, dan mengembalikan luas persegi panjang.
+
+CODE TEMPLATE:
+def hitung_luas(panjang, lebar):
+    # Write your code here
+    pass
+
+JAWABAN:
+def hitung_luas(panjang, lebar):
+    luas = panjang * lebar
+    return luas
+
+PENJELASAN:
+Pada soal ini, kita menggunakan variabel 'panjang' dan 'lebar' dengan tipe data integer untuk menghitung luas persegi panjang. Kemudian, kita mengembalikan hasil perkalian antara 'panjang' dan 'lebar' sebagai luas persegi panjang. Konsep variabel dan tipe data digunakan untuk membuat fungsi yang efektif dan efisien.
+
+====================================================================================================
+
+[SOAL #11]
+ID: 245
+Topik: Variabel dan Tipe Data
+Tipe: MCQ
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Apa perbedaan antara tipe data 'list' dan 'tuple' dalam Python?
+
+CODE TEMPLATE:
+null
+
+OPSI:
+  List adalah immutable, sedangkan tuple adalah mutable
+  List hanya dapat menyimpan tipe data yang sama, sedangkan tuple dapat menyimpan tipe data yang berbeda
+  List diakses menggunakan indeks, sedangkan tuple diakses menggunakan nama
+  List adalah mutable, sedangkan tuple adalah immutable
+
+JAWABAN:
+D
+
+PENJELASAN:
+Perbedaan utama antara list dan tuple dalam Python adalah sifat mutabilitasnya. List adalah mutable, artinya dapat diubah setelah dibuat, sedangkan tuple adalah immutable, artinya tidak dapat diubah setelah dibuat. Ini berarti Anda dapat menambah, menghapus, atau mengubah elemen dalam list, tetapi tidak dapat melakukannya dalam tuple.
+
+====================================================================================================
+
+[SOAL #12]
+ID: 244
+Topik: Variabel dan Tipe Data
+Tipe: MCQ
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Apa yang dimaksud dengan immutable dalam konteks tipe data di Python?
+
+OPSI:
+  Tipe data yang dapat diubah setelah dibuat
+  Tipe data yang dapat diakses dari mana saja dalam program
+  Tipe data yang memiliki ukuran tetap
+  Tipe data yang tidak dapat diubah setelah dibuat
+
+JAWABAN:
+D
+
+PENJELASAN:
+Immutable dalam konteks tipe data di Python merujuk pada tipe data yang tidak dapat diubah setelah dibuat. Contoh tipe data immutable di Python adalah string, tuple, dan integer. Ini berarti bahwa setelah sebuah objek dari tipe data immutable dibuat, nilainya tidak dapat diubah. Pilihan D adalah jawaban yang benar karena secara akurat mendefinisikan konsep immutable. Pilihan A, B, dan C salah karena mereka tidak secara akurat menggambarkan konsep immutable.
+
+====================================================================================================
+
+[SOAL #13]
+ID: 243
+Topik: Variabel dan Tipe Data
+Tipe: MCQ
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Apa perbedaan antara 'int' dan 'float' dalam Python?
+
+OPSI:
+  'int' untuk karakter, 'float' untuk angka
+  'int' untuk bilangan bulat, 'float' untuk bilangan desimal
+  'int' untuk bilangan desimal, 'float' untuk bilangan bulat
+  'int' untuk logika boolean, 'float' untuk bilangan bulat
+
+JAWABAN:
+B
+
+PENJELASAN:
+Dalam Python, 'int' digunakan untuk merepresentasikan bilangan bulat, sedangkan 'float' digunakan untuk merepresentasikan bilangan desimal. Contohnya, 5 adalah 'int', sedangkan 5.5 adalah 'float'.
+
+====================================================================================================
+
+[SOAL #14]
+ID: 242
+Topik: Variabel dan Tipe Data
+Tipe: FILL
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Apa output dari kode berikut?
+
+CODE TEMPLATE:
+x = 10
+print(type(x))
+
+JAWABAN:
+int
+
+PENJELASAN:
+Tipe data integer adalah tipe data yang merepresentasikan bilangan bulat, seperti 1, 2, 3, dan seterusnya.
+
+====================================================================================================

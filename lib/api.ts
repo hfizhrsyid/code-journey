@@ -2,18 +2,29 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios, { AxiosInstance } from "axios";
 import Constants from "expo-constants";
 
-const resolveAPIBase = () => {
-  const hostUri = Constants.expoConfig?.hostUri || (Constants.manifest2 as any)?.extra?.expoClient?.hostUri || Constants.manifest?.debuggerHost;
+const normalizeApiBase = (base: string) => {
+  const trimmed = base.replace(/\/$/, "");
+  return trimmed.endsWith("/api") ? `${trimmed}/` : `${trimmed}/api/`;
+};
 
+const resolveAPIBase = () => {
+  // ✅ PRIORITAS: Cek env variable DULU
+  if (process.env.EXPO_PUBLIC_API_URL) {
+    const base = process.env.EXPO_PUBLIC_API_URL;
+    const trimmed = base.replace(/\/$/, "");
+    return trimmed.endsWith("/api") ? `${trimmed}/` : `${trimmed}/api/`;
+  }
+
+  // Fallback ke auto-detect jika env kosong
+  const hostUri = Constants.expoConfig?.hostUri || (Constants.manifest2 as any)?.extra?.expoClient?.hostUri || Constants.manifest?.debuggerHost;
   const host = hostUri?.split(":")[0];
   const ip = host && /^\d+\.\d+\.\d+\.\d+$/.test(host) ? host : null;
-
-  const base = process.env.EXPO_PUBLIC_API_URL || (ip ? `http://${ip}:8000` : "http://localhost:8000");
-  return `${base}/api/`;
+  const base = ip ? `http://${ip}:8000` : "http://localhost:8000";
+  return normalizeApiBase(base);
 };
 
 const API_BASE_URL = resolveAPIBase();
-const FALLBACK_API_URL = "http://192.168.1.12:8000/api/";
+const FALLBACK_API_URL = process.env.EXPO_PUBLIC_API_FALLBACK_URL ? normalizeApiBase(process.env.EXPO_PUBLIC_API_FALLBACK_URL) : null;
 
 export interface Question {
   question_id: number;
@@ -22,6 +33,10 @@ export interface Question {
   options?: string[];
   question_type: string;
   difficulty: number;
+  answer_key?: string;
+  topic_id?: number | null;
+  topic_name?: string | null;
+  topic?: string | null;
 }
 
 export interface CheckAnswerResponse {
@@ -80,8 +95,8 @@ class QuizAPI {
       (response) => response,
       async (error) => {
         // Jika request gagal dan belum coba fallback, coba dengan IP
-        if (!this.useFallback && error.config && (error.code === "ECONNREFUSED" || error.code === "ENOTFOUND" || error.message === "Network Error" || !error.response)) {
-          console.log("🔄 localhost gagal, mencoba IP fallback...");
+        if (!this.useFallback && FALLBACK_API_URL && error.config && (error.code === "ECONNREFUSED" || error.code === "ENOTFOUND" || error.message === "Network Error" || !error.response)) {
+          console.log(`🔄 primary baseURL gagal, mencoba fallback ${FALLBACK_API_URL}`);
           this.useFallback = true;
 
           // Switch ke fallback URL
@@ -107,11 +122,24 @@ class QuizAPI {
     }
   }
 
-  async generateQuestion(difficulty: number, questionType: "mcq" | "fill" | "coding"): Promise<Question> {
+  async generateQuestion(difficulty: number, questionType: "mcq" | "fill" | "coding", topic?: string | number | { id?: number; name?: string }): Promise<Question> {
     try {
-      const response = await this.client.post("generate-question/", {
+      const payload: Record<string, any> = {
         difficulty,
         question_type: questionType,
+      };
+
+      if (typeof topic === "number") {
+        payload.topic_id = topic;
+      } else if (typeof topic === "string") {
+        payload.topic = topic;
+      } else if (topic && (topic.id || topic.name)) {
+        if (topic.id) payload.topic_id = topic.id;
+        if (topic.name) payload.topic = topic.name;
+      }
+
+      const response = await this.client.post("generate-question/", {
+        ...payload,
       });
 
       if (response.data.success) {
@@ -297,6 +325,16 @@ class QuizAPI {
       };
     } catch (error: any) {
       console.error("Error asking chatbot:", error?.response?.data || error?.message || error);
+      throw error;
+    }
+  }
+
+  async unlockTopicsUpTo(topicId: number) {
+    try {
+      const response = await this.client.post("topics/unlock/", { topic_id: topicId });
+      return response.data;
+    } catch (error) {
+      console.error("Error unlocking topics:", error);
       throw error;
     }
   }

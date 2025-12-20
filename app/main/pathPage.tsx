@@ -60,9 +60,11 @@ export default function PathPage() {
   const topic = (params.topic as string) || "";
   const topicId = parseInt(params.id as string) || 0;
   const difficulty = parseInt(params.difficulty as string) || 2;
+  const unlockCapId = parseInt(params.unlockCapId as string) || 0;
+  const resetProgress = (params.resetProgress as string) === "1" || (params.resetProgress as string) === "true";
 
   const { isAuthenticated } = useAuth();
-  const { questionSet, setQuestionSet, setCurrentIndex, setTopic, setTopicId, setDifficulty } = useQuestions();
+  const { questionSet, setQuestionSet, currentIndex, setCurrentIndex, setTopic, setTopicId, setDifficulty } = useQuestions();
 
   // Determine if we're showing all topics or a specific topic
   const showAllTopics = !topicId || topicId === 0;
@@ -73,8 +75,12 @@ export default function PathPage() {
       setTopic(topic);
       setTopicId(topicId);
       setDifficulty(difficulty);
+
+      // Pastikan state soal lama dibersihkan saat pindah topik
+      setQuestionSet([]);
+      setCurrentIndex(0);
     }
-  }, [topic, topicId, difficulty, showAllTopics, setTopic, setTopicId, setDifficulty]);
+  }, [topic, topicId, difficulty, showAllTopics, setTopic, setTopicId, setDifficulty, setQuestionSet, setCurrentIndex]);
 
   const initialLevels: LevelItem[] = Array.from({ length: 10 }).map((_, i) => ({
     id: i + 1,
@@ -91,6 +97,7 @@ export default function PathPage() {
   const [loadingProgress, setLoadingProgress] = useState(true);
   const [topics, setTopics] = useState<Topic[]>([]);
   const [loadingTopicId, setLoadingTopicId] = useState<number | null>(null);
+  const [unlockCapOrder, setUnlockCapOrder] = useState<number | null>(null);
 
   // TAMBAH: Reset levels ke initial state ketika topicId berubah
   useEffect(() => {
@@ -119,9 +126,15 @@ export default function PathPage() {
       if (showAllTopics) {
         loadAllTopics();
       } else {
-        loadUserProgress();
+        if (resetProgress) {
+          sessionStorage.clearPosition(topicId);
+          setLevels(initialLevels);
+          setLoadingProgress(false);
+        } else {
+          loadUserProgress();
+        }
       }
-    }, [topicId, isAuthenticated, showAllTopics])
+    }, [topicId, isAuthenticated, showAllTopics, resetProgress])
   );
 
   const loadAllTopics = async () => {
@@ -141,18 +154,39 @@ export default function PathPage() {
 
       // ✅ SORT BY ORDER!
       const sortedData = topicsArray.sort((a: Topic, b: Topic) => (a.order || 0) - (b.order || 0));
+
+      // Determine cap id: prefer param, else stored pretest cap
+      const storedCapId = unlockCapId ? unlockCapId : await sessionStorage.loadPretestCap();
+      const capOrder = storedCapId ? sortedData.find((t) => t.id === storedCapId)?.order ?? null : null;
+      setUnlockCapOrder(capOrder ?? null);
       setTopics(sortedData);
 
       // Create levels based on sorted topics
-      const topicLevels: LevelItem[] = sortedData.map((t: Topic, i: number) => ({
-        id: t.id,
-        title: t.name,
-        status: t.is_locked ? "locked" : ((t.completion_percentage === 100 ? "done" : "open") as LevelStatus),
-        imgLeft: imageLeft[i % imageLeft.length],
-        imgRight: imageRight[i % imageRight.length],
-        imgLeftSize: { width: 110, height: 70 },
-        imgRightSize: { width: 90, height: 90 },
-      }));
+      const topicLevels: LevelItem[] = sortedData.map((t: Topic, i: number) => {
+        if (capOrder !== null) {
+          const order = t.order || 0;
+          const status: LevelStatus = order < capOrder ? "done" : order === capOrder ? "open" : "locked";
+          return {
+            id: t.id,
+            title: t.name,
+            status,
+            imgLeft: imageLeft[i % imageLeft.length],
+            imgRight: imageRight[i % imageRight.length],
+            imgLeftSize: { width: 110, height: 70 },
+            imgRightSize: { width: 90, height: 90 },
+          };
+        }
+
+        return {
+          id: t.id,
+          title: t.name,
+          status: t.is_locked ? "locked" : ((t.completion_percentage === 100 ? "done" : "open") as LevelStatus),
+          imgLeft: imageLeft[i % imageLeft.length],
+          imgRight: imageRight[i % imageRight.length],
+          imgLeftSize: { width: 110, height: 70 },
+          imgRightSize: { width: 90, height: 90 },
+        };
+      });
 
       setLevels(topicLevels);
     } catch (error) {
@@ -291,6 +325,14 @@ export default function PathPage() {
 
   const handlePress = async (node: LevelItem) => {
     if (showAllTopics) {
+      if (unlockCapOrder !== null) {
+        const nodeTopic = topics.find((t) => t.id === node.id);
+        const nodeOrder = nodeTopic?.order || 0;
+        if (nodeOrder > unlockCapOrder) {
+          Alert.alert("Topik Terkunci", "Selesaikan pre-test untuk membuka topik berikutnya.");
+          return;
+        }
+      }
       if (node.status === "locked") {
         // ✅ Find by order, not by index
         const nodeTopic = topics.find((t) => t.id === node.id);
@@ -329,8 +371,16 @@ export default function PathPage() {
       return;
     }
 
-    // Load questions from database if not already loaded
-    if (questionSet.length === 0) {
+    // ✅ DETECT if we need to reload:
+    // 1. No questions loaded yet
+    // 2. User clicked a node earlier than current progress
+    const isClickingEarlierNode = (node.id - 1) < currentIndex;  // Compare indices, not node IDs
+    const needsReload = questionSet.length === 0 || isClickingEarlierNode;
+
+    if (needsReload) {
+      // Reset state before reloading
+      setQuestionSet([]);
+      setCurrentIndex(0);
       setLoading(true);
       try {
         let questions: any[] = [];
@@ -338,39 +388,42 @@ export default function PathPage() {
         // Try to load from database first
         try {
           questions = await quizAPI.getQuestions(topicId, difficulty);
+          if (!questions || questions.length === 0) {
+            console.warn("⚠️ No local questions, generating via AI");
+            questions = await quizAPI.generateQuestionSet(topic, difficulty);
+          }
+
           console.log(
             `📦 Setting questionSet: ${questions.length} questions`,
             questions.map((q) => q.question_id)
           );
 
-          // ✅ LOAD SAVED POSITION FIRST
-          const savedIndex = await sessionStorage.loadPosition(topicId);
-          let indexToUse = savedIndex?.currentIndex ?? 0;
-
-          // ✅ VALIDATE INDEX - tidak boleh melebihi panjang questions
-          if (indexToUse >= questions.length) {
-            console.warn(`⚠️ Saved index ${indexToUse} melebihi questions length ${questions.length}, reset ke 0`);
-            indexToUse = 0;
+          if (!questions || questions.length === 0) {
+            Alert.alert("Error", "Tidak ada soal untuk topik ini");
+            setLoading(false);
+            return;
           }
 
-          console.log(`📂 Using index: ${indexToUse + 1}/${questions.length}`);
-
-          // Set context with loaded questions and position
+          // Set context with loaded questions
           setQuestionSet(questions);
-          setCurrentIndex(indexToUse);
+          
+          // ✅ Calculate index but DON'T set currentIndex (component will read from param)
+          const nodeIndex = Math.min(node.id - 1, questions.length - 1);
 
-          // Wait for state to update, then navigate
-          setTimeout(() => {
-            // ✅ DOUBLE CHECK index validity
-            const safeIndex = Math.min(indexToUse, questions.length - 1);
-            if (safeIndex >= 0 && questions[safeIndex]) {
-              const screenPath = getQuestionScreenPath(questions[safeIndex].question_type);
-              router.push(`/level/${screenPath}`);
-            } else {
-              console.error("❌ No valid question found at index", safeIndex);
-              Alert.alert("Error", "Gagal memuat soal");
-            }
-          }, 100);
+          if (nodeIndex >= 0 && questions[nodeIndex]) {
+            const screenPath = getQuestionScreenPath(questions[nodeIndex].question_type);
+            router.push({
+              pathname: `/level/${screenPath}`,
+              params: {
+                questionIndex: nodeIndex.toString(),
+              },
+            } as any);
+          } else {
+            console.error("❌ No valid question found at node", node.id);
+            Alert.alert("Error", "Gagal memuat soal");
+            setLoading(false);
+            return;
+          }
         } catch (dbError) {
           console.warn("⚠️ Database questions not available, trying AI generation:", dbError);
 
@@ -380,14 +433,21 @@ export default function PathPage() {
             console.log("✅ Generated questions using AI:", questions.length);
 
             setQuestionSet(questions);
-            setCurrentIndex(0);
-
-            setTimeout(() => {
-              if (questions.length > 0 && questions[0]) {
-                const screenPath = getQuestionScreenPath(questions[0].question_type);
-                router.push(`/level/${screenPath}`);
-              }
-            }, 100);
+            
+            const nodeIndex = Math.min(node.id - 1, questions.length - 1);
+            if (questions.length > 0 && questions[nodeIndex]) {
+              const screenPath = getQuestionScreenPath(questions[nodeIndex].question_type);
+              router.push({
+                pathname: `/level/${screenPath}`,
+                params: {
+                  questionIndex: nodeIndex.toString(),
+                },
+              } as any);
+            } else {
+              console.error("❌ No valid question at nodeIndex", nodeIndex);
+              Alert.alert("Error", "Gagal memuat soal");
+              setLoading(false);
+            }
           } catch (genError) {
             console.error("❌ AI generation also failed:", genError);
             Alert.alert("No Questions Available", `No questions found for "${topic}" and AI generation failed. Please try again later.`, [{ text: "OK" }]);
@@ -406,12 +466,20 @@ export default function PathPage() {
 
     // If questions already loaded, navigate to the selected level
     if (node.id <= questionSet.length) {
-      const q = questionSet[node.id - 1];
-      setCurrentIndex(node.id - 1);
+      const questionIndex = node.id - 1; // 0-based index
+      const q = questionSet[questionIndex];
+
+      // Jangan set currentIndex dulu, biarkan component yang read param
       const screenPath = getQuestionScreenPath(q.question_type);
 
-      console.log("Navigating to question", node.id, "path:", screenPath);
-      router.push(`/level/${screenPath}` as any);
+      console.log(`📍 Navigating to node ${node.id} (index ${questionIndex}), path: ${screenPath}`);
+
+      router.push({
+        pathname: `/level/${screenPath}`,
+        params: {
+          questionIndex: questionIndex.toString(),
+        },
+      } as any);
     } else {
       Alert.alert("Invalid Level", "This level is not available.");
     }

@@ -67,27 +67,68 @@ PROMPT_TEMPLATES = {
     "mcq": """Buatlah 1 soal pilihan ganda Pemrograman Python untuk topik: {topic}
 Tingkat kesulitan: {difficulty} (1=mudah, 5=sulit)
 
-SYARAT SOAL:
+SYARAT SOAL KETAT:
 ✓ Soal HARUS relevan dengan topik "{topic}"
-✓ Gunakan kode Python (jangan ditranslate)
-✓ 4 pilihan jawaban (A, B, C, D)
+✓ 4 pilihan jawaban UNIK dan JELAS BERBEDA (A, B, C, D)
 ✓ Hanya 1 jawaban yang benar
+✓ JAWABAN TIDAK BOLEH OBVIOUS/TERLIHAT DI SOAL ITU SENDIRI
+✓ Gunakan VARIASI TIPE pertanyaan (jangan semua "berapa hasilnya")
+✓ Opsi harus LOGIS namun BERBEDA JELAS (bukan duplikat)
 
-CONTOH FORMAT:
-- Variabel: soal tentang deklarasi, tipe data, casting
-- Operator: soal tentang +, -, *, /, //, %, ==, !=, and, or
-- Percabangan: soal tentang if, elif, else, nested if
-- Perulangan: soal tentang for, while, range, break, continue
-- Pengurutan: soal tentang sorting, bubble sort, selection sort
-- Pencarian: soal tentang searching, linear search, binary search
+VARIASI TIPE SOAL - PILIH SALAH SATU (ROTASI):
+1. DEFINISI/KONSEP (terbukti efektif untuk variasi):
+   - "Apa perbedaan antara X dan Y?"
+   - "Apa yang dimaksud dengan X?"
+   - "Fungsi dari X adalah?"
+   - Contoh BAIK: "Apa perbedaan == dan 'is'?"
+   - Contoh BURUK: "Variabel x adalah... (jawaban obvious)"
+
+2. PREDIKSI OUTPUT (dengan code snippet):
+   - Tunjukkan code Python lengkap
+   - Tanyakan: "Output dari kode berikut adalah?"
+   - Opsi: nilai berbeda, error names, tipe data berbeda
+   - PENTING: Jawaban harus tidak obvious/mudah dilihat
+
+3. BUG FINDING / ERROR DETECTION:
+   - Tunjukkan code YANG SALAH
+   - Tanyakan: "Error apa yang dihasilkan?" / "Apa yang salah?"
+   - Opsi: berbagai error types (TypeError, IndexError, etc)
+
+4. KONSEP LOGIKA / FLOW CONTROL:
+   - Tanyakan tentang kondisi, loop, atau hasil logika
+   - Tunjukkan code dengan kondisi khusus
+   - Opsi: hasil berbeda berdasarkan kondisi
+
+5. SYNTAX / SEMANTIK:
+   - "Mana yang merupakan syntax Python yang benar?"
+   - "Kode mana yang menghasilkan hasil X?"
+   - Opsi: berbagai syntax patterns
+
+CHECKLIST SEBELUM RETURN:
+- [ ] Tipe soal BERBEDA dari sebelumnya (tidak semua output prediction)
+- [ ] Opsi A, B, C, D JELAS BERBEDA (tidak ada overlap)
+- [ ] Jawaban TIDAK obvious di pertanyaan/code (butuh pemahaman)
+- [ ] Minimal 1 distractors yang LOGIS tapi salah
+- [ ] Tidak ada opsi yang merupakan substring dari opsi lain
+
+CONTOH SOAL BAIK:
+Q: Perbedaan antara == dan 'is' dalam Python adalah?
+A. == membandingkan nilai, 'is' membandingkan identitas (memory reference)
+B. 'is' lebih cepat dari ==
+C. Keduanya sama, hanya nama berbeda
+D. 'is' hanya untuk string
+
+CONTOH SOAL BURUK (JANGAN):
+Q: Variabel x diberi nilai 10, berapa nilai x? (TERLALU OBVIOUS)
+Q: print(5 * 2 % 3), berapa hasilnya? (hanya menghitung, tidak konsep)
 
 RETURN HANYA JSON (tanpa kode lain):
 {{
-  "question_text": "Pertanyaan tentang {topic}...",
-  "code_template": "Python code example atau None",
-  "options": ["A. pilihan 1", "B. pilihan 2", "C. pilihan 3", "D. pilihan 4"],
-  "answer_key": "B",
-  "explanation": "Penjelasan mengapa B benar berdasarkan topik {topic}"
+  "question_text": "Pertanyaan yang jelas, tidak obvious, dan menantang...",
+  "code_template": "Python code jika diperlukan, atau null jika pure konsep",
+  "options": ["A. opsi 1 (distinct)", "B. opsi 2 (logis tapi salah)", "C. opsi 3 (distinct)", "D. opsi 4 (jawaban benar)"],
+  "answer_key": "D",
+  "explanation": "Penjelasan mengapa D benar, dan mengapa A/B/C salah. Jelaskan konsep utama."
 }}""",
 
     "fill": """Buatlah 1 soal isi-kosong (completion) untuk topik: {topic}
@@ -122,32 +163,24 @@ SYARAT SOAL:
 ✓ User harus menulis fungsi atau program lengkap
 ✓ Berikan template dasar
 ✓ Jawaban harus jelas dan dapat ditest
-
-CONTOH:
-- Variabel: program yang bekerja dengan variabel tipe data
-- Operator: program yang menggunakan operator aritmatika/logika
-- Percabangan: program dengan if-else berdasarkan kondisi
-- Perulangan: program dengan loop for/while
-- Dll
+✓ HARUS ada minimal 2 test cases
 
 RETURN HANYA JSON:
 {{
   "question_text": "Buatlah fungsi yang [deskripsi task]...",
   "code_template": "def solution():\\n    # Write your code here\\n    pass",
   "answer_key": "def solution():\\n    return 42",
+  "test_cases": [
+    {{"input": "5", "expected_output": "10"}},
+    {{"input": "10", "expected_output": "20"}}
+  ],
   "explanation": "Penjelasan solusi dan konsep {topic}"
 }}"""
 }
 
 
 def generate_question(difficulty: int, question_type: str, topic: str = "Pemrograman Python") -> Dict[str, Any]:
-    """Generate a programming question using Groq API
-    
-    Args:
-        difficulty: Question difficulty (1-5)
-        question_type: Type of question (mcq, fill, coding)
-        topic: Topic/subject for the question
-    """
+    """Generate a programming question using Groq API"""
     
     if question_type not in PROMPT_TEMPLATES:
         raise ValueError(f"Invalid question type: {question_type}")
@@ -196,9 +229,21 @@ def generate_question(difficulty: int, question_type: str, topic: str = "Pemrogr
         if not parsed.get("answer_key"):
             raise ValueError("Missing answer_key")
         
+        # ✅ UNTUK MCQ: Clean dan Validate
         if question_type == "mcq":
             if not parsed.get("options") or len(parsed["options"]) != 4:
                 raise ValueError("MCQ must have exactly 4 options")
+            
+            # Step 1: Clean duplicate prefixes (e.g., "A. A. 8" -> "A. 8")
+            parsed["options"] = clean_mcq_options(parsed["options"])
+            logger.info(f"Cleaned MCQ options: {parsed['options']}")
+            
+            # Step 2: Validate options tidak tumpang tindih
+            is_valid, error_msg = validate_mcq_options(parsed["options"])
+            if not is_valid:
+                raise ValueError(f"MCQ opsi tidak valid: {error_msg}")
+            
+            logger.info(f"✓ MCQ options validated successfully")
         
         logger.info(f"Question generated successfully: {parsed.get('question_text')[:50]}...")
         return parsed
@@ -297,8 +342,20 @@ Return JSON, for example:
         return None
 
 
-def check_answer(user_answer: str, correct_answer: Any, question_type: str, explanation: str = "") -> Dict[str, Any]:
-    """Check if user answer is correct"""
+def check_answer(user_answer: str, correct_answer: Any, question_type: str, explanation: str = "", question_instance=None) -> Dict[str, Any]:
+    """
+    Check if user answer is correct.
+    
+    Args:
+        user_answer: The user's submitted answer
+        correct_answer: The reference/correct answer from database
+        question_type: Type of question (mcq, fill, coding)
+        explanation: Question explanation text
+        question_instance: Optional Question model instance (for accessing test_cases)
+    
+    Returns:
+        Dict with keys: correct, feedback, correct_answer, explanation
+    """
     
     result = {
         "correct": False,
@@ -307,8 +364,9 @@ def check_answer(user_answer: str, correct_answer: Any, question_type: str, expl
         "explanation": explanation
     }
     
-    # Multiple-choice: same behavior as before (exact letter match, case-insensitive)
+    # ========== MULTIPLE CHOICE QUESTIONS ==========
     if question_type == "mcq":
+        # Exact letter match, case-insensitive
         result["correct"] = user_answer.strip().upper() == str(correct_answer).strip().upper()
         if result["correct"]:
             result["feedback"] = "✓ Jawaban Anda benar!"
@@ -316,25 +374,66 @@ def check_answer(user_answer: str, correct_answer: Any, question_type: str, expl
             result["feedback"] = "✗ Jawaban Anda salah. Silakan coba lagi."
         return result
 
-    # For coding questions, skip AI validation (use test cases instead via /api/questions/run/)
+    # ========== CODING QUESTIONS ==========
     if question_type == "coding":
-        # Simple fallback check - just accept any non-empty answer
-        # The real validation happens through test cases in the run_code endpoint
-        result["correct"] = bool(user_answer.strip())
-        result["feedback"] = "✓ Kode Anda telah dikirim!" if result["correct"] else "✗ Kode tidak boleh kosong."
-        return result
+        # Cek input tidak kosong
+        if not user_answer or not user_answer.strip():
+            result["correct"] = False
+            result["feedback"] = "✗ Kode tidak boleh kosong."
+            return result
+        
+        # PRIORITY 1: Gunakan test_cases jika ada pada soal
+        if question_instance and hasattr(question_instance, 'test_cases') and question_instance.test_cases:
+            try:
+                from .code_executor import execute_code_with_tests
+                test_result = execute_code_with_tests(user_answer, question_instance.test_cases)
+                result["correct"] = test_result['all_passed']
+                
+                if result["correct"]:
+                    result["feedback"] = f"✓ Sempurna! {test_result['passed']}/{test_result['total']} test cases passed!"
+                else:
+                    result["feedback"] = f"✗ {test_result['passed']}/{test_result['total']} test cases passed. Coba lagi!"
+                
+                logger.info(f"Code validation with test cases: {result['correct']} ({test_result['passed']}/{test_result['total']})")
+                return result
+            
+            except Exception as e:
+                logger.error(f"Error executing test cases: {e}")
+                # Fall through to answer_key comparison
+        
+        # PRIORITY 2: Fallback ke answer_key dengan normalisasi (non-case sensitive)
+        try:
+            normalized_user = normalize_python_code(user_answer)
+            normalized_correct = normalize_python_code(str(correct_answer))
+            
+            result["correct"] = normalized_user == normalized_correct
+            
+            if result["correct"]:
+                result["feedback"] = "✓ Kode Anda benar!"
+            else:
+                result["feedback"] = "✗ Kode Anda tidak sesuai dengan jawaban yang diharapkan. Silakan coba lagi."
+            
+            logger.info(f"Code validation with answer_key: {result['correct']}")
+            return result
+        
+        except Exception as e:
+            logger.error(f"Error normalizing code for comparison: {e}")
+            # Fallback: exact string match (case-sensitive)
+            result["correct"] = user_answer.strip() == correct_answer.strip()
+            result["feedback"] = "✗ Kode tidak sesuai." if not result["correct"] else "✓ Kode Anda benar!"
+            return result
 
-    # For fill questions, prefer AI-based validation (semantic)
+    # ========== FILL QUESTIONS ==========
     if question_type == "fill":
+        # Prefer AI-based validation (semantic)
         ai_res = ai_validate_answer(user_answer, correct_answer, question_text=explanation or "", question_type=question_type)
         if ai_res is not None:
             result["correct"] = bool(ai_res.get("correct", False))
-            # Keep feedback concise and not revealing correct answer
             result["feedback"] = ai_res.get("feedback", "") or ("✓ Jawaban Anda benar!" if result["correct"] else "✗ Jawaban Anda salah. Silakan coba lagi.")
             result["explanation"] = ai_res.get("explanation", explanation or "")
             return result
 
-        # If AI fails, fallback to conservative normalization checks (previous behavior)
+        # If AI fails, fallback to conservative normalization checks
         logger.info("AI validation unavailable — falling back to string normalization check")
         normalized_user = user_answer.strip().lower().replace(" ", "").replace("\n", "")
         normalized_correct = str(correct_answer).strip().lower().replace(" ", "").replace("\n", "")
@@ -347,8 +446,9 @@ def check_answer(user_answer: str, correct_answer: Any, question_type: str, expl
 
         return result
 
-    # Default fallback behaviour (should not normally hit)
+    # ========== DEFAULT FALLBACK ==========
     result["feedback"] = "✗ Tipe soal tidak dikenali."
+    logger.warning(f"Unknown question type: {question_type}")
     return result
 
 
@@ -489,3 +589,131 @@ def generate_question_set(topic_name: str, difficulty: int, count: int = 10, mcq
     
     logger.info(f"Question generation complete: {successful_count} successful, {failed_count} failed")
     return created
+
+def normalize_python_code(code: str) -> str:
+    """
+    Normalize Python code untuk comparison yang fleksibel (non-case sensitive)
+    - Hapus comments
+    - Normalize whitespace/indentation
+    - Lowercase untuk comparison
+    - Hapus blank lines
+    
+    Args:
+        code: Python code string
+    
+    Returns:
+        Normalized code string
+    """
+    import re
+    
+    # Split by lines
+    lines = code.split('\n')
+    
+    # Remove comments dan trailing whitespace
+    lines = [re.sub(r'#.*$', '', line).rstrip() for line in lines]
+    
+    # Remove empty lines
+    lines = [line for line in lines if line.strip()]
+    
+    # Normalize indentation (convert tabs to spaces)
+    lines = [line.expandtabs(4) for line in lines]
+    
+    # Join kembali
+    normalized = '\n'.join(lines).strip()
+    
+    # Lowercase untuk perbandingan
+    normalized = normalized.lower()
+    
+    return normalized
+
+def clean_mcq_options(options: List[str]) -> List[str]:
+    """
+    Clean MCQ options by removing duplicate letter prefixes
+    Example: "A. A. 8" -> "A. 8"
+    
+    Args:
+        options: List of option strings like ["A. A. 8", "B. B. 7", ...]
+    
+    Returns:
+        Cleaned list of options
+    """
+    cleaned = []
+    
+    for opt in options:
+        opt = opt.strip()
+        
+        # Remove duplicate prefixes like "A. A." -> "A."
+        # Pattern: "X. X. " where X is a letter
+        import re
+        
+        # Match pattern like "A. A. " or "A. A:" 
+        match = re.match(r'^([A-D])[.\s]+\1[.\s:]+(.*)$', opt, re.IGNORECASE)
+        if match:
+            letter = match.group(1)
+            content = match.group(2).strip()
+            cleaned.append(f"{letter}. {content}")
+        else:
+            # No duplicate prefix, keep as is but ensure proper format
+            # Make sure it starts with A., B., C., or D.
+            if not re.match(r'^[A-D][.\s]', opt, re.IGNORECASE):
+                # Doesn't have letter prefix, add it based on position if possible
+                cleaned.append(opt)
+            else:
+                cleaned.append(opt)
+    
+    return cleaned
+
+def validate_mcq_options(options: List[str]) -> Tuple[bool, str]:
+    """
+    Validate MCQ options untuk memastikan:
+    1. Tidak ada opsi yang duplikat
+    2. Tidak ada opsi yang terlalu mirip (substring/prefix)
+    3. Opsi harus jelas berbeda
+    4. Tidak ada prefix duplikat seperti "A. A. 8"
+    
+    Returns:
+        Tuple[bool, str]: (is_valid, error_message)
+    """
+    import re
+    
+    if not options or len(options) != 4:
+        return False, "MCQ harus memiliki exactly 4 opsi"
+    
+    # Normalize untuk comparison
+    def normalize_option(opt: str) -> str:
+        # Remove letter prefix (A., B., C., D.)
+        opt = opt.strip()
+        # Remove prefix seperti "A. " atau "A: "
+        opt = re.sub(r'^[A-D][.\s:]+', '', opt, flags=re.IGNORECASE).strip()
+        # Remove whitespace, lowercase
+        return opt.lower().replace(" ", "").replace("\n", "")
+    
+    # Extract content (without letter prefix)
+    contents = [normalize_option(opt) for opt in options]
+    
+    # Check 1: Exact duplicates
+    if len(set(contents)) != 4:
+        return False, "Opsi tidak boleh duplikat atau sama persis"
+    
+    # Check 2: Similarity check (no substring matches)
+    for i in range(len(contents)):
+        for j in range(i + 1, len(contents)):
+            content_i = contents[i]
+            content_j = contents[j]
+            
+            # Check if one is substring of other
+            if content_i in content_j or content_j in content_i:
+                return False, f"Opsi '{options[i]}' dan '{options[j]}' terlalu mirip/overlap"
+            
+            # Check for very similar numeric patterns
+            try:
+                val_i = float(content_i)
+                val_j = float(content_j)
+                if val_i == val_j:
+                    return False, f"Opsi '{options[i]}' dan '{options[j]}' adalah nilai yang sama"
+            except ValueError:
+                pass
+    
+    # Check 3: Answer key validation (akan di-check di generate_question)
+    
+    return True, ""

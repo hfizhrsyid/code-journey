@@ -1,0 +1,2101 @@
+====================================================================================================
+DAFTAR SOAL DAN JAWABAN
+Export: 2025-12-20 17:14:16
+Total soal: 81
+====================================================================================================
+
+
+[SOAL #1]
+ID: 296
+Topik: Variabel dan Tipe Data
+Tipe: MCQ
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Apa perbedaan utama antara tipe data list dan tuple dalam Python?
+
+OPSI:
+  List dapat diubah, tetapi tuple tidak dapat diubah dan lebih cepat
+  Tuple dapat diubah, tetapi list tidak dapat diubah dan lebih lambat
+  Keduanya sama, hanya nama berbeda
+  List hanya untuk angka, tuple hanya untuk string
+
+JAWABAN:
+A
+
+PENJELASAN:
+Perbedaan utama antara list dan tuple dalam Python adalah bahwa list dapat diubah (mutable), sedangkan tuple tidak dapat diubah (immutable). Ini berarti Anda bisa menambah, menghapus, atau mengubah elemen dalam list, tetapi tidak bisa melakukannya dalam tuple. Selain itu, tuple umumnya lebih cepat dan lebih efisien dalam hal penggunaan memori dibandingkan dengan list karena sifatnya yang tidak dapat diubah.
+
+====================================================================================================
+
+[SOAL #2]
+ID: 295
+Topik: Variabel dan Tipe Data
+Tipe: CODING
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Buatlah fungsi yang menghitung luas persegi panjang dengan menggunakan variabel dan tipe data yang tepat. Fungsi tersebut harus mengambil dua parameter, panjang dan lebar, dan mengembalikan luas persegi panjang.
+
+CODE TEMPLATE:
+def hitung_luas(panjang, lebar):
+    # Write your code here
+    pass
+
+JAWABAN:
+def hitung_luas(panjang, lebar):
+    return panjang * lebar
+
+PENJELASAN:
+Pada soal ini, kita menggunakan fungsi dengan dua parameter, panjang dan lebar, kemudian mengembalikan hasil perkalian antara panjang dan lebar. Hasil ini merupakan luas persegi panjang. Fungsi ini dapat diuji dengan beberapa test case untuk memastikan bahwa fungsi tersebut bekerja dengan benar.
+
+====================================================================================================
+
+[SOAL #3]
+ID: 294
+Topik: Variabel dan Tipe Data
+Tipe: FILL
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Isilah ___ dengan 'hello' untuk membuat variabel dengan tipe data String
+
+CODE TEMPLATE:
+x = ___
+print(type(x))
+
+JAWABAN:
+'hello'
+
+PENJELASAN:
+Tipe data string di Python ditandai dengan kutipan tunggal atau ganda, sehingga 'hello' adalah contoh variabel dengan tipe data string.
+
+====================================================================================================
+
+[SOAL #4]
+ID: 253
+Topik: Variabel dan Tipe Data
+Tipe: CODING
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Buatlah fungsi yang mengambil sebuah string sebagai input dan mengembalikan sebuah dictionary dengan informasi tentang tipedata dari setiap karakter dalam string tersebut.
+
+CODE TEMPLATE:
+def solution(input_str):
+    # Write your code here
+    pass
+
+JAWABAN:
+def solution(input_str):
+    result = {}
+    for char in input_str:
+        if isinstance(char, str):
+            if 'string' in result:
+                result['string'] += 1
+            else:
+                result['string'] = 1
+        elif isinstance(char, int):
+            if 'integer' in result:
+                result['integer'] += 1
+            else:
+                result['integer'] = 1
+        else:
+            if 'other' in result:
+                result['other'] += 1
+            else:
+                result['other'] = 1
+    return result
+
+PENJELASAN:
+Fungsi ini menggunakan perulangan untuk memeriksa setiap karakter dalam string input. Kemudian, ia menggunakan metode isinstance() untuk memeriksa tipedata dari setiap karakter dan mengupdate dictionary result berdasarkan tipedata tersebut.
+
+====================================================================================================
+
+[SOAL #5]
+ID: 251
+Topik: Variabel dan Tipe Data
+Tipe: CODING
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Buatlah fungsi yang mengambil dua buah parameter, kemudian mengembalikan hasil penjumlahan dan perkalian dari kedua parameter tersebut. Pastikan Anda menggunakan tipe data yang tepat untuk variabel-variabel Anda.
+
+CODE TEMPLATE:
+def solution(a, b):
+    # Write your code here
+    pass
+
+JAWABAN:
+def solution(a, b):
+    penjumlahan = a + b
+    perkalian = a * b
+    return penjumlahan, perkalian
+
+PENJELASAN:
+Dalam solusi ini, kita menggunakan fungsi solution() yang mengambil dua parameter a dan b. Kita lalu melakukan penjumlahan dan perkalian dari a dan b, dan mengembalikan hasilnya. Tipe data yang digunakan adalah integer, karena kita melakukan operasi aritmatika. Hasilnya dikembalikan dalam bentuk tuple.
+
+====================================================================================================
+
+[SOAL #6]
+ID: 249
+Topik: Variabel dan Tipe Data
+Tipe: FILL
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Isilah ___ untuk membuat kode yang menunjukkan perbedaan antara tipe data integer dan float
+
+CODE TEMPLATE:
+x = 10
+y = ___
+print(type(x))
+print(type(y))
+
+JAWABAN:
+10.5
+
+PENJELASAN:
+Penjelasan singkat tentang jawaban: Dalam kode tersebut, variabel x memiliki tipe data integer karena nilainya adalah 10, sedangkan variabel y memiliki tipe data float karena nilainya adalah 10.5. Hal ini menunjukkan perbedaan antara tipe data integer dan float.
+
+====================================================================================================
+
+[SOAL #7]
+ID: 248
+Topik: Variabel dan Tipe Data
+Tipe: MCQ
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Apa yang dimaksud dengan tipe data mutable dan immutable dalam Python?
+
+OPSI:
+  Mutable adalah tidak dapat diubah, sedangkan immutable adalah dapat diubah
+  Mutable dan immutable adalah istilah yang sama untuk tipe data yang dapat diubah
+  Mutable merujuk pada tipe data yang dapat diubah, sedangkan immutable merujuk pada tipe data yang tidak dapat diubah
+  Mutable hanya berlaku untuk daftar, sedangkan immutable hanya berlaku untuk string
+
+JAWABAN:
+C
+
+PENJELASAN:
+Tipe data mutable dalam Python merujuk pada tipe data yang dapat diubah setelah dibuat, seperti daftar (list) dan kamus (dictionary). Tipe data immutable merujuk pada tipe data yang tidak dapat diubah setelah dibuat, seperti string, tuple, dan integer. Contoh ini menunjukkan konsep dasar tentang tipe data dalam Python dan pentingnya memahami perbedaan antara mutable dan immutable.
+
+====================================================================================================
+
+[SOAL #8]
+ID: 247
+Topik: Variabel dan Tipe Data
+Tipe: CODING
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Buatlah fungsi yang mengambil sebuah string sebagai input dan mengembalikan jenis tipe data dari setiap karakter dalam string tersebut.
+
+CODE TEMPLATE:
+def tipe_data_karakter(input_str):
+    # Write your code here
+    pass
+
+JAWABAN:
+def tipe_data_karakter(input_str):
+    result = {}
+    for char in input_str:
+        if char.isdigit():
+            result[char] = 'Integer'
+        elif char.isalpha():
+            result[char] = 'String'
+        else:
+            result[char] = 'Simbol'
+    return result
+
+PENJELASAN:
+Fungsi ini menggunakan metode isdigit() dan isalpha() untuk menentukan apakah sebuah karakter adalah digit atau huruf. Jika karakter tersebut bukan digit atau huruf, maka dianggap sebagai simbol.
+
+====================================================================================================
+
+[SOAL #9]
+ID: 246
+Topik: Variabel dan Tipe Data
+Tipe: CODING
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Buatlah fungsi yang menghitung luas persegi panjang dengan menggunakan variabel dan tipe data yang tepat. Fungsi ini harus mengambil dua argumen, panjang dan lebar, dan mengembalikan luas persegi panjang.
+
+CODE TEMPLATE:
+def hitung_luas(panjang, lebar):
+    # Write your code here
+    pass
+
+JAWABAN:
+def hitung_luas(panjang, lebar):
+    luas = panjang * lebar
+    return luas
+
+PENJELASAN:
+Pada soal ini, kita menggunakan variabel 'panjang' dan 'lebar' dengan tipe data integer untuk menghitung luas persegi panjang. Kemudian, kita mengembalikan hasil perkalian antara 'panjang' dan 'lebar' sebagai luas persegi panjang. Konsep variabel dan tipe data digunakan untuk membuat fungsi yang efektif dan efisien.
+
+====================================================================================================
+
+[SOAL #10]
+ID: 245
+Topik: Variabel dan Tipe Data
+Tipe: MCQ
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Apa perbedaan antara tipe data 'list' dan 'tuple' dalam Python?
+
+CODE TEMPLATE:
+null
+
+OPSI:
+  List adalah immutable, sedangkan tuple adalah mutable
+  List hanya dapat menyimpan tipe data yang sama, sedangkan tuple dapat menyimpan tipe data yang berbeda
+  List diakses menggunakan indeks, sedangkan tuple diakses menggunakan nama
+  List adalah mutable, sedangkan tuple adalah immutable
+
+JAWABAN:
+D
+
+PENJELASAN:
+Perbedaan utama antara list dan tuple dalam Python adalah sifat mutabilitasnya. List adalah mutable, artinya dapat diubah setelah dibuat, sedangkan tuple adalah immutable, artinya tidak dapat diubah setelah dibuat. Ini berarti Anda dapat menambah, menghapus, atau mengubah elemen dalam list, tetapi tidak dapat melakukannya dalam tuple.
+
+====================================================================================================
+
+[SOAL #11]
+ID: 244
+Topik: Variabel dan Tipe Data
+Tipe: MCQ
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Apa yang dimaksud dengan immutable dalam konteks tipe data di Python?
+
+OPSI:
+  Tipe data yang dapat diubah setelah dibuat
+  Tipe data yang dapat diakses dari mana saja dalam program
+  Tipe data yang memiliki ukuran tetap
+  Tipe data yang tidak dapat diubah setelah dibuat
+
+JAWABAN:
+D
+
+PENJELASAN:
+Immutable dalam konteks tipe data di Python merujuk pada tipe data yang tidak dapat diubah setelah dibuat. Contoh tipe data immutable di Python adalah string, tuple, dan integer. Ini berarti bahwa setelah sebuah objek dari tipe data immutable dibuat, nilainya tidak dapat diubah. Pilihan D adalah jawaban yang benar karena secara akurat mendefinisikan konsep immutable. Pilihan A, B, dan C salah karena mereka tidak secara akurat menggambarkan konsep immutable.
+
+====================================================================================================
+
+[SOAL #12]
+ID: 243
+Topik: Variabel dan Tipe Data
+Tipe: MCQ
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Apa perbedaan antara 'int' dan 'float' dalam Python?
+
+OPSI:
+  'int' untuk karakter, 'float' untuk angka
+  'int' untuk bilangan bulat, 'float' untuk bilangan desimal
+  'int' untuk bilangan desimal, 'float' untuk bilangan bulat
+  'int' untuk logika boolean, 'float' untuk bilangan bulat
+
+JAWABAN:
+B
+
+PENJELASAN:
+Dalam Python, 'int' digunakan untuk merepresentasikan bilangan bulat, sedangkan 'float' digunakan untuk merepresentasikan bilangan desimal. Contohnya, 5 adalah 'int', sedangkan 5.5 adalah 'float'.
+
+====================================================================================================
+
+[SOAL #13]
+ID: 242
+Topik: Variabel dan Tipe Data
+Tipe: FILL
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Apa output dari kode berikut?
+
+CODE TEMPLATE:
+x = 10
+print(type(x))
+
+JAWABAN:
+int
+
+PENJELASAN:
+Tipe data integer adalah tipe data yang merepresentasikan bilangan bulat, seperti 1, 2, 3, dan seterusnya.
+
+====================================================================================================
+
+[SOAL #14]
+ID: 266
+Topik: Operator
+Tipe: MCQ
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Apa perbedaan antara operator 'and' dan 'or' dalam kondisi logika Python?
+
+OPSI:
+  'and' digunakan untuk kondisi tunggal, 'or' untuk kondisi ganda
+  'and' memerlukan kedua kondisi benar, 'or' memerlukan setidaknya satu kondisi benar
+  'and' dan 'or' dapat digunakan secara bergantian tanpa mempengaruhi hasil
+  'and' digunakan untuk kondisi yang lebih spesifik, 'or' untuk kondisi yang lebih umum
+
+JAWABAN:
+B
+
+PENJELASAN:
+Operator 'and' memerlukan kedua kondisi untuk bernilai True agar hasilnya True, sedangkan operator 'or' memerlukan setidaknya satu kondisi untuk bernilai True agar hasilnya True. Ini menunjukkan bahwa 'and' adalah operator yang lebih ketat daripada 'or' dalam menentukan hasil kondisi logika.
+
+====================================================================================================
+
+[SOAL #15]
+ID: 265
+Topik: Operator
+Tipe: MCQ
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Apa perbedaan antara operator '//' dan '/' dalam Python?
+
+CODE TEMPLATE:
+null
+
+OPSI:
+  '/' melakukan pembagian float, '//' melakukan pembagian integer dan float
+  '//' melakukan pembagian float, '/' melakukan pembagian integer
+  Keduanya melakukan pembagian float, tetapi '//' lebih cepat
+  '/' melakukan pembagian float, '//' melakukan pembagian integer, membuang bagian desimal
+
+JAWABAN:
+D
+
+PENJELASAN:
+Perbedaan antara operator '//' dan '/' dalam Python terletak pada hasil pembagian. Operator '/' melakukan pembagian float, yang berarti hasilnya akan selalu berupa bilangan float, bahkan jika bagian desimalnya adalah 0. Di sisi lain, operator '//' melakukan pembagian integer, yang membuang bagian desimal dari hasil pembagian dan mengembalikan hasil sebagai integer. Oleh karena itu, jawaban yang benar adalah D.
+
+====================================================================================================
+
+[SOAL #16]
+ID: 264
+Topik: Operator
+Tipe: CODING
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Buatlah fungsi yang menerima dua angka dan mengembalikan hasil operasi penjumlahan, pengurangan, perkalian, dan pembagian berdasarkan operator yang diberikan.
+
+CODE TEMPLATE:
+def kalkulasi(angka1, angka2, operator):
+    # Write your code here
+    pass
+
+JAWABAN:
+def kalkulasi(angka1, angka2, operator):
+    if operator == '+':
+        return angka1 + angka2
+    elif operator == '-':
+        return angka1 - angka2
+    elif operator == '*':
+        return angka1 * angka2
+    elif operator == '/':
+        if angka2 != 0:
+            return angka1 / angka2
+        else:
+            return 'Tidak dapat membagi dengan nol'
+    else:
+        return 'Operator tidak didukung'
+
+PENJELASAN:
+Fungsi kalkulasi ini menggunakan struktur kontrol if-elif-else untuk menentukan operator yang digunakan dan melakukan operasi yang sesuai. Jika operator tidak didukung, fungsi akan mengembalikan pesan 'Operator tidak didukung'. Jika melakukan pembagian dengan nol, fungsi akan mengembalikan pesan 'Tidak dapat membagi dengan nol'.
+
+====================================================================================================
+
+[SOAL #17]
+ID: 263
+Topik: Operator
+Tipe: FILL
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Isilah ___ untuk membuat kode yang menghasilkan hasil dari 5 ditambah 3
+
+CODE TEMPLATE:
+x = 5 ___ 3
+print(x)
+
+JAWABAN:
++
+
+PENJELASAN:
+Operator '+' digunakan untuk menjumlahkan dua nilai numerik, sehingga 5 + 3 menghasilkan 8
+
+====================================================================================================
+
+[SOAL #18]
+ID: 262
+Topik: Operator
+Tipe: MCQ
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Apa fungsi dari operator 'in' dalam Python?
+
+CODE TEMPLATE:
+null
+
+OPSI:
+  Operator 'in' digunakan untuk membandingkan nilai dua variabel
+  Operator 'in' digunakan untuk menghitung panjang string
+  Operator 'in' digunakan untuk mengakses elemen list
+  Operator 'in' digunakan untuk memeriksa keberadaan elemen dalam koleksi
+
+JAWABAN:
+D
+
+PENJELASAN:
+Operator 'in' dalam Python digunakan untuk memeriksa apakah suatu elemen ada dalam koleksi seperti list, tuple, atau string. Jika elemen ditemukan, maka operator 'in' akan mengembalikan True; jika tidak, maka akan mengembalikan False. Opsi A salah karena 'in' tidak digunakan untuk membandingkan nilai dua variabel. Opsi B salah karena 'in' tidak menghitung panjang string. Opsi C salah karena 'in' tidak digunakan untuk mengakses elemen list secara langsung, meskipun bisa digunakan untuk memeriksa keberadaan elemen dalam list.
+
+====================================================================================================
+
+[SOAL #19]
+ID: 261
+Topik: Operator
+Tipe: CODING
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Buatlah fungsi yang menerima dua angka dan melakukan operasi aritmatika berdasarkan operator yang diberikan. Fungsi harus mengembalikan hasil operasi tersebut.
+
+CODE TEMPLATE:
+def calculate(num1, num2, operator):
+    # Write your code here
+    pass
+
+JAWABAN:
+def calculate(num1, num2, operator):
+    if operator == '+':
+        return num1 + num2
+    elif operator == '-':
+        return num1 - num2
+    elif operator == '*':
+        return num1 * num2
+    elif operator == '/':
+        if num2 != 0:
+            return num1 / num2
+        else:
+            return 'Error: Pembagian dengan nol'
+    else:
+        return 'Error: Operator tidak didukung'
+
+PENJELASAN:
+Penjelasan solusi dan konsep Operator: Fungsi calculate menerima tiga parameter, yaitu num1, num2, dan operator. Fungsi ini menggunakan struktur if-elif untuk menentukan operasi aritmatika yang akan dilakukan berdasarkan operator yang diberikan. Jika operator tidak didukung, fungsi akan mengembalikan pesan error. Jika operasi yang dilakukan adalah pembagian dan num2 adalah nol, fungsi akan mengembalikan pesan error untuk menghindari pembagian dengan nol.
+
+====================================================================================================
+
+[SOAL #20]
+ID: 260
+Topik: Operator
+Tipe: FILL
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Isilah ___ untuk membuat kode yang melakukan operasi penjumlahan antara variabel x dan 5
+
+CODE TEMPLATE:
+x = 10
+hasil = x ___ 5
+print(hasil)
+
+JAWABAN:
++
+
+PENJELASAN:
+Operator penjumlahan (+) digunakan untuk menghitung hasil penjumlahan antara variabel x dan 5
+
+====================================================================================================
+
+[SOAL #21]
+ID: 259
+Topik: Operator
+Tipe: MCQ
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Apa perbedaan antara operator 'in' dan '==' dalam konteks membandingkan nilai dalam sebuah list di Python?
+
+CODE TEMPLATE:
+null
+
+OPSI:
+  'in' membandingkan identitas, '==' membandingkan nilai
+  'in' membandingkan nilai, '==' membandingkan keanggotaan dalam list
+  'in' hanya untuk string, '==' untuk semua tipe data
+  'in' memeriksa keanggotaan dalam sebuah koleksi, '==' membandingkan nilai
+
+JAWABAN:
+D
+
+PENJELASAN:
+Perbedaan utama antara 'in' dan '==' adalah bahwa 'in' digunakan untuk memeriksa apakah sebuah nilai merupakan anggota dari sebuah koleksi (seperti list, tuple, atau set), sementara '==' membandingkan nilai antara dua variabel atau ekspresi. Dalam konteks list, 'in' akan mengembalikan True jika nilai tersebut ditemukan dalam list, sedangkan '==' akan membandingkan nilai keseluruhan list, bukan mencari keanggotaan. Opsi A salah karena 'in' tidak membandingkan identitas, melainkan keanggotaan. Opsi B salah karena '==' tidak membandingkan keanggotaan, melainkan kesetaraan nilai. Opsi C salah karena 'in' tidak terbatas hanya untuk string, melainkan dapat digunakan dengan berbagai tipe data.
+
+====================================================================================================
+
+[SOAL #22]
+ID: 258
+Topik: Operator
+Tipe: MCQ
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Apa perbedaan antara operator 'and' dan 'or' dalam kontrol alur logika Python?
+
+OPSI:
+  'and' digunakan untuk kondisi tunggal, 'or' untuk kondisi ganda
+  'and' memerlukan kedua kondisi benar, 'or' hanya satu kondisi salah
+  'and' digunakan untuk menggabungkan string, 'or' untuk menggabungkan angka
+  'and' memerlukan kedua kondisi benar, 'or' hanya memerlukan satu kondisi benar
+
+JAWABAN:
+D
+
+PENJELASAN:
+Perbedaan antara 'and' dan 'or' terletak pada cara mereka mengevaluasi kondisi. 'and' memerlukan kedua kondisi untuk benar agar ekspresi seluruhnya menjadi benar, sedangkan 'or' hanya memerlukan satu kondisi benar. Ini berarti bahwa jika Anda menggunakan 'and', kedua kondisi harus terpenuhi, tetapi jika Anda menggunakan 'or', hanya satu kondisi yang perlu terpenuhi untuk membuat ekspresi benar. Opsi A, B, dan C salah karena tidak secara akurat menggambarkan perbedaan antara 'and' dan 'or'.
+
+====================================================================================================
+
+[SOAL #23]
+ID: 257
+Topik: Operator
+Tipe: MCQ
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Apa perbedaan antara operator 'in' dan '==' dalam Python?
+
+CODE TEMPLATE:
+null
+
+OPSI:
+  'in' digunakan untuk membandingkan nilai, '==' digunakan untuk membandingkan identitas
+  'in' digunakan untuk memeriksa keanggotaan dalam kumpulan, '==' digunakan untuk membandingkan nilai
+  'in' dan '==' sama, hanya nama berbeda
+  'in' digunakan untuk membandingkan jenis data, '==' digunakan untuk membandingkan nilai
+
+JAWABAN:
+B
+
+PENJELASAN:
+Operator 'in' digunakan untuk memeriksa apakah suatu nilai ada dalam kumpulan (seperti list, tuple, atau string), sedangkan operator '==' digunakan untuk membandingkan nilai dua variabel. Contohnya, 'a in [1, 2, 3]' akan menghasilkan True jika 'a' bernilai 1, 2, atau 3, sedangkan 'a == 1' akan menghasilkan True hanya jika 'a' bernilai 1.
+
+====================================================================================================
+
+[SOAL #24]
+ID: 256
+Topik: Operator
+Tipe: MCQ
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Apa perbedaan antara operator 'and' dan 'or' dalam Python?
+
+OPSI:
+  'and' untuk kondisi tunggal, 'or' untuk kondisi ganda
+  'and' memerlukan kedua kondisi benar, 'or' memerlukan salah satu kondisi benar
+  'and' dan 'or' dapat digunakan secara bergantian tanpa perbedaan
+  'and' memiliki prioritas lebih tinggi daripada 'or' dalam kondisi yang kompleks
+
+JAWABAN:
+B
+
+PENJELASAN:
+Perbedaan utama antara operator 'and' dan 'or' dalam Python adalah bahwa 'and' memerlukan kedua kondisi untuk benar agar hasilnya benar, sedangkan 'or' hanya memerlukan salah satu kondisi untuk benar agar hasilnya benar. Ini berarti bahwa jika Anda menggunakan 'and', kedua kondisi harus dipenuhi; jika Anda menggunakan 'or', hanya satu kondisi yang perlu dipenuhi. Opsi B adalah jawaban yang benar karena menjelaskan perbedaan ini dengan tepat.
+
+====================================================================================================
+
+[SOAL #25]
+ID: 255
+Topik: Operator
+Tipe: CODING
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Buatlah fungsi yang mengambil dua buah bilangan bulat sebagai input dan mengembalikan hasil dari operasi modulus (%) antara dua bilangan tersebut.
+
+CODE TEMPLATE:
+def modulus(a, b):
+    # Write your code here
+    pass
+
+JAWABAN:
+def modulus(a, b):
+    return a % b
+
+PENJELASAN:
+Fungsi modulus(a, b) akan menghitung sisa dari pembagian a oleh b dengan menggunakan operator modulus (%). Operator modulus (%) akan mengembalikan sisa dari operasi pembagian. Misalnya, modulus(17, 5) akan mengembalikan 2 karena 17 dibagi 5 akan meninggalkan sisa 2.
+
+====================================================================================================
+
+[SOAL #26]
+ID: 254
+Topik: Operator
+Tipe: FILL
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Isilah ___ untuk membuat kode yang menghasilkan hasil operasi penjumlahan antara variabel x dan 5
+
+CODE TEMPLATE:
+x = 3
+hasil = x ___ 5
+print(hasil)
+
+JAWABAN:
++
+
+PENJELASAN:
+Penjelasan singkat tentang jawaban dan topik Operator, yaitu operator penjumlahan (+) digunakan untuk menjumlahkan nilai dari variabel x dan 5.
+
+====================================================================================================
+
+[SOAL #27]
+ID: 281
+Topik: Percabangan
+Tipe: MCQ
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Apa yang dimaksud dengan percabangan kondisi if-elif-else dalam Python?
+
+OPSI:
+  Untuk melakukan perulangan berdasarkan kondisi
+  Untuk membagi kode menjadi beberapa fungsi
+  Untuk mengatur alur eksekusi program berdasarkan kondisi tertentu
+  Untuk mengubah tipe data variabel
+
+JAWABAN:
+C
+
+PENJELASAN:
+Percabangan kondisi if-elif-else digunakan untuk mengatur alur eksekusi program berdasarkan kondisi tertentu. Ini memungkinkan program untuk membuat keputusan dan melakukan aksi yang berbeda berdasarkan kondisi yang dipenuhi. Opsi A salah karena itu adalah fungsi dari perulangan, opsi B salah karena itu adalah fungsi dari fungsi, dan opsi D salah karena itu adalah fungsi dari pengubahan tipe data.
+
+====================================================================================================
+
+[SOAL #28]
+ID: 280
+Topik: Percabangan
+Tipe: CODING
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Buatlah fungsi yang menerima sebuah angka dan mengembalikan 'genap' jika angka tersebut genap, 'ganjil' jika angka tersebut ganjil, dan 'nol' jika angka tersebut adalah 0.
+
+CODE TEMPLATE:
+def cek_angka(angka):
+    # Write your code here
+    pass
+
+JAWABAN:
+def cek_angka(angka):
+    if angka == 0:
+        return 'nol'
+    elif angka % 2 == 0:
+        return 'genap'
+    else:
+        return 'ganjil'
+
+PENJELASAN:
+Konsep Percabangan digunakan untuk memilih antara beberapa alternatif berdasarkan kondisi. Pada kasus ini, kita menggunakan if-elif-else untuk menentukan apakah angka tersebut genap, ganjil, atau nol. Fungsi modulus (%) digunakan untuk mengecek sisa pembagian angka dengan 2, yang menentukan apakah angka tersebut genap atau ganjil.
+
+====================================================================================================
+
+[SOAL #29]
+ID: 279
+Topik: Percabangan
+Tipe: CODING
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Buatlah fungsi yang mengembalikan 'besar' jika inputnya lebih besar dari 10, 'kecil' jika inputnya kurang dari atau sama dengan 10, dan 'sama' jika inputnya sama dengan 10.
+
+CODE TEMPLATE:
+def solution(n):
+    # Write your code here
+    pass
+
+JAWABAN:
+def solution(n):
+    if n > 10:
+        return 'besar'
+    elif n < 10:
+        return 'kecil'
+    else:
+        return 'sama'
+
+PENJELASAN:
+Percabangan digunakan untuk memutuskan alur program berdasarkan kondisi tertentu. Dalam soal ini, kita menggunakan if-elif-else untuk membandingkan input n dengan nilai 10 dan mengembalikan string yang sesuai.
+
+====================================================================================================
+
+[SOAL #30]
+ID: 278
+Topik: Percabangan
+Tipe: MCQ
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Apa fungsi dari pernyataan 'elif' dalam struktur percabangan Python?
+
+CODE TEMPLATE:
+null
+
+OPSI:
+  Mengakhiri proses percabangan dan melanjutkan ke kode berikutnya
+  Melayani sebagai kondisi tambahan jika kondisi sebelumnya tidak dipenuhi
+  Mengulangi proses percabangan dari awal
+  Menggantikan fungsi 'if' dalam struktur percabangan
+
+JAWABAN:
+B
+
+PENJELASAN:
+Pernyataan 'elif' digunakan dalam struktur percabangan Python untuk memeriksa kondisi tambahan jika kondisi sebelumnya tidak dipenuhi. Ini memungkinkan program untuk mengevaluasi beberapa kondisi dan melakukan aksi yang berbeda tergantung pada kondisi mana yang dipenuhi. Opsi A salah karena 'elif' tidak mengakhiri proses percabangan, C salah karena 'elif' tidak mengulangi proses percabangan, dan D salah karena 'elif' tidak menggantikan 'if' tetapi melengkapinya.
+
+====================================================================================================
+
+[SOAL #31]
+ID: 277
+Topik: Percabangan
+Tipe: CODING
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Buatlah fungsi yang mengembalikan nilai 'lebih besar' jika input bilangan bulat lebih besar dari 10, 'sama dengan' jika input bilangan bulat sama dengan 10, dan 'lebih kecil' jika input bilangan bulat lebih kecil dari 10.
+
+CODE TEMPLATE:
+def solution(n):
+    # Write your code here
+    pass
+
+JAWABAN:
+def solution(n):
+    if n > 10:
+        return 'lebih besar'
+    elif n == 10:
+        return 'sama dengan'
+    else:
+        return 'lebih kecil'
+
+PENJELASAN:
+Fungsi ini menggunakan percabangan if-elif-else untuk membandingkan input bilangan bulat dengan 10 dan mengembalikan nilai sesuai dengan kondisi.
+
+====================================================================================================
+
+[SOAL #32]
+ID: 276
+Topik: Percabangan
+Tipe: MCQ
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Apa perbedaan antara pernyataan 'if' dan 'elif' dalam struktur percabangan Python?
+
+OPSI:
+  'if' digunakan untuk kondisi awal, 'elif' tidak digunakan dalam percabangan
+  'if' dan 'elif' sama, hanya berbeda penulisan
+  'if' digunakan untuk kondisi awal, 'elif' untuk kondisi tambahan jika 'if' salah
+  'elif' digunakan untuk kondisi awal, 'if' untuk kondisi tambahan jika 'elif' salah
+
+JAWABAN:
+C
+
+PENJELASAN:
+Pernyataan 'if' digunakan untuk menentukan kondisi awal dalam struktur percabangan, sedangkan 'elif' (singkatan dari 'else if') digunakan untuk menentukan kondisi tambahan jika kondisi awal ('if') salah. Dengan demikian, 'if' dan 'elif' bekerja bersama untuk mengatur aliran percabangan berdasarkan kondisi yang diberikan. Opsi C menjelaskan perbedaan ini dengan tepat.
+
+====================================================================================================
+
+[SOAL #33]
+ID: 275
+Topik: Percabangan
+Tipe: FILL
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Isilah ___ untuk membuat kode yang mengeprint 'Benar' jika x lebih besar dari 5
+
+CODE TEMPLATE:
+x = 10
+if x > ___:
+    print('Benar')
+
+JAWABAN:
+5
+
+PENJELASAN:
+Percabangan digunakan untuk membuat keputusan berdasarkan kondisi. Dalam kode ini, kita menggunakan if statement untuk membandingkan nilai x dengan nilai yang diisi. Jika x lebih besar dari nilai yang diisi, maka kode akan mengeprint 'Benar'.
+
+====================================================================================================
+
+[SOAL #34]
+ID: 274
+Topik: Percabangan
+Tipe: MCQ
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Apa yang dimaksud dengan konsep 'elif' dalam percabangan kondisi Python?
+
+OPSI:
+  Digunakan untuk mengulangi eksekusi kode dalam loop
+  Sebuah kondisi yang harus selalu dievaluasi setelah kondisi utama
+  Digunakan untuk mengakhiri eksekusi kode dalam block
+  Digunakan jika kondisi utama tidak terpenuhi, untuk mengevaluasi kondisi lain
+
+JAWABAN:
+D
+
+PENJELASAN:
+Konsep 'elif' digunakan dalam percabangan kondisi Python untuk mengevaluasi kondisi lain jika kondisi utama tidak terpenuhi. Ini memungkinkan untuk memiliki beberapa kondisi yang dapat dievaluasi secara berurutan, dan kode yang sesuai dapat dijalankan jika salah satu kondisi terpenuhi. Opsi A salah karena 'elif' tidak terkait dengan loop, opsi B salah karena 'elif' tidak harus selalu dievaluasi, dan opsi C salah karena 'elif' tidak terkait dengan mengakhiri eksekusi kode.
+
+====================================================================================================
+
+[SOAL #35]
+ID: 273
+Topik: Percabangan
+Tipe: FILL
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Isilah ___ untuk membuat kode yang mengeprint 'Halo, Dunia!' jika x lebih besar dari 5
+
+CODE TEMPLATE:
+x = 10
+if x > ___:
+    print('Halo, Dunia!')
+
+JAWABAN:
+5
+
+PENJELASAN:
+Percabangan digunakan untuk membuat keputusan berdasarkan kondisi. Dalam kode ini, kita perlu mengeprint 'Halo, Dunia!' jika x lebih besar dari 5. Oleh karena itu, kita perlu mengisi ___ dengan nilai 5.
+
+====================================================================================================
+
+[SOAL #36]
+ID: 272
+Topik: Percabangan
+Tipe: CODING
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Buatlah fungsi yang menerima sebuah bilangan bulat dan mengembalikan 'genap' jika bilangan tersebut genap, serta 'ganjil' jika bilangan tersebut ganjil.
+
+CODE TEMPLATE:
+def cek_bilangan(n):
+    # Write your code here
+    pass
+
+JAWABAN:
+def cek_bilangan(n):
+    if n % 2 == 0:
+        return 'genap'
+    else:
+        return 'ganjil'
+
+PENJELASAN:
+Percabangan digunakan untuk memutuskan hasil berdasarkan kondisi. Pada fungsi cek_bilangan, kita menggunakan operator modulus (%) untuk mengecek sisa hasil bagi bilangan dengan 2. Jika sisa bagi adalah 0, maka bilangan tersebut adalah genap.
+
+====================================================================================================
+
+[SOAL #37]
+ID: 271
+Topik: Percabangan
+Tipe: MCQ
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Apa yang terjadi ketika kode Python menggunakan 'elif' tanpa 'if' sebelumnya?
+
+CODE TEMPLATE:
+null
+
+OPSI:
+  Kode akan berjalan tanpa error dan mencetak hasil
+  Kode akan menghasilkan SyntaxError karena 'elif' tidak sah
+  Kode akan mengabaikan 'elif' dan melanjutkan ke perintah berikutnya
+  Kode akan menunggu kondisi 'if' yang tidak pernah terjadi
+
+JAWABAN:
+B
+
+PENJELASAN:
+Pada Python, 'elif' digunakan sebagai lanjutan dari pernyataan 'if'. Jika tidak ada 'if' sebelumnya, Python tidak akan mengenali konteks 'elif' dan akan menghasilkan SyntaxError karena sintaks yang tidak sah. Ini karena 'elif' merupakan bagian dari struktur percabangan yang memerlukan 'if' awal untuk dapat berfungsi dengan benar.
+
+====================================================================================================
+
+[SOAL #38]
+ID: 270
+Topik: Percabangan
+Tipe: MCQ
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Apa yang dimaksud dengan operator 'elif' dalam percabangan Python?
+
+OPSI:
+  Digunakan untuk membuat perulangan
+  Digunakan untuk membuat kondisi jika-else yang bersarang
+  Digunakan untuk memutuskan eksekusi program jika kondisi tidak terpenuhi
+  Digunakan untuk mengevaluasi kondisi tambahan jika kondisi sebelumnya tidak terpenuhi
+
+JAWABAN:
+D
+
+PENJELASAN:
+Operator 'elif' digunakan dalam percabangan Python untuk mengevaluasi kondisi tambahan jika kondisi sebelumnya tidak terpenuhi. Ini memungkinkan program untuk mengevaluasi beberapa kondisi berbeda secara berurutan dan melakukan aksi yang sesuai. Opsi A salah karena 'elif' tidak terkait dengan perulangan, opsi B salah karena 'elif' bukan untuk membuat kondisi if-else yang bersarang, dan opsi C salah karena 'elif' tidak memutuskan eksekusi program tetapi menambahkan kondisi tambahan untuk dievaluasi.
+
+====================================================================================================
+
+[SOAL #39]
+ID: 269
+Topik: Percabangan
+Tipe: MCQ
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Apa perbedaan antara if-else dan try-except dalam Python?
+
+OPSI:
+  if-else untuk menangani kesalahan sintaks, try-except untuk menangani kondisi logika
+  if-else untuk menangani kondisi logika, try-except untuk menangani kesalahan runtime
+  if-else dan try-except memiliki fungsi yang sama, hanya nama berbeda
+  if-else untuk menangani kondisi logika spesifik, try-except untuk menangani kesalahan yang tidak terduga
+
+JAWABAN:
+D
+
+PENJELASAN:
+Perbedaan utama antara if-else dan try-except adalah bahwa if-else digunakan untuk menangani kondisi logika yang sudah diprediksi, sedangkan try-except digunakan untuk menangani kesalahan yang tidak terduga, seperti kesalahan runtime atau exception. If-else memungkinkan programmer untuk menulis kode yang berbeda tergantung pada kondisi tertentu, sedangkan try-except memungkinkan programmer untuk menangani kesalahan yang terjadi selama eksekusi kode.
+
+====================================================================================================
+
+[SOAL #40]
+ID: 268
+Topik: Percabangan
+Tipe: MCQ
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Apa yang dimaksud dengan percabangan if-elif-else dalam Python?
+
+OPSI:
+  Digunakan untuk mengulangi kode secara terus-menerus
+  Digunakan untuk memilih salah satu dari beberapa kondisi yang berbeda
+  Digunakan untuk menghentikan kode secara paksa
+  Digunakan untuk menggabungkan beberapa kondisi menjadi satu
+
+JAWABAN:
+B
+
+PENJELASAN:
+Percabangan if-elif-else dalam Python digunakan untuk memilih salah satu dari beberapa kondisi yang berbeda berdasarkan nilai atau kondisi tertentu. Ini memungkinkan kode untuk mengambil keputusan berdasarkan kondisi yang berbeda dan menjalankan kode yang sesuai. Opsi A salah karena digunakan untuk perulangan, opsi C salah karena digunakan untuk exception handling, dan opsi D salah karena digunakan untuk operator logika.
+
+====================================================================================================
+
+[SOAL #41]
+ID: 267
+Topik: Percabangan
+Tipe: FILL
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Isilah ___ untuk membuat kode yang mengevaluasi kondisi jika x lebih besar dari 5
+
+CODE TEMPLATE:
+x = 10
+if x ___ 5:
+    print("x lebih besar dari 5")
+
+JAWABAN:
+>
+
+PENJELASAN:
+Percabangan digunakan untuk mengevaluasi kondisi. Dalam contoh ini, operator lebih besar dari (>) digunakan untuk membandingkan nilai x dengan 5.
+
+====================================================================================================
+
+[SOAL #42]
+ID: 299
+Topik: Perulangan
+Tipe: CODING
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Buatlah fungsi yang dapat menghitung hasil dari perkalian semua angka dalam sebuah rentang tertentu menggunakan perulangan.
+
+CODE TEMPLATE:
+def solution(n):
+    # Write your code here
+    pass
+
+JAWABAN:
+def solution(n):
+    hasil = 1
+    for i in range(1, n+1):
+        hasil *= i
+    return hasil
+
+PENJELASAN:
+Penjelasan solusi dan konsep Perulangan: Fungsi ini menggunakan perulangan untuk menghitung hasil perkalian semua angka dalam rentang dari 1 hingga n. Variabel 'hasil' diinisiasi dengan nilai 1, kemudian dalam setiap iterasi perulangan, 'hasil' dikalikan dengan angka saat ini 'i'. Setelah perulangan selesai, fungsi mengembalikan nilai 'hasil' yang merupakan hasil perkalian semua angka dalam rentang.
+
+====================================================================================================
+
+[SOAL #43]
+ID: 298
+Topik: Perulangan
+Tipe: CODING
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Buatlah fungsi yang menghitung jumlah bilangan positif di dalam sebuah list menggunakan perulangan.
+
+CODE TEMPLATE:
+def hitung_bilangan_positif(lst):
+    # Write your code here
+    pass
+
+JAWABAN:
+def hitung_bilangan_positif(lst):
+    count = 0
+    for num in lst:
+        if num > 0:
+            count += 1
+    return count
+
+PENJELASAN:
+Fungsi ini menggunakan perulangan untuk mengiterasi setiap elemen di dalam list. Jika elemen tersebut lebih besar dari 0, maka counter akan bertambah 1. Setelah iterasi selesai, fungsi akan mengembalikan nilai counter yang merepresentasikan jumlah bilangan positif di dalam list.
+
+====================================================================================================
+
+[SOAL #44]
+ID: 297
+Topik: Perulangan
+Tipe: MCQ
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Apa yang dimaksud dengan perbedaan antara for loop dan while loop dalam Python?
+
+CODE TEMPLATE:
+null
+
+OPSI:
+  For loop digunakan untuk perulangan yang tidak memiliki kondisi, sedangkan while loop digunakan untuk perulangan yang memiliki kondisi.
+  For loop digunakan untuk perulangan yang memiliki kondisi, sedangkan while loop digunakan untuk perulangan yang tidak memiliki kondisi.
+  For loop dan while loop memiliki fungsi yang sama, hanya sintaksnya yang berbeda.
+  For loop digunakan untuk perulangan yang memiliki jumlah iterasi tetap, sedangkan while loop digunakan untuk perulangan yang memiliki kondisi yang harus dipenuhi.
+
+JAWABAN:
+D
+
+PENJELASAN:
+Perbedaan antara for loop dan while loop terletak pada tujuan penggunaannya. For loop digunakan ketika kita tahu berapa banyak iterasi yang diperlukan, sedangkan while loop digunakan ketika kita tidak tahu berapa banyak iterasi yang diperlukan, tetapi kita tahu kondisi yang harus dipenuhi untuk menghentikan perulangan. Misalnya, jika kita ingin mencetak angka dari 1 hingga 10, kita dapat menggunakan for loop karena kita tahu berapa banyak iterasi yang diperlukan. Namun, jika kita ingin mencetak angka hingga suatu kondisi tertentu terpenuhi, kita dapat menggunakan while loop.
+
+====================================================================================================
+
+[SOAL #45]
+ID: 293
+Topik: Perulangan
+Tipe: MCQ
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Apa yang terjadi ketika kita menggunakan perulangan for dengan iterator yang tidak dapat diubah (immutable) seperti string, tetapi kita mencoba mengubah nilai elemen selama iterasi?
+
+CODE TEMPLATE:
+Python code: for char in 'hello':
+    char = 'x'
+
+OPSI:
+  Perulangan akan mengabaikan perubahan dan melanjutkan iterasi.
+  Perulangan akan memperbarui string asli dengan 'x' pada setiap iterasi.
+  Perulangan akan menghasilkan error TypeError karena mencoba mengubah string.
+  Perulangan akan menghasilkan error RuntimeError karena perubahan yang tidak diizinkan.
+
+JAWABAN:
+A
+
+PENJELASAN:
+Perulangan for dalam Python bekerja dengan cara mengiterasi elemen-elemen dari iterator yang diberikan. Ketika kita mencoba mengubah nilai elemen selama iterasi, perubahan itu hanya berlaku untuk variabel lokal (dalam kasus ini, 'char') dan tidak mempengaruhi iterator asli. Jadi, perulangan akan terus berjalan tanpa mengubah string asli, membuat opsi A benar.
+
+====================================================================================================
+
+[SOAL #46]
+ID: 292
+Topik: Perulangan
+Tipe: FILL
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Isilah ___ untuk membuat kode yang mengulangi print('Halo') 5 kali
+
+CODE TEMPLATE:
+for i in range(___):
+    print('Halo')
+
+JAWABAN:
+5
+
+PENJELASAN:
+Perulangan menggunakan fungsi range() untuk mengulangi statement print 'Halo' sebanyak 5 kali.
+
+====================================================================================================
+
+[SOAL #47]
+ID: 291
+Topik: Perulangan
+Tipe: MCQ
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Apa perbedaan antara perulangan for dan while dalam Python?
+
+OPSI:
+  Perulangan for digunakan untuk mengulang kode berdasarkan kondisi, sedangkan perulangan while digunakan untuk mengulang kode berdasarkan jumlah iterasi.
+  Perulangan for lebih cepat daripada perulangan while karena tidak memerlukan variabel penghitung.
+  Perulangan while digunakan untuk mengulang kode berdasarkan kondisi, sedangkan perulangan for digunakan untuk mengulang kode berdasarkan jumlah iterasi.
+  Perulangan for digunakan untuk mengulang kode berdasarkan koleksi atau iterator, sedangkan perulangan while digunakan untuk mengulang kode berdasarkan kondisi yang dapat diubah.
+
+JAWABAN:
+D
+
+PENJELASAN:
+Perulangan for digunakan untuk mengulang kode berdasarkan koleksi atau iterator, seperti daftar, tuple, atau string. Perulangan while digunakan untuk mengulang kode berdasarkan kondisi yang dapat diubah, seperti variabel yang dapat diubah nilainya. Perbedaan ini memungkinkan programmer untuk memilih jenis perulangan yang paling sesuai dengan kebutuhan mereka.
+
+====================================================================================================
+
+[SOAL #48]
+ID: 290
+Topik: Perulangan
+Tipe: CODING
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Buatlah fungsi yang menghasilkan deret angka berdasarkan perulangan. Fungsi tersebut harus mengambil sebuah parameter 'n' dan mengembalikan hasil penjumlahan dari 1 hingga 'n'.
+
+CODE TEMPLATE:
+def sum_deret(n):
+    # Write your code here
+    pass
+
+JAWABAN:
+def sum_deret(n):
+    total = 0
+    for i in range(1, n+1):
+        total += i
+    return total
+
+PENJELASAN:
+Penjelasan solusi dan konsep Perulangan: Fungsi sum_deret menggunakan perulangan for untuk menjumlahkan angka dari 1 hingga 'n'. Perulangan ini memungkinkan kita untuk mengulangi proses penjumlahan dengan cepat dan efisien.
+
+====================================================================================================
+
+[SOAL #49]
+ID: 288
+Topik: Perulangan
+Tipe: MCQ
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Apa yang dimaksud dengan perulangan dalam pemrograman Python, terutama dalam konteks loop?
+
+OPSI:
+  Perulangan adalah proses penggunaan kondisi untuk menghentikan eksekusi program.
+  Perulangan adalah teknik untuk mengulangi eksekusi kode berulang kali sampai kondisi tertentu terpenuhi.
+  Perulangan adalah metode untuk menggabungkan kode menjadi satu blok yang dapat dijalankan secara terpisah.
+  Perulangan adalah cara untuk mengubah arah eksekusi program berdasarkan input pengguna.
+
+JAWABAN:
+B
+
+PENJELASAN:
+Perulangan dalam pemrograman Python, terutama dalam konteks loop, merujuk pada kemampuan program untuk mengulangi eksekusi kode berulang kali sampai kondisi tertentu terpenuhi. Ini memungkinkan program untuk melakukan tugas berulang dengan efisien. Opsi B adalah jawaban yang benar karena secara akurat mendefinisikan konsep perulangan dalam konteks loop. Opsi A salah karena lebih terkait dengan kondisi penghentian, opsi C salah karena lebih terkait dengan blok kode, dan opsi D salah karena lebih terkait dengan kontrol alur program berdasarkan input pengguna.
+
+====================================================================================================
+
+[SOAL #50]
+ID: 287
+Topik: Perulangan
+Tipe: FILL
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Isilah ___ untuk membuat kode perulangan yang mencetak angka 1 sampai 5
+
+CODE TEMPLATE:
+for i in range(___):
+    print(i)
+
+JAWABAN:
+6
+
+PENJELASAN:
+Penjelasan: Kode perulangan menggunakan fungsi range() untuk mengenerate angka 0 sampai 5. Oleh karena itu, untuk mencetak angka 1 sampai 5, kita perlu memasukkan nilai 6 ke dalam fungsi range() untuk membuat perulangan dari 0 sampai 5, lalu kita dapat mencetak 'i+1' untuk mendapatkan angka 1 sampai 5.
+
+====================================================================================================
+
+[SOAL #51]
+ID: 286
+Topik: Perulangan
+Tipe: CODING
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Buatlah fungsi yang menghitung jumlah bilangan genap dari 1 hingga n menggunakan perulangan.
+
+CODE TEMPLATE:
+def jumlah_genap(n):
+    # Write your code here
+    pass
+
+JAWABAN:
+def jumlah_genap(n):
+    count = 0
+    for i in range(1, n+1):
+        if i % 2 == 0:
+            count += 1
+    return count
+
+PENJELASAN:
+Fungsi jumlah_genap(n) menggunakan perulangan for untuk mengiterasi dari 1 hingga n. Jika bilangan i habis dibagi 2 (i % 2 == 0), maka bilangan tersebut adalah genap dan dihitung dengan menambahkan 1 ke variabel count. Setelah perulangan selesai, fungsi mengembalikan jumlah bilangan genap yang ditemukan.
+
+====================================================================================================
+
+[SOAL #52]
+ID: 285
+Topik: Perulangan
+Tipe: FILL
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Isilah ___ untuk membuat kode yang mencetak angka 1 hingga 5 menggunakan perulangan for
+
+CODE TEMPLATE:
+for i in range(___):
+    print(i)
+
+JAWABAN:
+6
+
+PENJELASAN:
+Perulangan for digunakan untuk mengulangi eksekusi kode. Range(6) berarti perulangan akan berjalan dari 0 hingga 5, sehingga mencetak angka 0 hingga 5. Untuk mencetak angka 1 hingga 5, kita dapat menggunakan range(1, 6).
+
+====================================================================================================
+
+[SOAL #53]
+ID: 284
+Topik: Perulangan
+Tipe: CODING
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Buatlah fungsi yang menghitung jumlah angka genap dari 1 hingga n menggunakan perulangan.
+
+CODE TEMPLATE:
+def solution(n):
+    # Write your code here
+    pass
+
+JAWABAN:
+def solution(n):
+    count = 0
+    for i in range(1, n+1):
+        if i % 2 == 0:
+            count += 1
+    return count
+
+PENJELASAN:
+Fungsi solution(n) menggunakan perulangan for untuk mengiterasi angka dari 1 hingga n. Pada setiap iterasi, fungsi memeriksa apakah angka tersebut genap dengan menggunakan modulus (%). Jika angka genap, maka variabel count akan bertambah 1. Setelah perulangan selesai, fungsi akan mengembalikan jumlah angka genap yang ditemukan.
+
+====================================================================================================
+
+[SOAL #54]
+ID: 283
+Topik: Perulangan
+Tipe: MCQ
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Apa yang dimaksud dengan perbedaan antara perulangan for dan while dalam Python?
+
+OPSI:
+  Perulangan for digunakan untuk mengulangi kode berdasarkan kondisi, sedangkan perulangan while digunakan untuk mengulangi kode berdasarkan iterasi.
+  Perulangan for digunakan untuk mengulangi kode berdasarkan iterasi, sedangkan perulangan while digunakan untuk mengulangi kode berdasarkan kondisi.
+  Perulangan for dan while memiliki fungsi yang sama, namun dengan sintaks yang berbeda.
+  Perulangan for digunakan untuk mengulangi kode berdasarkan sekumpulan data, sedangkan perulangan while digunakan untuk mengulangi kode berdasarkan kondisi yang harus dipenuhi.
+
+JAWABAN:
+D
+
+PENJELASAN:
+Perulangan for dalam Python digunakan untuk mengulangi kode berdasarkan sekumpulan data, seperti list, tuple, atau string. Sementara itu, perulangan while digunakan untuk mengulangi kode berdasarkan kondisi yang harus dipenuhi. Jadi, perbedaan utama antara keduanya adalah bahwa perulangan for berfokus pada iterasi atas sekumpulan data, sedangkan perulangan while berfokus pada kondisi yang harus dipenuhi untuk melanjutkan perulangan.
+
+====================================================================================================
+
+[SOAL #55]
+ID: 282
+Topik: Perulangan
+Tipe: CODING
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Buatlah fungsi yang menghitung jumlah angka ganjil dari 1 hingga n menggunakan perulangan.
+
+CODE TEMPLATE:
+def hitung_ganjil(n):
+    # Write your code here
+    pass
+
+JAWABAN:
+def hitung_ganjil(n):
+    count = 0
+    for i in range(1, n+1):
+        if i % 2 != 0:
+            count += 1
+    return count
+
+PENJELASAN:
+Fungsi hitung_ganjil menggunakan perulangan for untuk mengiterasi angka dari 1 hingga n. Jika angka tersebut ganjil (i % 2 != 0), maka counter akan bertambah. Setelah perulangan selesai, fungsi akan mengembalikan jumlah angka ganjil.
+
+====================================================================================================
+
+[SOAL #56]
+ID: 313
+Topik: Pengurutan
+Tipe: CODING
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Buatlah fungsi yang dapat mengurutkan daftar bilangan bulat secara ascending menggunakan metode bubble sort
+
+CODE TEMPLATE:
+def bubble_sort(arr):
+    # Write your code here
+    pass
+
+JAWABAN:
+def bubble_sort(arr):
+    n = len(arr)
+    for i in range(n):
+        for j in range(0, n-i-1):
+            if arr[j] > arr[j+1] :
+                arr[j], arr[j+1] = arr[j+1], arr[j]
+    return arr
+
+PENJELASAN:
+Bubble sort adalah algoritma pengurutan sederhana yang bekerja dengan membandingkan setiap pasang elemen yang berdekatan dan menukar mereka jika mereka dalam urutan yang salah. Proses ini diulangi sampai tidak ada lagi pertukaran yang diperlukan, yang menunjukkan bahwa daftar sudah terurut.
+
+====================================================================================================
+
+[SOAL #57]
+ID: 312
+Topik: Pengurutan
+Tipe: MCQ
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Apa perbedaan antara metode pengurutan 'sort' dan 'sorted' dalam Python?
+
+CODE TEMPLATE:
+null
+
+OPSI:
+  'sort' mengurutkan secara ascending, 'sorted' mengurutkan secara descending
+  'sort' mengubah daftar asli, 'sorted' menghasilkan daftar baru tanpa mengubah asli
+  'sort' lebih cepat daripada 'sorted' karena tidak membuat salinan
+  'sort' hanya untuk list, 'sorted' untuk semua jenis iterable
+
+JAWABAN:
+B
+
+PENJELASAN:
+Metode 'sort' dalam Python mengurutkan daftar secara in-place, artinya langsung mengubah daftar asli. Di sisi lain, fungsi 'sorted' mengembalikan daftar baru yang terurut tanpa mengubah daftar asli. Ini membuat 'sorted' lebih fleksibel karena bisa digunakan dengan semua jenis iterable, bukan hanya list.
+
+====================================================================================================
+
+[SOAL #58]
+ID: 311
+Topik: Pengurutan
+Tipe: CODING
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Buatlah fungsi yang dapat mengurutkan daftar bilangan bulat dalam urutan menaik menggunakan algoritma Bubble Sort.
+
+CODE TEMPLATE:
+def bubble_sort(arr):
+    # Write your code here
+    pass
+
+JAWABAN:
+def bubble_sort(arr):
+    n = len(arr)
+    for i in range(n):
+        for j in range(0, n-i-1):
+            if arr[j] > arr[j+1] :
+                arr[j], arr[j+1] = arr[j+1], arr[j]
+    return arr
+
+PENJELASAN:
+Fungsi bubble_sort menggunakan algoritma Bubble Sort untuk mengurutkan daftar bilangan bulat. Bubble Sort bekerja dengan membandingkan setiap pasangan elemen yang berdekatan dan menukar mereka jika mereka berada dalam urutan yang salah. Proses ini diulangi sampai tidak ada lagi pertukaran yang diperlukan, menandakan bahwa daftar sudah terurut.
+
+====================================================================================================
+
+[SOAL #59]
+ID: 310
+Topik: Pengurutan
+Tipe: MCQ
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Apa yang dimaksud dengan pengurutan stabil dalam konteks pengurutan data di Python?
+
+OPSI:
+  Pengurutan yang mempertahankan urutan relatif elemen dengan kunci yang sama
+  Pengurutan yang mengubah urutan relatif elemen dengan kunci yang sama
+  Pengurutan yang hanya berlaku untuk tipe data tertentu
+  Pengurutan yang selalu menghasilkan urutan yang sama tanpa memperhatikan kunci
+
+JAWABAN:
+A
+
+PENJELASAN:
+Pengurutan stabil mempertahankan urutan relatif elemen dengan kunci yang sama, sehingga jika dua elemen memiliki kunci yang sama, urutan relatif mereka sebelum dan sesudah pengurutan tetap sama. Ini adalah konsep penting dalam pengurutan data karena memastikan bahwa data yang memiliki kunci yang sama tetap dalam urutan yang konsisten. Opsi A adalah jawaban yang benar karena mendefinisikan pengurutan stabil dengan akurat. Opsi B, C, dan D salah karena tidak mendefinisikan pengurutan stabil dengan benar.
+
+====================================================================================================
+
+[SOAL #60]
+ID: 309
+Topik: Pengurutan
+Tipe: CODING
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Buatlah fungsi yang dapat mengurutkan daftar bilangan bulat secara menaik dan menurun menggunakan metode pengurutan Quick Sort.
+
+CODE TEMPLATE:
+def quick_sort(arr, ascending=True):
+    # Write your code here
+    pass
+
+JAWABAN:
+def quick_sort(arr, ascending=True):
+    if len(arr) <= 1:
+        return arr
+    pivot = arr[len(arr) // 2]
+    left = [x for x in arr if x < pivot]
+    middle = [x for x in arr if x == pivot]
+    right = [x for x in arr if x > pivot]
+    if ascending:
+        return quick_sort(left, ascending) + middle + quick_sort(right, ascending)
+    else:
+        return quick_sort(right, ascending) + middle + quick_sort(left, ascending)
+
+PENJELASAN:
+Fungsi Quick Sort bekerja dengan memilih suatu elemen dalam daftar yang disebut pivot. Lalu, elemen-elemen lainnya dalam daftar dibagi menjadi dua bagian, yaitu elemen-elemen yang lebih kecil dari pivot dan elemen-elemen yang lebih besar dari pivot. Proses ini dilakukan secara rekursif hingga seluruh daftar terurut.
+
+====================================================================================================
+
+[SOAL #61]
+ID: 308
+Topik: Pengurutan
+Tipe: MCQ
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Apa perbedaan antara metode pengurutan 'Bubble Sort' dan 'Selection Sort' dalam Python?
+
+OPSI:
+  Bubble Sort menggunakan konsep rekursi, sedangkan Selection Sort menggunakan iterasi
+  Selection Sort lebih cepat daripada Bubble Sort karena hanya memerlukan satu pass
+  Bubble Sort mengurutkan data dengan membandingkan dan menukar elemen yang berdekatan, sedangkan Selection Sort mengurutkan dengan mencari elemen terkecil dan memindahkannya ke posisi yang tepat
+  Bubble Sort dan Selection Sort adalah metode pengurutan yang sama, hanya dengan nama yang berbeda
+
+JAWABAN:
+C
+
+PENJELASAN:
+Perbedaan antara Bubble Sort dan Selection Sort terletak pada cara mereka mengurutkan data. Bubble Sort bekerja dengan membandingkan dan menukar elemen yang berdekatan secara berulang-ulang, sedangkan Selection Sort bekerja dengan mencari elemen terkecil dalam array yang belum terurut dan memindahkannya ke posisi yang tepat. Oleh karena itu, opsi C adalah jawaban yang benar.
+
+====================================================================================================
+
+[SOAL #62]
+ID: 307
+Topik: Pengurutan
+Tipe: FILL
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Isilah ___ untuk membuat kode yang mengurutkan daftar angka secara menaik
+
+CODE TEMPLATE:
+daftar_angka = [5, 2, 9, 1]
+daftar_angka.sort(___)
+print(daftar_angka)
+
+JAWABAN:
+None
+
+PENJELASAN:
+Penjelasan singkat tentang jawaban dan topik Pengurutan. Fungsi sort() digunakan untuk mengurutkan daftar. Jika tidak ada argumen yang diberikan, maka secara default sort() akan mengurutkan secara ascendant (menaik).
+
+====================================================================================================
+
+[SOAL #63]
+ID: 306
+Topik: Pengurutan
+Tipe: MCQ
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Apa perbedaan antara metode pengurutan 'bubble sort' dan 'merge sort' dalam Python?
+
+OPSI:
+  'Bubble sort' lebih cepat daripada 'merge sort' untuk daftar yang sudah terurut
+  'Merge sort' menggunakan pendekatan dividir dan taklukkan, sedangkan 'bubble sort' menggunakan pendekatan iteratif
+  'Bubble sort' hanya dapat digunakan untuk daftar dengan jumlah elemen yang genap
+  'Merge sort' memiliki kompleksitas waktu O(n log n), sedangkan 'bubble sort' memiliki kompleksitas waktu O(n^2) dalam kasus terburuk
+
+JAWABAN:
+D
+
+PENJELASAN:
+Perbedaan utama antara 'bubble sort' dan 'merge sort' terletak pada kompleksitas waktu dan pendekatan yang digunakan. 'Merge sort' menggunakan pendekatan dividir dan taklukkan, yang membuatnya lebih efisien dengan kompleksitas waktu O(n log n). Sementara itu, 'bubble sort' menggunakan pendekatan iteratif yang membandingkan dan menukar elemen yang bersebelahan, dengan kompleksitas waktu O(n^2) dalam kasus terburuk. Ini menjadikan 'merge sort' lebih cepat dan lebih efisien untuk daftar yang besar.
+
+====================================================================================================
+
+[SOAL #64]
+ID: 305
+Topik: Pengurutan
+Tipe: MCQ
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Apa yang dimaksud dengan stabilitas dalam pengurutan (sorting) di Python?
+
+OPSI:
+  Kemampuan algoritma untuk mengurutkan daftar dengan ukuran yang sangat besar
+  Stabilitas mengacu pada kemampuan algoritma untuk mempertahankan urutan elemen yang memiliki nilai sama
+  Stabilitas berarti algoritma dapat mengurutkan daftar dengan kecepatan yang sangat tinggi
+  Stabilitas adalah ukuran seberapa banyak algoritma dapat mengurutkan daftar dengan tipe data yang berbeda-beda
+
+JAWABAN:
+B
+
+PENJELASAN:
+Stabilitas dalam pengurutan berarti bahwa jika dua elemen memiliki nilai yang sama, maka urutan relatif mereka sebelum dan setelah pengurutan tetap sama. Ini penting ketika kita ingin mempertahankan urutan elemen yang memiliki atribut tambahan selain nilai utama yang digunakan untuk pengurutan. Opsi B adalah jawaban yang benar karena secara akurat mendefinisikan stabilitas dalam konteks pengurutan.
+
+====================================================================================================
+
+[SOAL #65]
+ID: 304
+Topik: Pengurutan
+Tipe: MCQ
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Apa yang dimaksud dengan pengurutan stabil (stable sorting) dalam konteks algoritma pengurutan?
+
+OPSI:
+  Pengurutan yang selalu mengubah posisi elemen yang sama
+  Pengurutan yang mempertahankan urutan relatif elemen dengan nilai yang sama
+  Pengurutan yang selalu membalikkan urutan elemen
+  Pengurutan yang hanya bekerja pada daftar yang sudah terurut
+
+JAWABAN:
+B
+
+PENJELASAN:
+Pengurutan stabil (stable sorting) adalah sebuah properti dari algoritma pengurutan yang mempertahankan urutan relatif dari elemen-elemen yang memiliki nilai yang sama. Artinya, jika dua elemen memiliki nilai yang sama sebelum pengurutan, maka urutan relatif mereka akan tetap sama setelah pengurutan. Ini penting dalam banyak aplikasi, terutama ketika informasi tambahan yang diasosiasikan dengan setiap elemen perlu dipertahankan. Opsi B adalah jawaban yang benar karena secara akurat mendefinisikan pengurutan stabil.
+
+====================================================================================================
+
+[SOAL #66]
+ID: 303
+Topik: Pengurutan
+Tipe: FILL
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Isilah ___ untuk membuat kode pengurutan bilangan sebagai berikut: 
+
+CODE TEMPLATE:
+bilangan = [64, 34, 25, 12, 22, 11, 90]
+bilangan.sort()
+print(bilangan)
+
+JAWABAN:
+sort()
+
+PENJELASAN:
+Fungsi sort() digunakan untuk mengurutkan elemen dalam sebuah list. Pada kode tersebut, sort() mengurutkan bilangan dalam list dari yang terkecil ke yang terbesar.
+
+====================================================================================================
+
+[SOAL #67]
+ID: 302
+Topik: Pengurutan
+Tipe: MCQ
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Apa perbedaan antara metode pengurutan 'Bubble Sort' dan 'Selection Sort'?
+
+OPSI:
+  Bubble Sort lebih cepat karena menggunakan algoritma rekursif
+  Selection Sort lebih efisien karena hanya memerlukan satu kali iterasi
+  Keduanya memiliki kompleksitas waktu yang sama, namun Bubble Sort lebih stabil
+  Bubble Sort memiliki kompleksitas waktu O(n^2) yang lebih tinggi daripada Selection Sort dalam kasus terburuk, tetapi Selection Sort memiliki kelebihan dalam penggunaan memori
+
+JAWABAN:
+D
+
+PENJELASAN:
+Perbedaan utama antara Bubble Sort dan Selection Sort terletak pada cara mereka mengurutkan elemen. Bubble Sort bekerja dengan membandingkan setiap pasangan elemen yang berdekatan dan menukar mereka jika mereka dalam urutan yang salah. Sementara itu, Selection Sort memilih elemen terkecil dari daftar yang belum terurut dan memindahkannya ke posisi yang tepat. Keduanya memiliki kompleksitas waktu O(n^2) dalam kasus terburuk, namun Selection Sort memiliki kelebihan dalam penggunaan memori karena hanya melakukan satu kali iterasi dan tidak memerlukan banyak ruang tambahan.
+
+====================================================================================================
+
+[SOAL #68]
+ID: 301
+Topik: Pengurutan
+Tipe: MCQ
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Apa yang dimaksud dengan稳定 (stable) dalam konteks pengurutan di Python?
+
+OPSI:
+  Pengurutan yang dapat mengubah urutan elemen yang memiliki nilai sama
+  Pengurutan yang selalu mempertahankan urutan relatif elemen yang memiliki nilai sama
+  Pengurutan yang selalu membalik urutan elemen yang memiliki nilai sama
+  Pengurutan yang mengabaikan nilai elemen saat mengurutkan
+
+JAWABAN:
+B
+
+PENJELASAN:
+Pengurutan stabil (stable) memastikan bahwa urutan relatif elemen yang memiliki nilai sama dipertahankan sebelum dan setelah pengurutan. Ini berarti bahwa jika dua elemen memiliki nilai yang sama, maka urutan mereka sebelum pengurutan akan tetap sama setelah pengurutan. Hal ini penting dalam banyak aplikasi, seperti pengurutan data berdasarkan beberapa kriteria.
+
+====================================================================================================
+
+[SOAL #69]
+ID: 300
+Topik: Pengurutan
+Tipe: MCQ
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Apa perbedaan antara metode sort() dan sorted() dalam pengurutan list di Python?
+
+CODE TEMPLATE:
+null
+
+OPSI:
+  sort() mengembalikan list baru, sedangkan sorted() mengubah list asli
+  sort() mengubah list asli, sedangkan sorted() mengembalikan list baru
+  sort() hanya untuk string, sedangkan sorted() untuk semua tipe data
+  sort() untuk list, sedangkan sorted() untuk semua iterable
+
+JAWABAN:
+B
+
+PENJELASAN:
+Metode sort() mengubah list asli secara in-place, sedangkan metode sorted() mengembalikan list baru yang terurut tanpa mengubah list asli. Perbedaan ini penting dalam memilih metode pengurutan yang sesuai tergantung pada kebutuhan dan preferensi pengguna.
+
+====================================================================================================
+
+[SOAL #70]
+ID: 326
+Topik: Pencarian
+Tipe: CODING
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Buatlah fungsi yang melakukan pencarian binary search pada sebuah daftar angka yang sudah terurut untuk menemukan posisi sebuah angka target.
+
+CODE TEMPLATE:
+def binary_search(daftar, target):
+    # Write your code here
+    pass
+
+JAWABAN:
+def binary_search(daftar, target):
+    low = 0
+    high = len(daftar) - 1
+    while low <= high:
+        mid = (low + high) // 2
+        if daftar[mid] == target:
+            return mid
+        elif daftar[mid] < target:
+            low = mid + 1
+        else:
+            high = mid - 1
+    return -1
+
+PENJELASAN:
+Fungsi binary_search ini bekerja dengan membagi daftar menjadi dua bagian dan membandingkan elemen tengah dengan target. Jika elemen tengah sama dengan target, maka fungsi mengembalikan indeks elemen tersebut. Jika elemen tengah lebih kecil dari target, maka fungsi memotong setengah kiri daftar dan mengulangi proses. Jika elemen tengah lebih besar dari target, maka fungsi memotong setengah kanan daftar dan mengulangi proses. Jika target tidak ditemukan, maka fungsi mengembalikan -1.
+
+====================================================================================================
+
+[SOAL #71]
+ID: 325
+Topik: Pencarian
+Tipe: MCQ
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Apa yang dimaksud dengan algoritma Linear Search dalam konteks pencarian di Python?
+
+OPSI:
+  Algoritma yang menggunakan teknik divide dan conquer untuk mencari elemen dalam daftar
+  Algoritma yang membandingkan setiap elemen dalam daftar satu per satu untuk menemukan elemen yang dicari
+  Algoritma yang menggunakan struktur data khusus seperti tree atau graph untuk meningkatkan kecepatan pencarian
+  Algoritma yang hanya dapat digunakan untuk mencari elemen dalam daftar yang telah diurutkan
+
+JAWABAN:
+B
+
+PENJELASAN:
+Algoritma Linear Search adalah teknik pencarian yang paling sederhana, di mana setiap elemen dalam daftar dibandingkan satu per satu dengan elemen yang dicari hingga ditemukan. Ini berbeda dengan algoritma lain seperti Binary Search yang menggunakan divide dan conquer, atau algoritma yang menggunakan struktur data khusus. Linear Search dapat digunakan pada daftar yang telah diurutkan atau tidak diurutkan, sehingga opsi D salah. Opsi A dan C juga salah karena menggambarkan algoritma pencarian yang berbeda.
+
+====================================================================================================
+
+[SOAL #72]
+ID: 324
+Topik: Pencarian
+Tipe: CODING
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Buatlah fungsi yang melakukan pencarian nilai maksimum dalam sebuah daftar angka menggunakan algoritma pencarian linier. Fungsi harus menerima sebuah daftar angka sebagai input dan mengembalikan nilai maksimum dalam daftar tersebut.
+
+CODE TEMPLATE:
+def cari_maksimum(daftar_angka):
+    # Write your code here
+    pass
+
+JAWABAN:
+def cari_maksimum(daftar_angka):
+    if not daftar_angka:
+        return None
+    maksimum = daftar_angka[0]
+    for angka in daftar_angka:
+        if angka > maksimum:
+            maksimum = angka
+    return maksimum
+
+PENJELASAN:
+Fungsi `cari_maksimum` melakukan pencarian nilai maksimum dalam sebuah daftar angka menggunakan algoritma pencarian linier. Fungsi ini bekerja dengan membandingkan setiap elemen dalam daftar dan mengupdate nilai maksimum jika menemukan elemen yang lebih besar. Jika daftar kosong, fungsi mengembalikan `None`. Pada contoh pertama, nilai maksimum dalam daftar `[1, 2, 3, 4, 5]` adalah `5`. Pada contoh kedua, nilai maksimum dalam daftar `[-1, -2, -3, -4, -5]` adalah `-1`.
+
+====================================================================================================
+
+[SOAL #73]
+ID: 323
+Topik: Pencarian
+Tipe: CODING
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Buatlah fungsi yang melakukan pencarian liner pada daftar untuk menemukan indeks elemen tertentu. Fungsi harus menerima daftar dan target sebagai input dan mengembalikan indeks target jika ditemukan, atau -1 jika tidak ditemukan.
+
+CODE TEMPLATE:
+def linear_search(arr, target):
+    # Write your code here
+    pass
+
+JAWABAN:
+def linear_search(arr, target):
+    for i in range(len(arr)):
+        if arr[i] == target:
+            return i
+    return -1
+
+PENJELASAN:
+Penjelasan solusi dan konsep Pencarian: Fungsi linear_search memeriksa setiap elemen dalam daftar secara berurutan untuk menemukan target. Jika target ditemukan, indeksnya dikembalikan. Jika target tidak ditemukan setelah memeriksa semua elemen, -1 dikembalikan untuk menunjukkan bahwa target tidak ada dalam daftar.
+
+====================================================================================================
+
+[SOAL #74]
+ID: 322
+Topik: Pencarian
+Tipe: MCQ
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Apa perbedaan antara metode 'in' dan metode 'index()' dalam pencarian elemen pada list di Python?
+
+CODE TEMPLATE:
+null
+
+OPSI:
+  'in' mengembalikan index, 'index()' mengembalikan boolean
+  'in' lebih cepat tetapi kurang akurat
+  'index()' membutuhkan nilai exact, 'in' membutuhkan range
+  'in' mengembalikan boolean, 'index()' mengembalikan index
+
+JAWABAN:
+D
+
+PENJELASAN:
+Metode 'in' digunakan untuk memeriksa apakah sebuah elemen ada dalam list atau tidak, dan mengembalikan nilai boolean (True atau False). Sementara itu, metode 'index()' digunakan untuk mencari index dari sebuah elemen spesifik dalam list, dan mengembalikan nilai integer yang merupakan index dari elemen tersebut. Jika elemen tidak ditemukan, 'index()' akan menghasilkan ValueError, sedangkan 'in' akan mengembalikan False. Perbedaan ini penting dalam konteks pencarian karena menentukan apakah kita ingin mengetahui keberadaan atau lokasi elemen dalam list.
+
+====================================================================================================
+
+[SOAL #75]
+ID: 321
+Topik: Pencarian
+Tipe: FILL
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Isilah ___ untuk membuat fungsi pencarian linear yang benar
+
+CODE TEMPLATE:
+def pencarian_linear(data, target):
+    for i in range(len(data)):
+        if data[i] == target:
+            return ___
+    return -1
+
+JAWABAN:
+i
+
+PENJELASAN:
+Fungsi pencarian linear digunakan untuk mencari elemen dalam daftar. Jika elemen ditemukan, fungsi harus mengembalikan indeks elemen tersebut. Dalam kode di atas, variabel 'i' merepresentasikan indeks elemen yang sedang diperiksa.
+
+====================================================================================================
+
+[SOAL #76]
+ID: 320
+Topik: Pencarian
+Tipe: MCQ
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Apa perbedaan antara algoritma pencarian linear dan binary search dalam Python?
+
+OPSI:
+  Linear search lebih cepat untuk daftar yang sudah terurut
+  Binary search hanya dapat digunakan pada daftar yang tidak terurut
+  Linear search memiliki kompleksitas waktu yang lebih baik daripada binary search
+  Binary search memiliki kompleksitas waktu yang lebih baik daripada linear search untuk daftar yang besar dan terurut
+
+JAWABAN:
+D
+
+PENJELASAN:
+Binary search memiliki kompleksitas waktu O(log n) karena setiap langkah membagi ruang pencarian menjadi dua, sedangkan linear search memiliki kompleksitas waktu O(n) karena memeriksa setiap elemen secara berurutan. Oleh karena itu, binary search lebih efisien untuk daftar yang besar dan terurut.
+
+====================================================================================================
+
+[SOAL #77]
+ID: 319
+Topik: Pencarian
+Tipe: MCQ
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Apa yang dimaksud dengan algoritma pencarian linear dalam Python?
+
+OPSI:
+  Algoritma yang menggunakan tree untuk mencari data
+  Algoritma yang memeriksa setiap elemen dalam list secara berurutan
+  Algoritma yang hanya dapat digunakan untuk mencari data dalam set
+  Algoritma yang menggunakan hash table untuk mencari data
+
+JAWABAN:
+B
+
+PENJELASAN:
+Algoritma pencarian linear adalah metode pencarian yang memeriksa setiap elemen dalam list secara berurutan untuk menemukan data yang dicari. Ini berarti bahwa algoritma akan memeriksa setiap elemen satu per satu, dari awal hingga akhir, sampai data ditemukan atau sampai akhir list. Opsi B adalah jawaban yang benar karena secara akurat menggambarkan definisi algoritma pencarian linear. Opsi A, C, dan D salah karena mereka menggambarkan algoritma atau struktur data yang berbeda.
+
+====================================================================================================
+
+[SOAL #78]
+ID: 318
+Topik: Pencarian
+Tipe: MCQ
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Apa perbedaan antara algoritma Pencarian Linier (Linear Search) dan Pencarian Biner (Binary Search) dalam Python?
+
+OPSI:
+  Pencarian Linier lebih cepat daripada Pencarian Biner karena memeriksa elemen secara berurutan
+  Pencarian Biner hanya dapat digunakan pada daftar yang terurut
+  Pencarian Linier memerlukan daftar yang terurut, sedangkan Pencarian Biner tidak
+  Pencarian Biner lebih cepat daripada Pencarian Linier karena membagi daftar menjadi dua bagian pada setiap iterasi
+
+JAWABAN:
+D
+
+PENJELASAN:
+Pencarian Biner lebih cepat daripada Pencarian Linier karena membagi daftar menjadi dua bagian pada setiap iterasi, sehingga mengurangi jumlah perbandingan yang diperlukan. Pencarian Linier, di sisi lain, memeriksa setiap elemen secara berurutan, sehingga memiliki kompleksitas waktu yang lebih tinggi. Pencarian Biner memang memerlukan daftar yang terurut, tetapi ini adalah syarat yang memungkinkan algoritma ini bekerja dengan efisien.
+
+====================================================================================================
+
+[SOAL #79]
+ID: 317
+Topik: Pencarian
+Tipe: CODING
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Buatlah fungsi yang melakukan pencarian nilai tertentu dalam sebuah daftar menggunakan metode pencarian linear. Fungsi harus menerima dua parameter: daftar dan nilai yang ingin dicari, lalu mengembalikan indeks dari nilai tersebut dalam daftar jika ditemukan, atau -1 jika tidak ditemukan.
+
+CODE TEMPLATE:
+def cari_nilai(daftar, nilai):
+    # Write your code here
+    pass
+
+JAWABAN:
+def cari_nilai(daftar, nilai):
+    for i in range(len(daftar)):
+        if daftar[i] == nilai:
+            return i
+    return -1
+
+PENJELASAN:
+Fungsi pencarian linear ini bekerja dengan memeriksa setiap elemen dalam daftar secara berurutan sampai menemukan nilai yang sesuai atau sampai akhir daftar. Jika nilai ditemukan, fungsi mengembalikan indeks nilai tersebut. Jika tidak ditemukan, fungsi mengembalikan -1 sebagai tanda bahwa nilai tidak ada dalam daftar.
+
+====================================================================================================
+
+[SOAL #80]
+ID: 316
+Topik: Pencarian
+Tipe: MCQ
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Apa perbedaan antara metode pencarian linear dan binary search dalam Python?
+
+OPSI:
+  Linear search lebih cepat untuk daftar yang sudah terurut
+  Binary search hanya dapat digunakan untuk daftar yang sudah terurut
+  Linear search memiliki kompleksitas waktu yang lebih baik daripada binary search
+  Binary search memiliki kompleksitas waktu yang lebih baik daripada linear search untuk daftar yang besar dan terurut
+
+JAWABAN:
+D
+
+PENJELASAN:
+Binary search memiliki kompleksitas waktu O(log n) karena setiap langkahnya membagi ruang pencarian menjadi dua, sedangkan linear search memiliki kompleksitas waktu O(n) karena memeriksa setiap elemen secara berurutan. Oleh karena itu, binary search lebih efisien untuk daftar yang besar dan terurut.
+
+====================================================================================================
+
+[SOAL #81]
+ID: 315
+Topik: Pencarian
+Tipe: FILL
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Isilah ___ untuk membuat kode yang melakukan pencarian nilai maksimum dalam sebuah list
+
+CODE TEMPLATE:
+def cari_maksimum(daftar):
+  return max(daftar)
+print(cari_maksimum([1, 2, 3, 4, 5]))
+
+JAWABAN:
+max
+
+PENJELASAN:
+Fungsi max() dalam Python digunakan untuk mencari nilai maksimum dalam sebuah list atau iterables lainnya.
+
+====================================================================================================

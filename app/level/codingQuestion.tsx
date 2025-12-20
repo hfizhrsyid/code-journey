@@ -1,14 +1,14 @@
 import { Question, quizAPI, validateQuestion } from "@/lib/api";
 import { styles } from "@/styles/codeQuestion";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, Image, Modal, SafeAreaView, ScrollView, Text, TextInput, TouchableOpacity, View, Alert } from "react-native";
 import { useQuestions } from "../../lib/QuestionContext";
 import { useFocusEffect } from "@react-navigation/native";
 import React from "react";
 
-// helper: pastikan options selalu berupa array (toleran terhadap string JSON atau comma-list)
-const normalizeQuestion = (q: any) => {
+// helper: pastikan options selalu berupa array dan bawa metadata topik
+const normalizeQuestion = (q: any, fallbackTopicId?: number, fallbackTopicName?: string) => {
   if (!q) return q;
   try {
     if (q.options && typeof q.options === "string") {
@@ -25,6 +25,11 @@ const normalizeQuestion = (q: any) => {
           .filter(Boolean);
       }
     }
+
+    // ensure topic metadata is preserved for newly generated questions
+    if (!q.topic_id && typeof fallbackTopicId !== "undefined") q.topic_id = fallbackTopicId;
+    if (!q.topic_name && q.topic) q.topic_name = q.topic;
+    if (!q.topic_name && fallbackTopicName) q.topic_name = fallbackTopicName;
   } catch (e) {
     console.warn("normalizeQuestion error:", e);
   }
@@ -32,7 +37,12 @@ const normalizeQuestion = (q: any) => {
 };
 
 export default function CodingQuestion() {
+  const params = useLocalSearchParams();
+
   const { questionSet, setQuestionSet, currentIndex, setCurrentIndex, difficulty, topic, topicId, savePosition } = useQuestions();
+
+  // ✅ READ questionIndex dari params jika ada (user klik node lama)
+  const paramQuestionIndex = params.questionIndex ? parseInt(params.questionIndex as string) : null;
 
   const [question, setQuestion] = useState<Question | null>(null);
   const [answer, setAnswer] = useState("");
@@ -42,6 +52,10 @@ export default function CodingQuestion() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [autoRetried, setAutoRetried] = useState(false);
+  const [prevTopicId, setPrevTopicId] = useState<number | null>(null);
+  const [hasAppliedParamIndex, setHasAppliedParamIndex] = useState(false);
+  const MAX_QUESTIONS = 10;
 
   const loadQuestion = useCallback(async () => {
     try {
@@ -52,10 +66,44 @@ export default function CodingQuestion() {
       setFeedbackMessage("");
       setTestResults([]);
 
+      // ✅ GUNAKAN paramQuestionIndex jika ada (user klik node lama)
+      // Jika tidak ada, gunakan currentIndex (normal flow)
+      const indexToUse = !hasAppliedParamIndex && paramQuestionIndex !== null ? paramQuestionIndex : currentIndex;
+
+      console.log(`📖 [Coding] Loading question: index=${indexToUse}, fromParam=${paramQuestionIndex !== null}`);
+
+      const safeIndex = questionSet.length > 0 ? Math.min(Math.max(indexToUse, 0), questionSet.length - 1) : 0;
+
+      // ✅ ALWAYS sync currentIndex with the index we're using
+      // This ensures context state matches the actual question being displayed
+      if (safeIndex !== currentIndex) {
+        setCurrentIndex(safeIndex);
+      }
+      if (!hasAppliedParamIndex && paramQuestionIndex !== null) {
+        setHasAppliedParamIndex(true);
+      }
+
+      const hydrateFromServer = async () => {
+        try {
+          const fetched = await quizAPI.getQuestions(topicId || topic, difficulty || 2);
+          if (fetched && fetched.length > 0) {
+            const normalized = fetched.map((q: any) => normalizeQuestion(q, topicId, topic));
+            const nextSafe = Math.min(Math.max(safeIndex, 0), normalized.length - 1);
+            setQuestionSet(normalized);
+            setCurrentIndex(nextSafe);
+            setQuestion(normalized[nextSafe] as any);
+            return true;
+          }
+        } catch (fetchErr) {
+          console.warn("Hydrate coding from server failed:", fetchErr);
+        }
+        return false;
+      };
+
       // If we have a question set and the index exists, use it
-      if (questionSet.length > 0 && currentIndex < questionSet.length) {
-        let currentQuestion = questionSet[currentIndex];
-        currentQuestion = normalizeQuestion(currentQuestion);
+      if (questionSet.length > 0 && safeIndex < questionSet.length) {
+        let currentQuestion = questionSet[safeIndex];
+        currentQuestion = normalizeQuestion(currentQuestion, topicId, topic);
 
         // Validate question
         const validation = validateQuestion(currentQuestion);
@@ -69,11 +117,15 @@ export default function CodingQuestion() {
         return;
       }
 
+      // Try to hydrate from server before generating
+      const hydrated = await hydrateFromServer();
+      if (hydrated) return;
+
       // Fallback: request a single coding question from backend and populate context
       try {
-        const q = await quizAPI.generateQuestion(difficulty || 2, "coding");
+        const q = await quizAPI.generateQuestion(difficulty || 2, "coding", { id: topicId, name: topic });
         if (q) {
-          const nq = normalizeQuestion(q);
+          const nq = normalizeQuestion(q, topicId, topic);
 
           // Validate generated question
           const validation = validateQuestion(nq);
@@ -111,22 +163,42 @@ export default function CodingQuestion() {
     } finally {
       setLoading(false);
     }
-  }, [questionSet, currentIndex, difficulty, topicId, setQuestion, setQuestionSet, setCurrentIndex, setLoading, setError, setAnswer, setFeedbackStatus, setFeedbackMessage]);
+  }, [questionSet, paramQuestionIndex, currentIndex, difficulty, topicId, topic, setQuestionSet, setCurrentIndex, hasAppliedParamIndex]);
 
   // Load question on component mount
   useEffect(() => {
     loadQuestion();
   }, [loadQuestion]);
 
-  // ✅ RESET STATE KETIKA TOPIC BERUBAH
+  // Trigger loadQuestion ketika screen fokus untuk memastikan data selalu fresh
+  useFocusEffect(
+    React.useCallback(() => {
+      loadQuestion();
+    }, [loadQuestion])
+  );
+
+  // Auto-retry sekali ketika error muncul
   useEffect(() => {
-    setQuestion(null);
-    setAnswer("");
-    setFeedbackStatus(null);
-    setFeedbackMessage("");
-    setTestResults([]);
-    setError(null);
-  }, [topicId]);
+    if (!loading && error && !autoRetried) {
+      setAutoRetried(true);
+      loadQuestion();
+    }
+  }, [loading, error, autoRetried, loadQuestion]);
+
+  // ✅ RESET STATE HANYA KETIKA TOPIC BENAR-BENAR BERUBAH
+  useEffect(() => {
+    if (prevTopicId !== null && topicId !== prevTopicId) {
+      console.log(`🔄 Topic changed from ${prevTopicId} to ${topicId}, resetting state`);
+      setQuestion(null);
+      setAnswer("");
+      setFeedbackStatus(null);
+      setFeedbackMessage("");
+      setTestResults([]);
+      setError(null);
+      setAutoRetried(false);
+    }
+    setPrevTopicId(topicId);
+  }, [topicId, prevTopicId]);
 
   const handleSubmit = async () => {
     if (!question || !answer.trim()) {
@@ -183,9 +255,9 @@ export default function CodingQuestion() {
 
     const nextIndex = currentIndex + 1;
 
-    // Check if we've completed 10 questions - redirect to reportCard
-    if (nextIndex >= 10) {
-      console.log("✅ Completed 10 questions, navigating to reportCard");
+    // ✅ CEK APAKAH SUDAH MENCAPAI LIMIT 10 SOAL
+    if (nextIndex >= MAX_QUESTIONS) {
+      console.log(`✅ Sudah mencapai ${MAX_QUESTIONS} soal, navigasi ke reportCard`);
       router.push({
         pathname: "/reportCard",
         params: {
@@ -198,11 +270,12 @@ export default function CodingQuestion() {
 
     // Jika ada soal berikutnya dalam questionSet, pindah index dan navigasi bila tipe berbeda
     if (nextIndex < questionSet.length) {
-      const nextQ = normalizeQuestion(questionSet[nextIndex]);
+      const nextQ = normalizeQuestion(questionSet[nextIndex], topicId, topic);
       const copy = [...questionSet];
       copy[nextIndex] = nextQ;
       setQuestionSet(copy);
       setCurrentIndex(nextIndex);
+      setQuestion(nextQ as any);
 
       const nextPath = getQuestionScreenPath(nextQ.question_type);
       if (nextPath !== "codingQuestion") {
@@ -223,12 +296,13 @@ export default function CodingQuestion() {
         return "mcq";
       })() as "mcq" | "fill" | "coding";
 
-      const newQuestion = await quizAPI.generateQuestion(difficulty || 2, nextType);
+      const newQuestion = await quizAPI.generateQuestion(difficulty || 2, nextType, { id: topicId, name: topic });
       if (newQuestion) {
-        const nq = normalizeQuestion(newQuestion);
+        const nq = normalizeQuestion(newQuestion, topicId, topic);
         const updated = [...questionSet, nq];
         setQuestionSet(updated);
         setCurrentIndex(nextIndex);
+        setQuestion(nq as any);
 
         const newPath = getQuestionScreenPath(nq.question_type);
         if (newPath !== "codingQuestion") {
@@ -240,7 +314,7 @@ export default function CodingQuestion() {
       console.warn("Gagal generate soal berikutnya (coding):", err);
     }
 
-    // Navigate to results screen
+    // Jika tidak ada soal baru yang bisa diambil, anggap selesai
     router.push({
       pathname: "/reportCard",
       params: {
@@ -300,7 +374,9 @@ export default function CodingQuestion() {
       <View style={styles.container}>
         <ScrollView contentContainerStyle={styles.scrollContent}>
           <View style={styles.header}>
-            <Text style={styles.headerText}>Soal {currentIndex + 1}/10</Text>
+            <Text style={styles.headerText}>
+              Soal {currentIndex + 1}/{questionSet.length}
+            </Text>
             <TouchableOpacity style={styles.primaryButton}>
               <Text style={styles.primaryButtonText}>Coding</Text>
             </TouchableOpacity>
@@ -457,7 +533,7 @@ export default function CodingQuestion() {
 
               <View style={styles.nextButtonRow}>
                 <TouchableOpacity style={styles.nextButton} onPress={handleNextQuestion}>
-                  <Text style={styles.nextButtonText}>{currentIndex + 1 >= 10 ? "Selesai" : "Selanjutnya"}</Text>
+                  <Text style={styles.nextButtonText}>Selanjutnya</Text>
                 </TouchableOpacity>
               </View>
             </View>
