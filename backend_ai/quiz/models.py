@@ -34,6 +34,7 @@ class Question(models.Model):
     test_cases = models.JSONField(null=True, blank=True)  # For coding questions: [{"input": "...", "expected_output": "..."}]
     question_hash = models.CharField(max_length=64, null=True, blank=True, db_index=True)
     is_active = models.BooleanField(default=True)
+    is_pretest = models.BooleanField(default=False)  # Marks questions used for diagnostic pretest
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     

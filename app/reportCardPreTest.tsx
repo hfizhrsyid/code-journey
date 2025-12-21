@@ -1,10 +1,19 @@
 import { useAuth } from "@/lib/AuthContext";
-import { quizAPI } from "@/lib/api";
 import { styles } from "@/styles/reportCard";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import Svg, { Circle, Defs, LinearGradient, Stop } from "react-native-svg";
+
+interface TopicRecommendation {
+    topic_id: number;
+    topic_name: string;
+    correct: number;
+    total: number;
+    score: number;
+    recommended_difficulty: number;
+}
 
 const CircleProgress = ({ percent }: { percent: number }) => {
     const radius = 40;
@@ -69,49 +78,71 @@ const ReportCardPreTest = () => {
     const params = useLocalSearchParams();
     const { user } = useAuth();
 
-    const topicId = parseInt(params.topicId as string) || 0;
-    const topicName = (params.topicName as string) || "Topic";
-
     const [loading, setLoading] = useState(true);
-    const [stats, setStats] = useState({
-        correctAnswers: 0,
-        totalQuestions: 0,
-        percentage: 0,
-    });
+    const [recommendations, setRecommendations] = useState<TopicRecommendation[]>([]);
+    const [overallScore, setOverallScore] = useState(0);
+    const [totalCorrect, setTotalCorrect] = useState(0);
+    const [totalQuestions, setTotalQuestions] = useState(0);
 
     useEffect(() => {
-        loadStats();
+        loadResults();
     }, []);
 
-    const loadStats = async () => {
+    const loadResults = async () => {
         try {
             setLoading(true);
-            const attempts = await quizAPI.getUserAttempts(topicId);
+            
+            // Get results from navigation params
+            const score = parseInt(params.overall_score as string) || 0;
+            const correct = parseInt(params.total_correct as string) || 0;
+            const total = parseInt(params.total_questions as string) || 0;
+            const recs = JSON.parse((params.recommendations as string) || "[]");
+            
+            setOverallScore(score);
+            setTotalCorrect(correct);
+            setTotalQuestions(total);
+            setRecommendations(recs);
 
-            // Get unique questions attempted
-            const uniqueQuestions = new Set(attempts.map((a: any) => a.question_id));
-            const totalQuestions = uniqueQuestions.size;
-
-            // Count correct answers (latest attempt per question)
-            const correctCount = Array.from(uniqueQuestions).filter(qId => {
-                const questionAttempts = attempts.filter((a: any) => a.question_id === qId);
-                const latest = questionAttempts[questionAttempts.length - 1];
-                return latest?.is_correct;
-            }).length;
-
-            const percentage = totalQuestions > 0
-                ? Math.round((correctCount / totalQuestions) * 100)
-                : 0;
-
-            setStats({
-                correctAnswers: correctCount,
-                totalQuestions,
-                percentage,
+            // Save recommendations to AsyncStorage for later use
+            await AsyncStorage.setItem("pretest_recommendations", JSON.stringify(recs));
+            await AsyncStorage.setItem("pretest_completed", "true");
+            await AsyncStorage.setItem("pretest_overall_score", score.toString());
+            
+            // Mark topics as skippable if user scored high enough (>=80%)
+            const topicsToSkip = recs
+                .filter(rec => rec.score >= 80)
+                .map(rec => rec.topic_id);
+            await AsyncStorage.setItem("topics_to_skip", JSON.stringify(topicsToSkip));
+            
+            console.log("📊 Pretest results loaded:", { 
+                score, 
+                correct, 
+                total, 
+                recommendations: recs.length,
+                topicsToSkip: topicsToSkip.length 
             });
         } catch (error) {
-            console.error("Failed to load stats:", error);
+            console.error("Failed to load pretest results:", error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const getDifficultyLabel = (difficulty: number) => {
+        switch (difficulty) {
+            case 1: return "Mudah";
+            case 2: return "Sedang";
+            case 3: return "Sulit";
+            default: return "Sedang";
+        }
+    };
+
+    const getDifficultyColor = (difficulty: number) => {
+        switch (difficulty) {
+            case 1: return "#4CAF50"; // Green
+            case 2: return "#FFA726"; // Orange
+            case 3: return "#EF5350"; // Red
+            default: return "#FFA726";
         }
     };
 
@@ -142,23 +173,58 @@ const ReportCardPreTest = () => {
                     {/* Informasi kiri */}
                     <View>
                         <Text style={styles.name}>{user?.username || "User"}</Text>
-                        <Text style={styles.smallText}>Skor      {stats.correctAnswers} / {stats.totalQuestions}</Text>
-                        <Text style={styles.smallText}>Waktu   N/A</Text>
+                        <Text style={styles.smallText}>Skor      {totalCorrect} / {totalQuestions}</Text>
+                        <Text style={styles.smallText}>Akurasi   {overallScore}%</Text>
                     </View>
 
                     {/* Circle Progress */}
                     <View style={styles.circleContainer}>
-                        <CircleProgress percent={stats.percentage} />
+                        <CircleProgress percent={overallScore} />
                     </View>
                 </View>
 
                 {/* HASIL */}
-                <Text style={styles.sectionTitle}>Hasil</Text>
-                <Text style={styles.descText}>Petualangan belajarmu dimulai dari materi</Text>
+                <Text style={styles.sectionTitle}>Rekomendasi Pembelajaran</Text>
+                <Text style={styles.descText}>Berdasarkan hasil pretest, ini rekomendasi topik untuk kamu:</Text>
 
-                <View style={styles.badge}>
-                    <Text style={styles.badgeText}>{topicName}</Text>
-                </View>
+                {/* Topic Recommendations */}
+                {recommendations.map((rec, index) => (
+                    <View
+                        key={index}
+                        style={{
+                            backgroundColor: "#2C3E50",
+                            padding: 15,
+                            borderRadius: 10,
+                            marginTop: 12,
+                        }}
+                    >
+                        <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 8 }}>
+                            <Text style={{ color: "#fff", fontSize: 16, fontWeight: "bold", flex: 1 }}>
+                                {rec.topic_name}
+                            </Text>
+                            <Text style={{ color: "#9FDFFF", fontSize: 14 }}>
+                                {rec.score}%
+                            </Text>
+                        </View>
+                        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+                            <Text style={{ color: "#B8C5D6", fontSize: 13 }}>
+                                Benar: {rec.correct}/{rec.total}
+                            </Text>
+                            <View
+                                style={{
+                                    backgroundColor: getDifficultyColor(rec.recommended_difficulty),
+                                    paddingHorizontal: 12,
+                                    paddingVertical: 4,
+                                    borderRadius: 12,
+                                }}
+                            >
+                                <Text style={{ color: "#fff", fontSize: 12, fontWeight: "600" }}>
+                                    Mulai dari: {getDifficultyLabel(rec.recommended_difficulty)}
+                                </Text>
+                            </View>
+                        </View>
+                    </View>
+                ))}
 
                 {/* BUTTON */}
                 <View style={styles.buttonContainer}>

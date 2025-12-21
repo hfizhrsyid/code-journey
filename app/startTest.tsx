@@ -1,10 +1,16 @@
 import { styles } from "@/styles/startTest";
+import { router } from 'expo-router';
 import { Image, Text, TouchableOpacity, View } from 'react-native';
 
 const Test = () => {
+    const handleStart = () => {
+        // Navigate to pretest question flow
+        router.push('/pretestQuestion');
+    };
+
     return(
-        <View style ={styles.container}>
-            <Text style={styles.title}> Test Your Skills with CodeJourney!</Text>
+        <View style={styles.container}>
+            <Text style={styles.title}>Test Your Skills with CodeJourney!</Text>
 
             <Image
                 source={require('../assets/images/test.png')}
@@ -12,7 +18,7 @@ const Test = () => {
                 resizeMode="contain"
             />
 
-            <TouchableOpacity style={styles.button}>
+            <TouchableOpacity style={styles.button} onPress={handleStart}>
                 <Text style={styles.buttonText}>Mulai</Text>
             </TouchableOpacity>
         </View>

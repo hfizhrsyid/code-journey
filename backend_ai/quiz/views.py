@@ -839,3 +839,150 @@ def chat_bot(request):
     except Exception as e:
         logger.error(f"Chatbot error: {e}")
         return Response({"error": "chatbot unavailable"}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+@add_cors_headers
+def get_pretest_questions(request):
+    """
+    Get all pretest questions (diagnostic test)
+    Returns questions from all topics marked as is_pretest=True
+    """
+    try:
+        pretest_questions = Question.objects.filter(
+            is_pretest=True,
+            is_active=True
+        ).select_related('topic').order_by('topic__order', 'difficulty')
+        
+        questions_data = []
+        for q in pretest_questions:
+            questions_data.append({
+                "question_id": q.id,
+                "question_type": q.question_type,
+                "difficulty": q.difficulty,
+                "topic": q.topic.name if q.topic else "General",
+                "topic_id": q.topic.id if q.topic else None,
+                "question_text": q.question_text,
+                "code_template": q.code_template,
+                "options": q.options,
+                "explanation": q.explanation,
+            })
+        
+        return Response({
+            "questions": questions_data,
+            "total": len(questions_data)
+        })
+    except Exception as e:
+        logger.error(f"Error fetching pretest questions: {e}")
+        return Response(
+            {"error": "Failed to fetch pretest questions"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+@add_cors_headers
+def submit_pretest(request):
+    """
+    Submit pretest results and get topic recommendations
+    
+    POST data:
+    {
+        "answers": [
+            {"question_id": 1, "user_answer": "A"},
+            {"question_id": 2, "user_answer": "variable"},
+            ...
+        ]
+    }
+    
+    Returns topic-by-topic analysis with recommended difficulty levels
+    """
+    try:
+        answers = request.data.get("answers", [])
+        if not answers:
+            return Response(
+                {"error": "answers array is required"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        user = request.user
+        topic_results = {}  # {topic_id: {"correct": 0, "total": 0, "topic_name": ""}}
+        
+        # Process each answer
+        for answer_data in answers:
+            question_id = answer_data.get("question_id")
+            user_answer = answer_data.get("user_answer")
+            
+            try:
+                question = Question.objects.get(id=question_id, is_pretest=True)
+            except Question.DoesNotExist:
+                continue
+            
+            # Check answer
+            result = check_answer(
+                user_answer=user_answer,
+                correct_answer=question.answer_key,
+                question_type=question.question_type,
+                explanation=question.explanation or ""
+            )
+            is_correct = result.get("correct", False)
+            
+            # Save attempt
+            QuestionAttempt.objects.create(
+                user=user,
+                question=question,
+                answer=user_answer,
+                is_correct=is_correct
+            )
+            
+            # Track by topic
+            if question.topic:
+                topic_id = question.topic.id
+                if topic_id not in topic_results:
+                    topic_results[topic_id] = {
+                        "topic_id": topic_id,
+                        "topic_name": question.topic.name,
+                        "correct": 0,
+                        "total": 0,
+                        "score": 0,
+                        "recommended_difficulty": 1
+                    }
+                
+                topic_results[topic_id]["total"] += 1
+                if is_correct:
+                    topic_results[topic_id]["correct"] += 1
+        
+        # Calculate scores and recommendations
+        for topic_id, data in topic_results.items():
+            if data["total"] > 0:
+                score = round((data["correct"] / data["total"]) * 100)
+                data["score"] = score
+                
+                # Recommend difficulty based on score
+                if score >= 80:
+                    data["recommended_difficulty"] = 3  # Hard
+                elif score >= 50:
+                    data["recommended_difficulty"] = 2  # Medium
+                else:
+                    data["recommended_difficulty"] = 1  # Easy
+        
+        # Calculate overall score
+        total_correct = sum(d["correct"] for d in topic_results.values())
+        total_questions = sum(d["total"] for d in topic_results.values())
+        overall_score = round((total_correct / total_questions) * 100) if total_questions > 0 else 0
+        
+        return Response({
+            "overall_score": overall_score,
+            "total_correct": total_correct,
+            "total_questions": total_questions,
+            "topic_recommendations": list(topic_results.values())
+        })
+        
+    except Exception as e:
+        logger.error(f"Error submitting pretest: {e}")
+        return Response(
+            {"error": f"Failed to submit pretest: {str(e)}"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )

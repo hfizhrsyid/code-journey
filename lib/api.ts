@@ -22,6 +22,8 @@ export interface Question {
   options?: string[];
   question_type: string;
   difficulty: number;
+  topic?: string;
+  topic_id?: number;
 }
 
 export interface CheckAnswerResponse {
@@ -297,6 +299,42 @@ class QuizAPI {
       };
     } catch (error: any) {
       console.error("Error asking chatbot:", error?.response?.data || error?.message || error);
+      throw error;
+    }
+  }
+
+  async getPretestQuestions(): Promise<Question[]> {
+    try {
+      console.log("🔄 Fetching pretest questions");
+      const response = await this.client.get("pretest/questions/");
+      console.log("✅ Pretest questions fetched:", response.data.total);
+      return response.data.questions;
+    } catch (error) {
+      console.error("❌ Failed to fetch pretest questions:", error);
+      throw error;
+    }
+  }
+
+  async submitPretest(answers: Array<{ question_id: number; user_answer: string }>): Promise<{
+    overall_score: number;
+    total_correct: number;
+    total_questions: number;
+    topic_recommendations: Array<{
+      topic_id: number;
+      topic_name: string;
+      correct: number;
+      total: number;
+      score: number;
+      recommended_difficulty: number;
+    }>;
+  }> {
+    try {
+      console.log("🔄 Submitting pretest with", answers.length, "answers");
+      const response = await this.client.post("pretest/submit/", { answers });
+      console.log("✅ Pretest submitted successfully");
+      return response.data;
+    } catch (error) {
+      console.error("❌ Failed to submit pretest:", error);
       throw error;
     }
   }

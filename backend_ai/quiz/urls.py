@@ -12,7 +12,9 @@ from .views import (
     get_user_badges,
     get_all_badges,
     check_badge_unlock,
-    chat_bot,  # add
+    chat_bot,
+    get_pretest_questions,
+    submit_pretest,
 )
 from .auth_views import (
     signup,
@@ -39,6 +41,10 @@ urlpatterns = [
     path("badges/", get_all_badges, name="get_all_badges"),
     path("user/badges/", get_user_badges, name="get_user_badges"),
     path("badges/check/", check_badge_unlock, name="check_badge_unlock"),
+    
+    # Pretest endpoints
+    path("pretest/questions/", get_pretest_questions, name="get_pretest_questions"),
+    path("pretest/submit/", submit_pretest, name="submit_pretest"),
     
     # OLD: Legacy AI-generation endpoints (to be deprecated)
     path("generate-question/", generate_question_view, name="generate_question"),
