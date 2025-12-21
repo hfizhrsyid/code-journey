@@ -39,12 +39,25 @@ def execute_code_with_tests(code: str, test_cases: List[Dict[str, str]]) -> Dict
             # Create a namespace for code execution
             namespace = {}
             
-            # If there's input, add it to the namespace
-            if test_input:
-                namespace['input'] = lambda: test_input
-            
-            # Execute the user's code
+            # Execute the user's code (defines the function)
             exec(code, namespace)
+            
+            # Find the function name (first function defined in the code)
+            func_name = None
+            for name, obj in namespace.items():
+                if callable(obj) and not name.startswith('_'):
+                    func_name = name
+                    break
+            
+            # If we found a function and there's test input, call it
+            if func_name and test_input:
+                # Parse test input as Python code and call the function
+                try:
+                    result = eval(f"{func_name}({test_input})", namespace)
+                    # Print the result so it can be captured
+                    print(result)
+                except Exception as call_error:
+                    print(f"Error calling function: {call_error}")
             
             # Get the output
             actual_output = sys.stdout.getvalue().strip()

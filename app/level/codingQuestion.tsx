@@ -152,7 +152,14 @@ export default function CodingQuestion() {
         setFeedbackStatus(result.all_passed ? "correct" : "wrong");
       } catch (runError: any) {
         // If runCode fails (e.g., no test cases), fall back to simple submit
-        console.log("No test cases, using simple submit:", runError);
+        console.error("❌ runCode failed:", runError);
+        console.error("Error response:", runError.response?.data);
+        
+        // Show the actual error message if available
+        if (runError.response?.data?.error) {
+          console.log(`⚠️ Backend error: ${runError.response.data.error}`);
+        }
+        
         const result = await quizAPI.submitAnswer(question.question_id, answer.trim().toLowerCase());
 
         if (result.newly_unlocked_badges && result.newly_unlocked_badges.length > 0) {

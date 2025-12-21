@@ -302,6 +302,10 @@ def get_questions(request):
              
         if question_type:
             questions = questions.filter(question_type=question_type)
+            # For coding questions, only return those with test cases
+            if question_type == 'coding':
+                questions = questions.exclude(test_cases__isnull=True)
+                logger.info(f"Filtering coding questions to only include those with test_cases")
 
         # DEBUG LOGS - Print to console immediately
         print(f"🔍🔍🔍 DEBUG: target_topic = {target_topic}")
@@ -473,10 +477,13 @@ def run_code(request):
         
         # Check if question has test cases
         if not question.test_cases:
+            logger.warning(f"Question {question_id} has no test_cases. Type: {question.question_type}")
             return Response(
                 {"error": "This question has no test cases"},
                 status=status.HTTP_400_BAD_REQUEST
             )
+        
+        logger.info(f"Running code for Q{question_id} with {len(question.test_cases)} test cases")
         
         # Execute code with test cases
         result = execute_code_with_tests(code, question.test_cases)
