@@ -43,10 +43,23 @@ class BadgeService:
         """
         Check apakah user mencapai 100% accuracy pada suatu topic
         
+        User harus:
+        1. Attempt semua soal yang tersedia di topic tersebut
+        2. Semua jawaban harus benar (100% accuracy)
+        
         Returns:
             Dict dengan badge info atau None jika tidak unlock
         """
-        # Hitung total pertanyaan dan yang benar pada topic ini
+        # Get total available questions in this topic
+        total_questions_in_topic = Question.objects.filter(
+            topic=topic,
+            is_active=True
+        ).count()
+        
+        if total_questions_in_topic == 0:
+            return None
+        
+        # Get user's attempts for this topic (only count latest attempt per question)
         attempts = QuestionAttempt.objects.filter(
             user=user,
             question__topic=topic
@@ -59,13 +72,26 @@ class BadgeService:
         if attempts.count() == 0:
             return None
         
-        correct_count = attempts.filter(is_correct=True).count()
-        total_count = attempts.count()
+        # Count unique questions attempted
+        unique_questions_attempted = attempts.values('question_id').distinct().count()
         
-        accuracy = (correct_count / total_count) * 100 if total_count > 0 else 0
+        # User must attempt ALL questions in the topic
+        if unique_questions_attempted < total_questions_in_topic:
+            return None
         
-        # Jika accuracy >= 100%, unlock topic master badge
-        if accuracy >= 100:
+        # Count correct answers (only latest attempt per question)
+        correct_count = 0
+        for question_id in attempts.values_list('question_id', flat=True).distinct():
+            # Get latest attempt for this question
+            latest_attempt = attempts.filter(question_id=question_id).order_by('-created_at').first()
+            if latest_attempt and latest_attempt.is_correct:
+                correct_count += 1
+        
+        # Calculate accuracy based on unique questions
+        accuracy = (correct_count / unique_questions_attempted) * 100
+        
+        # Must have 100% accuracy (all questions correct)
+        if accuracy == 100:
             try:
                 badge = Badge.objects.get(
                     badge_type='topic_100',

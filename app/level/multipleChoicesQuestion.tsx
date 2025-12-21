@@ -1,11 +1,11 @@
 import { quizAPI, validateQuestion } from "@/lib/api";
 import { styles } from "@/styles/multipleChoicesQuestion";
-import { router } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, Alert, Image, Modal, SafeAreaView, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
+import { router } from "expo-router";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { ActivityIndicator, Alert, Image, Modal, SafeAreaView, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { useQuestions } from "../../lib/QuestionContext";
-import React from "react";
+
 
 export default function MultipleChoicesQuestion() {
   const { questionSet, setQuestionSet, currentIndex, setCurrentIndex, difficulty, topic, topicId, savePosition } = useQuestions();
@@ -39,12 +39,14 @@ export default function MultipleChoicesQuestion() {
         const validation = validateQuestion(currentQuestion);
         if (!validation.valid) {
           setError(validation.error || "Soal tidak valid");
+          setLoading(false);
           return;
         }
 
         console.log("✅ Loaded question from context:", currentQuestion);
         console.log("📋 Question options:", currentQuestion.options);
         setQuestion(currentQuestion);
+        setLoading(false);
         return;
       }
 
@@ -58,6 +60,7 @@ export default function MultipleChoicesQuestion() {
           const validation = validateQuestion(nq);
           if (!validation.valid) {
             setError(validation.error || "Soal yang dihasilkan tidak valid");
+            setLoading(false);
             return;
           }
 
@@ -65,6 +68,7 @@ export default function MultipleChoicesQuestion() {
           setQuestionSet([nq]);
           setCurrentIndex(0);
           setQuestion(nq);
+          setLoading(false);
           return;
         }
       } catch (genErr) {
@@ -85,29 +89,31 @@ export default function MultipleChoicesQuestion() {
       setQuestionSet([mock]);
       setCurrentIndex(0);
       setQuestion(mock);
-      return;
+      setLoading(false);
     } catch (err: any) {
       console.error("Failed to load question:", err);
       setError(err?.message || "Gagal memuat soal");
-    } finally {
       setLoading(false);
     }
   }, [questionSet, currentIndex, topicId, setQuestionSet, setCurrentIndex]);
 
-  useEffect(() => {
-    loadQuestion();
-  }, [loadQuestion]);
+  const prevTopicIdRef = useRef(topicId);
 
-  // ✅ RESET STATE KETIKA TOPIC BERUBAH
   useEffect(() => {
-    setQuestion(null);
-    setSelectedAnswer(null);
-    setAnswerStatus(null);
-    setFeedback("");
-    setExplanation("");
-    setCorrectAnswerInfo(null);
-    setError(null);
-  }, [topicId]);
+    // Only reset if topicId actually changed (not on initial mount)
+    if (prevTopicIdRef.current !== topicId && prevTopicIdRef.current !== 0) {
+      console.log(`🔄 TopicId changed from ${prevTopicIdRef.current} to ${topicId}, resetting state`);
+      setQuestion(null);
+      setSelectedAnswer(null);
+      setAnswerStatus(null);
+      setFeedback("");
+      setExplanation("");
+      setCorrectAnswerInfo(null);
+      setError(null);
+    }
+    prevTopicIdRef.current = topicId;
+    loadQuestion();
+  }, [topicId, loadQuestion]);
 
   const handleSelectAnswer = async (optionId: string) => {
     if (selectedAnswer || !question || checking) return;

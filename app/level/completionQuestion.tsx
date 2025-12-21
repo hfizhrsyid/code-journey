@@ -1,11 +1,11 @@
 import { Question, quizAPI, validateQuestion } from "@/lib/api";
 import { styles } from "@/styles/completionQuestion";
+import { useFocusEffect } from "@react-navigation/native";
 import { router } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Alert, Image, Modal, SafeAreaView, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { useQuestions } from "../../lib/QuestionContext";
-import { useFocusEffect } from "@react-navigation/native";
-import React from "react";
+
 
 export default function CompletionQuestion() {
   const { questionSet, setQuestionSet, currentIndex, setCurrentIndex, difficulty, topic, topicId, savePosition } = useQuestions();
@@ -30,6 +30,7 @@ export default function CompletionQuestion() {
 
       if (questionSet.length === 0 || currentIndex >= questionSet.length) {
         setError("Soal tidak ditemukan");
+        setLoading(false);
         return;
       }
 
@@ -41,33 +42,37 @@ export default function CompletionQuestion() {
       const validation = validateQuestion(currentQuestion);
       if (!validation.valid) {
         setError(validation.error || "Soal tidak valid");
+        setLoading(false);
         return;
       }
 
       console.log("✅ Loaded question from context:", currentQuestion);
       console.log("📋 Question options:", currentQuestion.options);
       setQuestion(currentQuestion);
+      setLoading(false);
     } catch (error: any) {
       console.error("Failed to load question:", error);
       setError(error.message || "Gagal memuat soal");
-    } finally {
       setLoading(false);
     }
   }, [questionSet, currentIndex, topicId]);
 
-  useEffect(() => {
-    loadQuestion();
-  }, [loadQuestion]);
+  const prevTopicIdRef = useRef(topicId);
 
-  // ✅ RESET STATE KETIKA TOPIC BERUBAH
   useEffect(() => {
-    setQuestion(null);
-    setAnswer("");
-    setFeedbackStatus(null);
-    setFeedback("");
-    setExplanation("");
-    setError(null);
-  }, [topicId]);
+    // Only reset if topicId actually changed (not on initial mount)
+    if (prevTopicIdRef.current !== topicId && prevTopicIdRef.current !== 0) {
+      console.log(`🔄 TopicId changed from ${prevTopicIdRef.current} to ${topicId}, resetting state`);
+      setQuestion(null);
+      setAnswer("");
+      setFeedbackStatus(null);
+      setFeedback("");
+      setExplanation("");
+      setError(null);
+    }
+    prevTopicIdRef.current = topicId;
+    loadQuestion();
+  }, [topicId, loadQuestion]);
 
   const handleSubmit = async () => {
     if (!question || !answer.trim()) {

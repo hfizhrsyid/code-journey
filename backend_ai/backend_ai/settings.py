@@ -204,6 +204,7 @@ CSRF_TRUSTED_ORIGINS = os.getenv('CSRF_TRUSTED_ORIGINS', '').split(',') if os.ge
     "http://127.0.0.1:19006",
     "http://192.168.1.8:3000",
     "http://192.168.1.8:8081", 
+    "http://192.168.1.3:8081", 
     "http://192.168.1.8:19006",
     "http://192.168.1.8:19000",
 ]

@@ -1,11 +1,11 @@
 import { Question, quizAPI, validateQuestion } from "@/lib/api";
 import { styles } from "@/styles/codeQuestion";
-import { router } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, Image, Modal, SafeAreaView, ScrollView, Text, TextInput, TouchableOpacity, View, Alert } from "react-native";
-import { useQuestions } from "../../lib/QuestionContext";
 import { useFocusEffect } from "@react-navigation/native";
-import React from "react";
+import { router } from "expo-router";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { ActivityIndicator, Alert, Image, Modal, SafeAreaView, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { useQuestions } from "../../lib/QuestionContext";
+
 
 // helper: pastikan options selalu berupa array (toleran terhadap string JSON atau comma-list)
 const normalizeQuestion = (q: any) => {
@@ -61,11 +61,13 @@ export default function CodingQuestion() {
         const validation = validateQuestion(currentQuestion);
         if (!validation.valid) {
           setError(validation.error || "Soal tidak valid");
+          setLoading(false);
           return;
         }
 
         console.log("✅ Loaded coding question from context:", currentQuestion);
         setQuestion(currentQuestion as any);
+        setLoading(false);
         return;
       }
 
@@ -79,6 +81,7 @@ export default function CodingQuestion() {
           const validation = validateQuestion(nq);
           if (!validation.valid) {
             setError(validation.error || "Soal yang dihasilkan tidak valid");
+            setLoading(false);
             return;
           }
 
@@ -86,6 +89,7 @@ export default function CodingQuestion() {
           setQuestionSet([nq]);
           setCurrentIndex(0);
           setQuestion(nq as any);
+          setLoading(false);
           return;
         }
       } catch (genErr) {
@@ -104,29 +108,31 @@ export default function CodingQuestion() {
       setQuestionSet([mock]);
       setCurrentIndex(0);
       setQuestion(mock as any);
-      return;
+      setLoading(false);
     } catch (err: any) {
       console.error("Failed to load question:", err);
       setError(err?.message || "Gagal memuat soal");
-    } finally {
       setLoading(false);
     }
   }, [questionSet, currentIndex, difficulty, topicId, setQuestion, setQuestionSet, setCurrentIndex, setLoading, setError, setAnswer, setFeedbackStatus, setFeedbackMessage]);
 
-  // Load question on component mount
-  useEffect(() => {
-    loadQuestion();
-  }, [loadQuestion]);
+  const prevTopicIdRef = useRef(topicId);
 
-  // ✅ RESET STATE KETIKA TOPIC BERUBAH
+  // Load question on component mount and when dependencies change
   useEffect(() => {
-    setQuestion(null);
-    setAnswer("");
-    setFeedbackStatus(null);
-    setFeedbackMessage("");
-    setTestResults([]);
-    setError(null);
-  }, [topicId]);
+    // Only reset if topicId actually changed (not on initial mount)
+    if (prevTopicIdRef.current !== topicId && prevTopicIdRef.current !== 0) {
+      console.log(`🔄 TopicId changed from ${prevTopicIdRef.current} to ${topicId}, resetting state`);
+      setQuestion(null);
+      setAnswer("");
+      setFeedbackStatus(null);
+      setFeedbackMessage("");
+      setTestResults([]);
+      setError(null);
+    }
+    prevTopicIdRef.current = topicId;
+    loadQuestion();
+  }, [topicId, loadQuestion]);
 
   const handleSubmit = async () => {
     if (!question || !answer.trim()) {

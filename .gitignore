@@ -46,3 +46,5 @@ app-example
 .env
 # Markdown
 *.md
+
+backend_ai/venv/
