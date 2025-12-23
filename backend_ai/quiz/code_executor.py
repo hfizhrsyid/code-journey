@@ -55,7 +55,18 @@ def execute_code_with_tests(code: str, test_cases: List[Dict[str, str]]) -> Dict
                 try:
                     result = eval(f"{func_name}({test_input})", namespace)
                     # Print the result so it can be captured
-                    print(result)
+                    # Handle None return (function that doesn't return anything)
+                    if result is not None:
+                        print(result)
+                except Exception as call_error:
+                    # If eval fails, maybe there's a syntax error in test input
+                    print(f"Error calling function: {call_error}")
+            elif func_name and not test_input:
+                # Call function with no arguments
+                try:
+                    result = namespace[func_name]()
+                    if result is not None:
+                        print(result)
                 except Exception as call_error:
                     print(f"Error calling function: {call_error}")
             
@@ -64,6 +75,9 @@ def execute_code_with_tests(code: str, test_cases: List[Dict[str, str]]) -> Dict
             
             # Restore stdout
             sys.stdout = old_stdout
+            
+            # Debug: log the outputs
+            print(f"Test {i}: Input='{test_input}', Expected='{expected_output}', Actual='{actual_output}'")
             
             # Compare output
             if actual_output == expected_output:

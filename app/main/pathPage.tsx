@@ -1,9 +1,9 @@
+import { sessionStorage } from "@/lib/sessionStorage";
 import { styles } from "@/styles/pathPage";
 import { FontAwesome } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useMemo, useState } from "react";
-import { sessionStorage } from "@/lib/sessionStorage";
 import { ActivityIndicator, Alert, Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Svg, { Circle, Path } from "react-native-svg";
@@ -226,11 +226,25 @@ export default function PathPage() {
       } else {
         // ✅ TOPIK BARU
         console.log(`📭 No attempts for topicId ${currentTopicId}`);
+        
+        // Check if user has pretest results for this topic
+        const startingLevel = await getStartingLevel(currentTopicId);
+        console.log(`🎯 Pretest starting level for topic ${currentTopicId}: ${startingLevel}`);
+        
         setLevels((prev) =>
-          prev.map((level, idx) => ({
-            ...level,
-            status: idx === 0 ? ("open" as LevelStatus) : ("locked" as LevelStatus),
-          }))
+          prev.map((level, idx) => {
+            const levelNum = idx + 1;
+            if (levelNum < startingLevel) {
+              // Mark previous levels as done (skipped by pretest)
+              return { ...level, status: "done" as LevelStatus };
+            } else if (levelNum === startingLevel) {
+              // Open the starting level
+              return { ...level, status: "open" as LevelStatus };
+            } else {
+              // Lock subsequent levels
+              return { ...level, status: "locked" as LevelStatus };
+            }
+          })
         );
       }
     } catch (error) {

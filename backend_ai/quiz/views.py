@@ -864,6 +864,14 @@ def get_pretest_questions(request):
         
         questions_data = []
         for q in pretest_questions:
+            # Format MCQ options with letters (A, B, C, D)
+            formatted_options = q.options
+            if q.question_type == "mcq" and q.options:
+                formatted_options = [
+                    f"{chr(65 + i)}. {opt}" if not opt.startswith(chr(65 + i)) else opt
+                    for i, opt in enumerate(q.options)
+                ]
+            
             questions_data.append({
                 "question_id": q.id,
                 "question_type": q.question_type,
@@ -872,7 +880,7 @@ def get_pretest_questions(request):
                 "topic_id": q.topic.id if q.topic else None,
                 "question_text": q.question_text,
                 "code_template": q.code_template,
-                "options": q.options,
+                "options": formatted_options,
                 "explanation": q.explanation,
             })
         

@@ -1,5 +1,4 @@
 import { quizAPI } from "@/lib/api";
-import { getPretestRecommendations } from "@/lib/pretestHelper";
 import { styles } from "@/styles/dashboard";
 import { FontAwesome } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
@@ -67,19 +66,13 @@ export default function Dashboard() {
       setLoading(true);
       const data = await quizAPI.getTopics();
       
-      // Mark pretest-mastered topics as 100% complete, but only unlock sequentially
-      const recommendations = await getPretestRecommendations();
+      // Don't mark topics as 100% - let pretest unlock starting levels instead
       const sortedTopics = [...data].sort((a, b) => a.order - b.order);
       
       let allPreviousComplete = true;
       const enrichedTopics = sortedTopics.map((topic: Materi) => {
-        const rec = recommendations.find(r => r.topic_id === topic.id);
-        const isPretestMastered = rec && rec.score >= 80;
-        
-        // Check if this topic should be marked as complete
-        const isComplete = topic.completion_percentage === 100 || isPretestMastered;
-        
         // Topic is only unlocked if all previous topics are complete
+        const isComplete = topic.completion_percentage >= 100;
         const shouldUnlock = allPreviousComplete;
         
         // Update for next iteration
@@ -89,7 +82,6 @@ export default function Dashboard() {
         
         return {
           ...topic,
-          completion_percentage: isPretestMastered ? 100 : topic.completion_percentage,
           is_locked: !shouldUnlock,
         };
       });

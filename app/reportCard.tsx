@@ -3,7 +3,7 @@ import { quizAPI } from "@/lib/api";
 import { styles } from "@/styles/reportCardMateri";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Alert, Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import Svg, { Circle, Defs, LinearGradient, Stop, Text as SvgText } from "react-native-svg";
 
 const formatDuration = (ms: number) => {
@@ -91,7 +91,34 @@ const ReportCard = () => {
   useEffect(() => {
     loadStats();
     loadNextTopic();
+    checkForBadges();
   }, [topicId]);
+
+  const checkForBadges = async () => {
+    try {
+      // Check if user completed 10 questions (full topic)
+      const attempts = await quizAPI.getUserAttempts(topicId);
+      const uniqueQuestions = new Set(attempts.map((a: any) => a.question_id));
+      const correctCount = Array.from(uniqueQuestions).filter((qId) => {
+        const questionAttempts = attempts.filter((a: any) => a.question_id === qId);
+        const latest = questionAttempts[questionAttempts.length - 1];
+        return latest?.is_correct;
+      }).length;
+
+      // If completed 10 questions, show badge notification
+      if (correctCount >= 10) {
+        setTimeout(() => {
+          Alert.alert(
+            "🏆 Badge Baru!",
+            `Selamat! Anda menyelesaikan topik ${topicName} dan mendapatkan badge!`,
+            [{ text: "Lihat Badge", onPress: () => router.push("/main/profile") }]
+          );
+        }, 1000); // Delay 1 second untuk UX yang lebih baik
+      }
+    } catch (error) {
+      console.error("Failed to check badges:", error);
+    }
+  };
 
   const loadStats = async () => {
     try {
@@ -132,11 +159,8 @@ const ReportCard = () => {
       if (!totalQuestions) {
         setRecapText("Belum ada data untuk topik ini. Kerjakan dulu beberapa soal, ya.");
       } else {
-        setRecapText(
-          `Kamu menyelesaikan ${totalQuestions} soal dengan akurasi ${percentage}% dalam ${formatDuration(durationMs)}. Rata-rata ${formatDurationShort(
-            avgSecondsPerQuestion
-          )} per soal dari ${totalAttempts} percobaan.`
-        );
+        const recap = `Kamu menyelesaikan ${totalQuestions} soal dengan akurasi ${percentage}% dalam ${formatDuration(durationMs)}. Rata-rata ${formatDurationShort(avgSecondsPerQuestion)} per soal dari ${totalAttempts} percobaan.`;
+        setRecapText(recap);
       }
     } catch (error) {
       console.error("Failed to load stats:", error);
@@ -214,9 +238,9 @@ const ReportCard = () => {
           <View style={styles.accuracyRow}>
             <View style={styles.accuracyLeft}>
               <Text style={styles.labelSmall}>Akurasi</Text>
-              <Text style={styles.percentageText}>{stats.percentage}%</Text>
+              <Text style={styles.percentageText}>{stats.percentage || 0}%</Text>
               <Text style={styles.labelSmall}>Waktu</Text>
-              <Text style={styles.timeText}>{durationText}</Text>
+              <Text style={styles.timeText}>{durationText || "-"}</Text>
             </View>
 
             <View style={styles.circleContainer}>
@@ -231,12 +255,15 @@ const ReportCard = () => {
         {/* SECTION 2: Hasil - Menampilkan materi berikutnya */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Hasil</Text>
-          <Text style={styles.resultMessage}>Hore! Kamu telah menyelesaikan materi ini. Saatnya lanjut ke materi</Text>
+          <Text style={styles.resultMessage}>Hore! Kamu telah menyelesaikan materi ini.</Text>
 
           {nextTopic ? (
-            <View style={styles.badgeContainer}>
-              <Text style={styles.badgeText}>{nextTopic.name}</Text>
-            </View>
+            <>
+              <Text style={styles.resultMessage}>Saatnya lanjut ke materi:</Text>
+              <View style={styles.badgeContainer}>
+                <Text style={styles.badgeText}>{nextTopic.name || "Materi Berikutnya"}</Text>
+              </View>
+            </>
           ) : (
             <Text style={styles.resultMessage}>✅ Kamu telah menyelesaikan semua materi!</Text>
           )}
@@ -248,12 +275,12 @@ const ReportCard = () => {
         {/* SECTION 3: Rekapitulasi */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Rekapitulasi</Text>
-          <Text style={styles.recapText}>{recapText}</Text>
+          <Text style={styles.recapText}>{recapText || "Memuat data..."}</Text>
         </View>
 
         {/* BUTTON */}
         <TouchableOpacity style={styles.nextLevelButton} onPress={handleNextLevel}>
-          <Text style={styles.nextLevelText}>{nextTopic ? "Level Selanjutnya" : "Kembali ke Dashboard"}</Text>
+          <Text style={styles.nextLevelText}>{nextTopic ? "Topik Selanjutnya" : "Kembali ke Dashboard"}</Text>
         </TouchableOpacity>
       </View>
     </ScrollView>

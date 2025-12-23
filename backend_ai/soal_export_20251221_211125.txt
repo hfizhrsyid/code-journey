@@ -1,0 +1,2956 @@
+====================================================================================================
+DAFTAR SOAL DAN JAWABAN
+Export: 2025-12-21 21:11:25
+Total soal: 104
+====================================================================================================
+
+
+[SOAL #1]
+ID: 243
+Topik: N/A
+Tipe: CODING
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Buatlah fungsi yang menghitung rata-rata dari deret bilangan yang dibentuk oleh selisih kuadrat dua bilangan berurutan, dari 1 hingga n.
+
+CODE TEMPLATE:
+def hitung_rata_rata(n):
+    # Write your code here
+    pass
+
+JAWABAN:
+def hitung_rata_rata(n):
+    deret = [(i+1)**2 - i**2 for i in range(1, n+1)]
+    return sum(deret) / len(deret)
+
+PENJELASAN:
+Fungsi ini menggunakan list comprehension untuk menghitung selisih kuadrat dua bilangan berurutan, dari 1 hingga n, kemudian menghitung rata-rata dari deret tersebut.
+
+TEST CASES:
+[{'input': '5', 'expected_output': '3.0'}, {'input': '1', 'expected_output': '2.0'}, {'input': '10', 'expected_output': '6.0'}, {'input': '0', 'expected_output': '0.0'}, {'input': '20', 'expected_output': '11.0'}]
+
+====================================================================================================
+
+[SOAL #2]
+ID: 242
+Topik: N/A
+Tipe: CODING
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Buatlah fungsi yang menghitung rata-rata dari daftar angka menggunakan perulangan for.
+
+CODE TEMPLATE:
+def hitung_rata_rata(daftar_angka):
+    # Write your code here
+    pass
+
+JAWABAN:
+def hitung_rata_rata(daftar_angka):
+    total = 0
+    for angka in daftar_angka:
+        total += angka
+    return total / len(daftar_angka)
+
+PENJELASAN:
+Penjelasan solusi: Fungsi `hitung_rata_rata` menerima sebuah daftar angka sebagai input. Kemudian, menggunakan perulangan for, kita iterasi setiap angka dalam daftar dan menjumlahkannya dalam variabel `total`. Setelah itu, kita menghitung rata-rata dengan membagi `total` dengan jumlah elemen dalam daftar (`len(daftar_angka)`).
+
+TEST CASES:
+[{'input': '[1, 2, 3, 4, 5]', 'expected_output': '3.0'}, {'input': '[-1, 0, 1]', 'expected_output': '0.0'}, {'input': '[10, 20, 30]', 'expected_output': '20.0'}, {'input': '[0, 0, 0]', 'expected_output': '0.0'}, {'input': '[-10, -20, -30]', 'expected_output': '-20.0'}]
+
+====================================================================================================
+
+[SOAL #3]
+ID: 241
+Topik: N/A
+Tipe: CODING
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Buatlah fungsi yang menghitung jumlah bilangan genap dalam sebuah list
+
+CODE TEMPLATE:
+def hitung_genap(daftar_bilangan):
+    # Write your code here
+    pass
+
+JAWABAN:
+def hitung_genap(daftar_bilangan):
+    return len([bilangan for bilangan in daftar_bilangan if bilangan % 2 == 0])
+
+PENJELASAN:
+Fungsi `hitung_genap` menggunakan list comprehension untuk membuat list baru yang berisi hanya bilangan genap dari input `daftar_bilangan`. Kemudian, fungsi `len` digunakan untuk menghitung jumlah elemen dalam list tersebut, yang merupakan jumlah bilangan genap.
+
+TEST CASES:
+[{'input': '[1, 2, 3, 4, 5]', 'expected_output': '2'}, {'input': '[10, 20, 30, 40, 50]', 'expected_output': '5'}, {'input': '[]', 'expected_output': '0'}, {'input': '[0, 0, 0, 0, 0]', 'expected_output': '5'}, {'input': '[-2, -4, -6, -8, -10]', 'expected_output': '5'}]
+
+====================================================================================================
+
+[SOAL #4]
+ID: 240
+Topik: N/A
+Tipe: CODING
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Buatlah fungsi yang menghitung rata-rata dari daftar bilangan bulat dengan menggunakan perulangan for dan operator aritmatika, fungsi harus menerima sebuah parameter yaitu list of integer
+
+CODE TEMPLATE:
+def hitung_rata_rata(daftar_bilangan):
+    # Write your code here
+    pass
+
+JAWABAN:
+def hitung_rata_rata(daftar_bilangan):
+    total = 0
+    for bilangan in daftar_bilangan:
+        total += bilangan
+    return total / len(daftar_bilangan)
+
+PENJELASAN:
+Fungsi ini menggunakan perulangan for untuk menjumlahkan semua bilangan dalam daftar, kemudian membagi hasilnya dengan jumlah bilangan dalam daftar untuk mendapatkan rata-rata. Hasil ini kemudian dikembalikan sebagai output fungsi.
+
+TEST CASES:
+[{'input': '[1, 2, 3, 4, 5]', 'expected_output': '3.0'}, {'input': '[0, 0, 0, 0, 0]', 'expected_output': '0.0'}, {'input': '[-1, -2, -3, -4, -5]', 'expected_output': '-3.0'}, {'input': '[10, 20, 30, 40, 50]', 'expected_output': '30.0'}, {'input': '[]', 'expected_output': 'ZeroDivisionError'}]
+
+====================================================================================================
+
+[SOAL #5]
+ID: 239
+Topik: N/A
+Tipe: CODING
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Buatlah fungsi yang menghitung rata-rata dari daftar bilangan bulat menggunakan perulangan for dan kondisi if untuk menangani kemungkinan masukan daftar kosong.
+
+CODE TEMPLATE:
+def hitung_rata_rata(daftar_bilangan):
+    # Write your code here
+    pass
+
+JAWABAN:
+def hitung_rata_rata(daftar_bilangan):
+    if len(daftar_bilangan) == 0:
+        return 0
+    total = 0
+    for bilangan in daftar_bilangan:
+        total += bilangan
+    return total / len(daftar_bilangan)
+
+PENJELASAN:
+Fungsi ini bekerja dengan melakukan perulangan terhadap setiap elemen dalam daftar, menjumlahkan nilai-nilai tersebut, dan kemudian membaginya dengan jumlah total elemen dalam daftar untuk mendapatkan rata-rata. Jika daftar kosong, fungsi akan mengembalikan nilai 0 untuk menghindari kesalahan.
+
+TEST CASES:
+[{'input': '[1, 2, 3, 4, 5]', 'expected_output': '3.0'}, {'input': '[]', 'expected_output': '0'}, {'input': '[0, 0, 0]', 'expected_output': '0.0'}, {'input': '[-1, 1, -2, 2]', 'expected_output': '0.0'}, {'input': '[100, 200, 300]', 'expected_output': '200.0'}]
+
+====================================================================================================
+
+[SOAL #6]
+ID: 238
+Topik: N/A
+Tipe: CODING
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Buatlah fungsi yang menghitung rata-rata dari daftar bilangan bulat menggunakan perulangan for.
+
+CODE TEMPLATE:
+def hitung_rata_rata(daftar_bilangan):
+    # Write your code here
+    pass
+
+JAWABAN:
+def hitung_rata_rata(daftar_bilangan):
+    total = 0
+    for bilangan in daftar_bilangan:
+        total += bilangan
+    return total / len(daftar_bilangan)
+
+PENJELASAN:
+Fungsi ini menggunakan perulangan for untuk menjumlahkan semua bilangan dalam daftar, kemudian membagi dengan jumlah elemen daftar untuk menghitung rata-rata.
+
+TEST CASES:
+[{'input': '[1, 2, 3, 4, 5]', 'expected_output': '3.0'}, {'input': '[10, 20, 30]', 'expected_output': '20.0'}, {'input': '[-1, 0, 1]', 'expected_output': '0.0'}, {'input': '[1000, 2000, 3000]', 'expected_output': '2000.0'}, {'input': '[0, 0, 0]', 'expected_output': '0.0'}]
+
+====================================================================================================
+
+[SOAL #7]
+ID: 237
+Topik: N/A
+Tipe: CODING
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Buatlah fungsi yang menghitung rata-rata nilai dari sebuah daftar bilangan bulat
+
+CODE TEMPLATE:
+def hitung_rata_rata(daftar_bilangan):
+    # Write your code here
+    pass
+
+JAWABAN:
+def hitung_rata_rata(daftar_bilangan):
+    return sum(daftar_bilangan) / len(daftar_bilangan)
+
+PENJELASAN:
+Fungsi ini menggunakan built-in function sum() untuk menghitung jumlah seluruh elemen dalam daftar dan len() untuk menghitung jumlah elemen dalam daftar. Kemudian, hasilnya dibagi untuk mendapatkan rata-rata.
+
+TEST CASES:
+[{'input': '[1, 2, 3, 4, 5]', 'expected_output': '3.0'}, {'input': '[0, 0, 0, 0, 0]', 'expected_output': '0.0'}, {'input': '[-1, -2, -3, -4, -5]', 'expected_output': '-3.0'}, {'input': '[10, 20, 30, 40, 50]', 'expected_output': '30.0'}, {'input': '[]', 'expected_output': 'ZeroDivisionError: division by zero'}]
+
+====================================================================================================
+
+[SOAL #8]
+ID: 236
+Topik: N/A
+Tipe: CODING
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Buatlah fungsi yang menghitung rata-rata dari daftar bilangan bulat dengan menggunakan perulangan for, serta mengembalikan nilai rata-rata tersebut.
+
+CODE TEMPLATE:
+def hitung_rata_rata(daftar_bilangan):
+    # Write your code here
+    pass
+
+JAWABAN:
+def hitung_rata_rata(daftar_bilangan):
+    total = 0
+    for bilangan in daftar_bilangan:
+        total += bilangan
+    rata_rata = total / len(daftar_bilangan)
+    return rata_rata
+
+PENJELASAN:
+Penjelasan solusi: Fungsi hitung_rata_rata memanfaatkan perulangan for untuk menjumlahkan semua bilangan dalam daftar, kemudian membagi jumlah tersebut dengan banyaknya bilangan untuk mendapatkan rata-rata. Konsep Pemrograman Python yang digunakan meliputi perulangan for, operasi aritmatika dasar, dan manipulasi daftar.
+
+TEST CASES:
+[{'input': '[1, 2, 3, 4, 5]', 'expected_output': '3.0'}, {'input': '[0, 0, 0, 0, 0]', 'expected_output': '0.0'}, {'input': '[-1, -2, -3, -4, -5]', 'expected_output': '-3.0'}, {'input': '[10, 20, 30, 40, 50]', 'expected_output': '30.0'}, {'input': '[1000, 2000, 3000, 4000, 5000]', 'expected_output': '3000.0'}]
+
+====================================================================================================
+
+[SOAL #9]
+ID: 235
+Topik: N/A
+Tipe: CODING
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Buatlah fungsi yang menghitung rata-rata dari daftar bilangan bulat dengan menggunakan perulangan for.
+
+CODE TEMPLATE:
+def hitung_rata_rata(daftar_bilangan):
+    # Write your code here
+    pass
+
+JAWABAN:
+def hitung_rata_rata(daftar_bilangan):
+    total = 0
+    for bilangan in daftar_bilangan:
+        total += bilangan
+    return total / len(daftar_bilangan)
+
+PENJELASAN:
+Fungsi hitung_rata_rata memanfaatkan perulangan for untuk menjumlahkan semua bilangan dalam daftar. Setelah itu, hasil penjumlahan dibagi dengan jumlah elemen dalam daftar untuk mendapatkan rata-rata.
+
+TEST CASES:
+[{'input': '[1, 2, 3, 4, 5]', 'expected_output': '3.0'}, {'input': '[10, 20, 30]', 'expected_output': '20.0'}, {'input': '[-1, 0, 1]', 'expected_output': '0.0'}, {'input': '[1000, 2000, 3000]', 'expected_output': '2000.0'}, {'input': '[]', 'expected_output': 'ZeroDivisionError: division by zero'}]
+
+====================================================================================================
+
+[SOAL #10]
+ID: 234
+Topik: N/A
+Tipe: CODING
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Buatlah fungsi yang menerima list of integer dan mengembalikan rata-rata dari semua angka dalam list tersebut.
+
+CODE TEMPLATE:
+def calculate_average(numbers):
+    # Write your code here
+    pass
+
+JAWABAN:
+def calculate_average(numbers):
+    return sum(numbers) / len(numbers)
+
+PENJELASAN:
+Fungsi ini bekerja dengan menggunakan fungsi built-in Python, yaitu sum() untuk menghitung jumlah semua angka dalam list dan len() untuk menghitung jumlah elemen dalam list. Kemudian, hasilnya dibagi untuk mendapatkan rata-rata.
+
+TEST CASES:
+[{'input': '[1, 2, 3, 4, 5]', 'expected_output': '3.0'}, {'input': '[0, 0, 0, 0]', 'expected_output': '0.0'}, {'input': '[-1, -2, -3, -4, -5]', 'expected_output': '-3.0'}, {'input': '[10, 20, 30, 40, 50]', 'expected_output': '30.0'}, {'input': '[]', 'expected_output': 'ZeroDivisionError: division by zero'}]
+
+====================================================================================================
+
+[SOAL #11]
+ID: 233
+Topik: N/A
+Tipe: MCQ
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Apa yang dilakukan perintah 'break' dalam perulangan Python?
+
+CODE TEMPLATE:
+for i in range(5): 
+    if i == 3: 
+        break 
+    print(i)
+
+OPSI:
+  Mengulang perulangan dari awal
+  Menghentikan perulangan saat kondisi terpenuhi
+  Melanjutkan ke iterasi berikutnya
+  Mengembalikan nilai dalam perulangan
+
+JAWABAN:
+B
+
+PENJELASAN:
+Perintah 'break' digunakan untuk menghentikan perulangan saat kondisi tertentu terpenuhi, sehingga perulangan tidak akan dilanjutkan meskipun masih ada iterasi yang belum dilakukan.
+
+====================================================================================================
+
+[SOAL #12]
+ID: 232
+Topik: N/A
+Tipe: CODING
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Buatlah fungsi yang menghitung rata-rata nilai dari sebuah daftar bilangan bulat dengan memanfaatkan konsep perulangan dan tipe data list pada Pemrograman Python.
+
+CODE TEMPLATE:
+def hitung_rata_rata(daftar_bilangan):
+    # Write your code here
+    pass
+
+JAWABAN:
+def hitung_rata_rata(daftar_bilangan):
+    total = 0
+    for bilangan in daftar_bilangan:
+        total += bilangan
+    return total / len(daftar_bilangan)
+
+PENJELASAN:
+Fungsi `hitung_rata_rata` mengambil sebuah daftar bilangan bulat sebagai input, kemudian menggunakan perulangan `for` untuk mengiterasi setiap bilangan dalam daftar, menjumlahkannya ke variabel `total`. Setelah itu, fungsi mengembalikan hasil bagi `total` dengan jumlah elemen dalam daftar, yang diperoleh menggunakan fungsi `len()`, sehingga menghasilkan rata-rata nilai dari daftar tersebut.
+
+TEST CASES:
+[{'input': '[1, 2, 3, 4, 5]', 'expected_output': '3.0'}, {'input': '[10, 20, 30]', 'expected_output': '20.0'}, {'input': '[-1, 0, 1]', 'expected_output': '0.0'}, {'input': '[1000, 2000, 3000]', 'expected_output': '2000.0'}, {'input': '[]', 'expected_output': 'ZeroDivisionError: division by zero'}]
+
+====================================================================================================
+
+[SOAL #13]
+ID: 231
+Topik: N/A
+Tipe: MCQ
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Apa yang akan terjadi jika kita menggunakan perintah break dalam loop for di Python?
+
+CODE TEMPLATE:
+for i in range(5): 
+  if i == 3: 
+    break 
+  print(i)
+
+OPSI:
+  Loop akan berjalan terus sampai i mencapai 5
+  Loop akan berhenti saat i mencapai 3
+  Loop akan mengulang dari awal saat i mencapai 3
+  Loop akan menampilkan error
+
+JAWABAN:
+B
+
+PENJELASAN:
+Perintah break dalam loop for di Python akan menghentikan loop saat kondisi tertentu terpenuhi. Dalam contoh kode, loop akan berhenti saat i mencapai 3.
+
+====================================================================================================
+
+[SOAL #14]
+ID: 230
+Topik: N/A
+Tipe: MCQ
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Apa yang akan dicetak oleh kode Python berikut: print('Hello, World!'[0:5])?
+
+CODE TEMPLATE:
+print('Hello, World!'[0:5])
+
+OPSI:
+  Hello
+  World
+  Hello, World!
+  Hello,
+
+JAWABAN:
+A
+
+PENJELASAN:
+Karena slicing [0:5] akan mengambil karakter dari indeks 0 hingga 5 (tidak termasuk), sehingga akan mengambil 'Hello'.
+
+====================================================================================================
+
+[SOAL #15]
+ID: 229
+Topik: N/A
+Tipe: CODING
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Buatlah fungsi yang menghitung rata-rata dari daftar angka menggunakan Pemrograman Python
+
+CODE TEMPLATE:
+def hitung_rata_rata(daftar_angka):
+    # Write your code here
+    pass
+
+JAWABAN:
+def hitung_rata_rata(daftar_angka):
+    return sum(daftar_angka) / len(daftar_angka)
+
+PENJELASAN:
+Fungsi `hitung_rata_rata` mengambil daftar angka sebagai input, kemudian menggunakan fungsi `sum` untuk menghitung total angka dalam daftar dan `len` untuk menghitung jumlah angka dalam daftar. Rata-rata dihitung dengan membagi total angka dengan jumlah angka.
+
+TEST CASES:
+[{'input': '[1, 2, 3, 4, 5]', 'expected_output': '3.0'}, {'input': '[0, 0, 0, 0, 0]', 'expected_output': '0.0'}, {'input': '[-1, -2, -3, -4, -5]', 'expected_output': '-3.0'}, {'input': '[10, 20, 30, 40, 50]', 'expected_output': '30.0'}, {'input': '[1000, 2000, 3000, 4000, 5000]', 'expected_output': '3000.0'}]
+
+====================================================================================================
+
+[SOAL #16]
+ID: 170
+Topik: Variabel dan Tipe Data
+Tipe: MCQ
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Apa yang akan terjadi jika kita mencoba menambahkan sebuah string dengan sebuah integer di Python?
+
+CODE TEMPLATE:
+x = '5' + 5
+
+OPSI:
+  Python akan menghasilkan output '55'
+  Python akan menghasilkan error karena tipe data yang tidak kompatibel
+  Python akan mengubah integer menjadi string secara otomatis
+  Python akan mengubah string menjadi integer secara otomatis
+
+JAWABAN:
+B
+
+PENJELASAN:
+Python tidak dapat menambahkan string dengan integer secara langsung karena tipe data yang berbeda. Hal ini akan menghasilkan error TypeError.
+
+====================================================================================================
+
+[SOAL #17]
+ID: 169
+Topik: Variabel dan Tipe Data
+Tipe: MCQ
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Apa yang akan terjadi jika Anda mencoba menjalankan kode Python berikut: x = 5; y = 'hello'; print(x + y)
+
+CODE TEMPLATE:
+x = 5; y = 'hello'; print(x + y)
+
+OPSI:
+  Kode akan menghasilkan output 5hello
+  Kode akan menghasilkan error karena tidak dapat menjumlahkan integer dan string
+  Kode akan menghasilkan output hello5
+  Kode akan menghasilkan output 10
+
+JAWABAN:
+B
+
+PENJELASAN:
+Kode akan menghasilkan error karena tidak dapat menjumlahkan integer dan string. Di Python, Anda tidak dapat secara langsung menjumlahkan variabel dengan tipe data yang berbeda (seperti integer dan string) menggunakan operator +, kecuali jika Anda melakukan konversi tipe data terlebih dahulu.
+
+====================================================================================================
+
+[SOAL #18]
+ID: 168
+Topik: Variabel dan Tipe Data
+Tipe: CODING
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Buatlah fungsi yang mengambil dua argumen, a dan b, dan mengembalikan hasil penjumlahan dan pengurangan dari kedua variabel tersebut. Pastikan untuk menangani kasus di mana a dan b memiliki tipe data yang berbeda.
+
+CODE TEMPLATE:
+def solution(a, b):
+    # Write your code here
+    pass
+
+JAWABAN:
+def solution(a, b):
+    try:
+        a = float(a)
+        b = float(b)
+        return a + b, a - b
+    except ValueError:
+        return 'Error: Input harus berupa angka'
+
+PENJELASAN:
+Dalam solusi ini, kita menggunakan fungsi float() untuk mengubah input menjadi angka float. Jika input tidak dapat diubah menjadi angka, kita akan mengembalikan pesan error. Dengan cara ini, kita dapat menangani kasus di mana a dan b memiliki tipe data yang berbeda.
+
+TEST CASES:
+[{'input': '5, 5', 'expected_output': '(10.0, 0.0)'}, {'input': '0, 0', 'expected_output': '(0.0, 0.0)'}, {'input': '-5, 5', 'expected_output': '(0.0, -10.0)'}, {'input': 'a, 5', 'expected_output': 'Error: Input harus berupa angka'}, {'input': '5.5, 5.5', 'expected_output': '(11.0, 0.0)'}]
+
+====================================================================================================
+
+[SOAL #19]
+ID: 167
+Topik: Variabel dan Tipe Data
+Tipe: MCQ
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Apa yang akan menjadi hasil dari kode Python berikut: a = 5; b = '5'; print(a == b)?
+
+CODE TEMPLATE:
+a = 5; b = '5'; print(a == b)
+
+OPSI:
+  True
+  False
+  TypeError
+  ValueError
+
+JAWABAN:
+B
+
+PENJELASAN:
+Karena a adalah integer dan b adalah string, maka perbandingan a == b akan menghasilkan False. Meskipun nilainya sama, tipe datanya berbeda.
+
+====================================================================================================
+
+[SOAL #20]
+ID: 166
+Topik: Variabel dan Tipe Data
+Tipe: CODING
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Buatlah fungsi yang mengambil tiga argumen (nama, usia, dan kota) dan mengembalikan sebuah string yang berisi informasi tentang orang tersebut dengan format 'Nama: {nama}, Usia: {usia} tahun, Kota: {kota}'
+
+CODE TEMPLATE:
+def informasi_orang(nama, usia, kota):
+    # Write your code here
+    pass
+
+JAWABAN:
+def informasi_orang(nama, usia, kota):
+    return f'Nama: {nama}, Usia: {usia} tahun, Kota: {kota}'
+
+PENJELASAN:
+Fungsi ini menggunakan variabel dan tipe data string untuk mengembalikan informasi tentang orang tersebut. Konsep yang digunakan adalah penggunaan f-string untuk format string yang lebih mudah dibaca dan efisien.
+
+TEST CASES:
+[{'input': "'John Doe', 25, 'Jakarta'", 'expected_output': 'Nama: John Doe, Usia: 25 tahun, Kota: Jakarta'}, {'input': "'Jane Doe', 0, 'New York'", 'expected_output': 'Nama: Jane Doe, Usia: 0 tahun, Kota: New York'}, {'input': "'', -5, ''", 'expected_output': 'Nama: , Usia: -5 tahun, Kota: '}, {'input': "'Very Long Name', 100, 'Very Long City Name'", 'expected_output': 'Nama: Very Long Name, Usia: 100 tahun, Kota: Very Long City Name'}]
+
+====================================================================================================
+
+[SOAL #21]
+ID: 165
+Topik: Variabel dan Tipe Data
+Tipe: MCQ
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Apa tipe data dari variabel 'nama' jika kode Python adalah: nama = 'John Doe'?
+
+CODE TEMPLATE:
+nama = 'John Doe'
+print(type(nama))
+
+OPSI:
+  Integer
+  String
+  Float
+  Boolean
+
+JAWABAN:
+B
+
+PENJELASAN:
+Tipe data dari variabel 'nama' adalah String karena diawali dan diakhiri dengan tanda petik satu ('') atau tanda petik dua ('').
+
+====================================================================================================
+
+[SOAL #22]
+ID: 164
+Topik: Variabel dan Tipe Data
+Tipe: MCQ
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Apa tipe data dari variabel 'x' jika kode Python berikut dijalankan: x = 10.5
+
+CODE TEMPLATE:
+x = 10.5
+
+OPSI:
+  Integer
+  Float
+  String
+  Boolean
+
+JAWABAN:
+B
+
+PENJELASAN:
+Tipe data float merupakan tipe data untuk angka desimal, sehingga variabel 'x' memiliki tipe data float karena diisi dengan nilai 10.5
+
+====================================================================================================
+
+[SOAL #23]
+ID: 163
+Topik: Variabel dan Tipe Data
+Tipe: CODING
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Buatlah fungsi yang mengambil dua argumen berupa string, lalu menggabungkan dan menghitung panjang total dari kedua string tersebut.
+
+CODE TEMPLATE:
+def hitung_panjang_string(str1, str2):
+    # Write your code here
+    pass
+
+JAWABAN:
+def hitung_panjang_string(str1, str2):
+    gabungan = str1 + str2
+    return len(gabungan)
+
+PENJELASAN:
+Pada fungsi ini, kita menggunakan variabel untuk menyimpan string yang digabung, kemudian menggunakan fungsi len() untuk menghitung panjang total dari string yang telah digabung. Konsep Variabel dan Tipe Data yang digunakan disini meliputi penggunaan tipe data string dan integer.
+
+TEST CASES:
+[{'input': "'hello', 'world'", 'expected_output': '10'}, {'input': "'', ''", 'expected_output': '0'}, {'input': "'a', 'b'", 'expected_output': '2'}, {'input': "'abcdefghijklmnopqrstuvwxyz', 'abcdefghijklmnopqrstuvwxyz'", 'expected_output': '52'}, {'input': "'', 'test'", 'expected_output': '4'}]
+
+====================================================================================================
+
+[SOAL #24]
+ID: 162
+Topik: Variabel dan Tipe Data
+Tipe: CODING
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Buatlah fungsi yang mengambil sebuah string sebagai input dan mengembalikan sebuah dictionary dengan jumlah karakter unik dan total karakter dalam string tersebut.
+
+CODE TEMPLATE:
+def count_characters(input_string):
+    # Write your code here
+    pass
+
+JAWABAN:
+def count_characters(input_string):
+    unique_chars = set(input_string)
+    return {'total': len(input_string), 'unique': len(unique_chars)}
+
+PENJELASAN:
+Fungsi ini bekerja dengan menggunakan variabel untuk menyimpan input string, kemudian menggunakan tipe data set untuk menghitung karakter unik. Setelah itu, fungsi ini mengembalikan sebuah dictionary dengan jumlah total karakter dan karakter unik.
+
+TEST CASES:
+[{'input': '"hello"', 'expected_output': "{'total': 5, 'unique': 4}"}, {'input': '""', 'expected_output': "{'total': 0, 'unique': 0}"}, {'input': '"aaaaaaaa"', 'expected_output': "{'total': 8, 'unique': 1}"}, {'input': '"abcdefgh"', 'expected_output': "{'total': 8, 'unique': 8}"}, {'input': '"abcabcabc"', 'expected_output': "{'total': 9, 'unique': 3}"}]
+
+====================================================================================================
+
+[SOAL #25]
+ID: 161
+Topik: Variabel dan Tipe Data
+Tipe: FILL
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Isilah ___ untuk membuat kode yang menghasilkan output string 'Hello World' dengan menggunakan tipe data string
+
+CODE TEMPLATE:
+x = ___
+print(x)
+
+JAWABAN:
+'Hello World'
+
+PENJELASAN:
+Penjelasan singkat tentang jawaban dan topik Variabel dan Tipe Data: Pada kode tersebut, kita perlu mengisi variabel x dengan tipe data string 'Hello World' agar outputnya menjadi 'Hello World'.
+
+====================================================================================================
+
+[SOAL #26]
+ID: 143
+Topik: Variabel dan Tipe Data
+Tipe: CODING
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Buatlah fungsi yang mengambil dua argumen, sebuah string dan sebuah integer, kemudian mengembalikan sebuah string yang merupakan hasil penggabungan dari string yang diulang sebanyak integer yang diberikan.
+
+CODE TEMPLATE:
+def solution(string, n):
+    # Write your code here
+    pass
+
+JAWABAN:
+def solution(string, n):
+    return string * n
+
+PENJELASAN:
+Fungsi ini menggunakan operator perkalian string (*), yang mengulang string sebanyak n kali. Misalnya, jika string 'hello' dan n 3, maka fungsi akan mengembalikan 'hellohellohello'. Ini menunjukkan bagaimana variabel dan tipe data digunakan dalam pemrograman untuk melakukan operasi dasar.
+
+TEST CASES:
+[{'input': "'hello', 3", 'expected_output': 'hellohellohello'}, {'input': "'world', 0", 'expected_output': ''}, {'input': "'abc', 2", 'expected_output': 'abcabc'}, {'input': "'', 5", 'expected_output': ''}, {'input': "'test', -1", 'expected_output': ''}]
+
+====================================================================================================
+
+[SOAL #27]
+ID: 142
+Topik: Variabel dan Tipe Data
+Tipe: MCQ
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Apa hasil dari kode Python berikut: x = 5; y = '5'; print(x == y)?
+
+CODE TEMPLATE:
+x = 5; y = '5'; print(x == y)
+
+OPSI:
+  True
+  False
+  Error
+  Tidak terdefinisi
+
+JAWABAN:
+B
+
+PENJELASAN:
+Karena x adalah variabel bertipe integer dengan nilai 5, sedangkan y adalah variabel bertipe string dengan nilai '5'. Meskipun nilai mereka tampak sama, tipe data yang berbeda menyebabkan perbandingan menggunakan == menghasilkan False.
+
+====================================================================================================
+
+[SOAL #28]
+ID: 141
+Topik: Variabel dan Tipe Data
+Tipe: MCQ
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Apa yang terjadi ketika Anda menjalankan kode Python berikut: x = 5; y = '5'; print(x == y)?
+
+CODE TEMPLATE:
+x = 5; y = '5'; print(x == y)
+
+OPSI:
+  True
+  False
+  TypeError
+  ValueError
+
+JAWABAN:
+B
+
+PENJELASAN:
+Karena x adalah integer dan y adalah string, maka perbandingan x == y akan menghasilkan False karena tipe data yang berbeda
+
+====================================================================================================
+
+[SOAL #29]
+ID: 140
+Topik: Variabel dan Tipe Data
+Tipe: FILL
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Isilah ___ dengan tipe data yang sesuai untuk menyimpan teks 'Hello World' pada bahasa pemrograman Python.
+
+CODE TEMPLATE:
+x = ___('Hello World')
+print(x)
+
+JAWABAN:
+str
+
+PENJELASAN:
+Tipe data string (str) digunakan untuk menyimpan teks atau karakter pada bahasa pemrograman Python.
+
+====================================================================================================
+
+[SOAL #30]
+ID: 138
+Topik: Variabel dan Tipe Data
+Tipe: CODING
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Buatlah fungsi yang mengambil dua buah argumen berupa string, lalu mengembalikan hasil konversi kedua string tersebut menjadi integer dan menjumlahkannya.
+
+CODE TEMPLATE:
+def solution(str1, str2):
+    # Write your code here
+    pass
+
+JAWABAN:
+def solution(str1, str2):
+    num1 = int(str1)
+    num2 = int(str2)
+    return num1 + num2
+
+PENJELASAN:
+Pada solusi ini, kita menggunakan fungsi int() untuk mengkonversi string menjadi integer. Fungsi solution() kemudian mengembalikan hasil penjumlahan dari kedua integer tersebut.
+
+TEST CASES:
+[{'input': '10, 20', 'expected_output': '30'}, {'input': '0, 0', 'expected_output': '0'}, {'input': '-5, 5', 'expected_output': '0'}, {'input': '1000, 2000', 'expected_output': '3000'}, {'input': '-100, -200', 'expected_output': '-300'}]
+
+====================================================================================================
+
+[SOAL #31]
+ID: 137
+Topik: Variabel dan Tipe Data
+Tipe: FILL
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Isilah ___ untuk membuat kode yang menampilkan nilai integer 10
+
+CODE TEMPLATE:
+x = ___
+print(x)
+
+JAWABAN:
+10
+
+PENJELASAN:
+Dalam penggunaan variabel dan tipe data, kita perlu menentukan jenis data yang akan disimpan dalam variabel. Pada contoh ini, kita menggunakan integer (bilangan bulat) sebagai tipe data.
+
+====================================================================================================
+
+[SOAL #32]
+ID: 136
+Topik: Variabel dan Tipe Data
+Tipe: MCQ
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Apa yang terjadi ketika Anda mencoba menambahkan sebuah string dengan sebuah integer di Python?
+
+CODE TEMPLATE:
+print('hello' + 5)
+
+OPSI:
+  Menghasilkan 'hello5'
+  Menghasilkan error karena tipe data yang berbeda
+  Menghasilkan 5
+  Menghasilkan '5hello'
+
+JAWABAN:
+B
+
+PENJELASAN:
+Di Python, Anda tidak dapat langsung menambahkan sebuah string dengan sebuah integer karena mereka memiliki tipe data yang berbeda. Python akan mengeluarkan error TypeError ketika Anda mencoba melakukan operasi ini. Untuk menghindari error ini, Anda perlu mengubah tipe data integer menjadi string menggunakan fungsi str() atau melakukan operasi matematika terpisah.
+
+====================================================================================================
+
+[SOAL #33]
+ID: 135
+Topik: Variabel dan Tipe Data
+Tipe: MCQ
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Apa yang terjadi ketika Anda mencoba melakukan operasi penjumlahan antara sebuah string dan sebuah integer di Python?
+
+CODE TEMPLATE:
+print('hello' + 5)
+
+OPSI:
+  Python akan menghasilkan output 'hello5'
+  Python akan menghasilkan error karena tidak bisa menjumlahkan string dan integer
+  Python akan mengkonversi integer menjadi string dan kemudian menjumlahkannya
+  Python akan mengkonversi string menjadi integer dan kemudian menjumlahkannya
+
+JAWABAN:
+B
+
+PENJELASAN:
+Python tidak bisa secara langsung menjumlahkan string dan integer karena keduanya memiliki tipe data yang berbeda. Oleh karena itu, Python akan menghasilkan error ketika mencoba melakukan operasi penjumlahan antara keduanya.
+
+====================================================================================================
+
+[SOAL #34]
+ID: 134
+Topik: Variabel dan Tipe Data
+Tipe: FILL
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Isilah ___ untuk membuat kode yang mendeklarasikan variabel dengan tipe data string
+
+CODE TEMPLATE:
+x = ___
+print(type(x))
+
+JAWABAN:
+'Hello World'
+
+PENJELASAN:
+Penjelasan: Tipe data string dalam Python ditandai dengan diapit oleh tanda petik, baik tanda petik satu ('') atau tanda petik dua ('')
+
+====================================================================================================
+
+[SOAL #35]
+ID: 180
+Topik: Operator
+Tipe: MCQ
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Apa hasil dari ekspresi berikut: 5 * 2 + 3 % 2
+
+CODE TEMPLATE:
+print(5 * 2 + 3 % 2)
+
+OPSI:
+  10
+  11
+  12
+  13
+
+JAWABAN:
+B
+
+PENJELASAN:
+Karena operator * dan % memiliki prioritas yang sama, maka ekspresi di atas akan dieksekusi dari kiri ke kanan. Jadi, 5 * 2 = 10, lalu 3 % 2 = 1, dan akhirnya 10 + 1 = 11
+
+====================================================================================================
+
+[SOAL #36]
+ID: 179
+Topik: Operator
+Tipe: CODING
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Buatlah fungsi yang mengembalikan hasil dari ekspresi 2x + 5y, di mana x dan y adalah input dari pengguna. Gunakan operator aritmatika untuk menghitung hasilnya.
+
+CODE TEMPLATE:
+def solution(x, y):
+    # Write your code here
+    pass
+
+JAWABAN:
+def solution(x, y):
+    return 2*x + 5*y
+
+PENJELASAN:
+Fungsi solution(x, y) menggunakan operator aritmatika untuk menghitung hasil dari ekspresi 2x + 5y. Operator '*' digunakan untuk mengalikan x dengan 2, dan operator '+' digunakan untuk menambahkan hasilnya dengan 5y.
+
+TEST CASES:
+[{'input': '1, 1', 'expected_output': '7'}, {'input': '0, 0', 'expected_output': '0'}, {'input': '-2, 3', 'expected_output': '11'}, {'input': '10, 10', 'expected_output': '70'}, {'input': '-5, -5', 'expected_output': '-35'}]
+
+====================================================================================================
+
+[SOAL #37]
+ID: 178
+Topik: Operator
+Tipe: MCQ
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Apa hasil dari ekspresi 5 * 2 + 3 menggunakan operator di Python?
+
+CODE TEMPLATE:
+print(5 * 2 + 3)
+
+OPSI:
+  10
+  12
+  13
+  14
+
+JAWABAN:
+C
+
+PENJELASAN:
+Ekspresi 5 * 2 + 3 di evaluasi sebagai berikut: (5 * 2) = 10, kemudian 10 + 3 = 13. Oleh karena itu, jawaban yang benar adalah C. 13.
+
+====================================================================================================
+
+[SOAL #38]
+ID: 177
+Topik: Operator
+Tipe: FILL
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Isilah ___ untuk membuat kode yang melakukan operasi penambahan antara 5 dan 3
+
+CODE TEMPLATE:
+x = 5 ___ 3
+print(x)
+
+JAWABAN:
++
+
+PENJELASAN:
+Penjelasan singkat tentang jawaban dan topik Operator, yaitu operator penambahan '+' digunakan untuk menjumlahkan dua nilai.
+
+====================================================================================================
+
+[SOAL #39]
+ID: 176
+Topik: Operator
+Tipe: CODING
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Buatlah fungsi yang mengambil dua argumen numerik, lalu mengembalikan hasil dari operasi 'AND' logika bitwise antara kedua argumen tersebut.
+
+CODE TEMPLATE:
+def bitwise_and(a, b):
+    # Write your code here
+    pass
+
+JAWABAN:
+def bitwise_and(a, b):
+    return a & b
+
+PENJELASAN:
+Fungsi bitwise_and(a, b) menggunakan operator '&' untuk melakukan operasi 'AND' logika bitwise antara 'a' dan 'b'. Operasi ini membandingkan setiap bit dari 'a' dengan bit yang sesuai dalam 'b'. Jika kedua bit adalah 1, maka bit yang sesuai dalam hasilnya adalah 1. Jika tidak, maka bit yang sesuai dalam hasilnya adalah 0.
+
+TEST CASES:
+[{'input': '5, 3', 'expected_output': '1'}, {'input': '0, 0', 'expected_output': '0'}, {'input': '-5, 5', 'expected_output': '5'}, {'input': '10, 12', 'expected_output': '8'}, {'input': '255, 255', 'expected_output': '255'}]
+
+====================================================================================================
+
+[SOAL #40]
+ID: 175
+Topik: Operator
+Tipe: CODING
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Buatlah fungsi yang menerima dua buah angka dan mengembalikan hasil dari operasi aritmatika tambah, kurang, kali, dan bagi terhadap kedua angka tersebut.
+
+CODE TEMPLATE:
+def solution(a, b):
+    # Write your code here
+    pass
+
+JAWABAN:
+def solution(a, b):
+    tambah = a + b
+    kurang = a - b
+    kali = a * b
+    bagi = a / b if b != 0 else 'Tidak dapat dibagi'
+    return tambah, kurang, kali, bagi
+
+PENJELASAN:
+Penjelasan solusi dan konsep Operator: Fungsi ini menggunakan operator aritmatika dasar seperti +, -, *, dan / untuk melakukan operasi terhadap dua angka yang diberikan. Perlu diperhatikan bahwa operasi pembagian harus memiliki pengecekan kondisi untuk menghindari pembagian oleh nol.
+
+TEST CASES:
+[{'input': '5, 5', 'expected_output': '(10, 0, 25, 1.0)'}, {'input': '10, 0', 'expected_output': '(10, 10, 0, Tidak dapat dibagi)'}, {'input': '-5, 5', 'expected_output': '(0, -10, -25, -1.0)'}, {'input': '0, 0', 'expected_output': '(0, 0, 0, Tidak dapat dibagi)'}, {'input': '100, 2', 'expected_output': '(102, 98, 200, 50.0)'}]
+
+====================================================================================================
+
+[SOAL #41]
+ID: 174
+Topik: Operator
+Tipe: MCQ
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Apa hasil dari expression berikut: 5 * 2 + 3 % 2
+
+CODE TEMPLATE:
+print(5 * 2 + 3 % 2)
+
+OPSI:
+  10
+  11
+  12
+  13
+
+JAWABAN:
+B
+
+PENJELASAN:
+Karena operator perkalian dan modulus memiliki prioritas yang lebih tinggi daripada operator penjumlahan, maka expression tersebut dievaluasi sebagai (5 * 2) + (3 % 2) = 10 + 1 = 11
+
+====================================================================================================
+
+[SOAL #42]
+ID: 173
+Topik: Operator
+Tipe: CODING
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Buatlah fungsi yang mengambil dua bilangan bulat sebagai input dan mengembalikan hasil dari operasi logika AND, OR, dan XOR antara dua bilangan tersebut.
+
+CODE TEMPLATE:
+def solution(a, b):
+    # Write your code here
+    pass
+
+JAWABAN:
+def solution(a, b):
+    and_result = a & b
+    or_result = a | b
+    xor_result = a ^ b
+    return and_result, or_result, xor_result
+
+PENJELASAN:
+Penjelasan solusi dan konsep Operator: Fungsi solution(a, b) menggunakan operator bitwise untuk melakukan operasi logika AND (&), OR (|), dan XOR (^) antara dua bilangan bulat a dan b. Hasil operasi ini kemudian dikembalikan sebagai tuple.
+
+TEST CASES:
+[{'input': '5, 5', 'expected_output': '(5, 5, 0)'}, {'input': '0, 0', 'expected_output': '(0, 0, 0)'}, {'input': '-5, 5', 'expected_output': '(-5, 5, 0)'}, {'input': '10, 6', 'expected_output': '(2, 14, 12)'}, {'input': '255, 255', 'expected_output': '(255, 255, 0)'}]
+
+====================================================================================================
+
+[SOAL #43]
+ID: 172
+Topik: Operator
+Tipe: MCQ
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Apa hasil dari ekspresi Python berikut: 5 * 2 + 3
+
+CODE TEMPLATE:
+print(5 * 2 + 3)
+
+OPSI:
+  10
+  13
+  15
+  16
+
+JAWABAN:
+B
+
+PENJELASAN:
+Ekspresi Python 5 * 2 + 3 dijalankan dengan urutan operasi sebagai berikut: (1) perkalian 5 dan 2, menghasilkan 10; (2) penambahan 10 dan 3, menghasilkan 13. Oleh karena itu, hasil akhir ekspresi tersebut adalah 13.
+
+====================================================================================================
+
+[SOAL #44]
+ID: 171
+Topik: Operator
+Tipe: MCQ
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Apa hasil dari ekspresi 5 % 3 di Python?
+
+CODE TEMPLATE:
+print(5 % 3)
+
+OPSI:
+  1
+  2
+  3
+  4
+
+JAWABAN:
+B
+
+PENJELASAN:
+Operator % di Python digunakan untuk menghitung sisa dari pembagian. Dalam kasus ini, 5 dibagi oleh 3 akan menghasilkan sisa 2, karena 3 * 1 = 3 dan 5 - 3 = 2.
+
+====================================================================================================
+
+[SOAL #45]
+ID: 153
+Topik: Operator
+Tipe: CODING
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Buatlah fungsi yang mengembalikan hasil dari ekspresi 2 * (3 + 4) menggunakan operator aritmatika dan mendemonstrasikan penggunaan operator dalam suatu program.
+
+CODE TEMPLATE:
+def solution():
+    # Write your code here
+    pass
+
+JAWABAN:
+def solution():
+    hasil = 2 * (3 + 4)
+    return hasil
+
+PENJELASAN:
+Penjelasan solusi dan konsep Operator: Pada soal ini, kita diminta membuat fungsi yang menghitung ekspresi 2 * (3 + 4). Dalam fungsi solution(), kita terlebih dahulu menghitung ekspresi 3 + 4, kemudian mengalikan hasilnya dengan 2. Hasil akhir dari ekspresi ini akan dikembalikan oleh fungsi. Contoh ini mendemonstrasikan penggunaan operator aritmatika seperti penjumlahan dan perkalian, serta menunjukkan bagaimana operator dapat digunakan dalam suatu program untuk melakukan perhitungan.
+
+TEST CASES:
+[{'input': '', 'expected_output': '14'}, {'input': '', 'expected_output': '14'}, {'input': '', 'expected_output': '14'}]
+
+====================================================================================================
+
+[SOAL #46]
+ID: 152
+Topik: Operator
+Tipe: CODING
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Buatlah fungsi yang mengembalikan hasil dari ekspresi 2x + 5y, dengan x dan y sebagai input fungsi.
+
+CODE TEMPLATE:
+def solution(x, y):
+    # Write your code here
+    pass
+
+JAWABAN:
+def solution(x, y):
+    return 2*x + 5*y
+
+PENJELASAN:
+Fungsi ini menggunakan operator aritmatika untuk menghitung hasil dari ekspresi 2x + 5y. Operator '*' digunakan untuk perkalian dan '+' digunakan untuk penjumlahan.
+
+TEST CASES:
+[{'input': '1, 1', 'expected_output': '7'}, {'input': '0, 0', 'expected_output': '0'}, {'input': '-2, 3', 'expected_output': '11'}, {'input': '10, 10', 'expected_output': '70'}, {'input': '-5, -5', 'expected_output': '-35'}]
+
+====================================================================================================
+
+[SOAL #47]
+ID: 151
+Topik: Operator
+Tipe: MCQ
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Apa hasil dari ekspresi 5 * 2 + 3 di Python?
+
+CODE TEMPLATE:
+print(5 * 2 + 3)
+
+OPSI:
+  10
+  13
+  15
+  16
+
+JAWABAN:
+B
+
+PENJELASAN:
+Ekspresi 5 * 2 + 3 di Python mengikuti urutan operasi (operator precedence), yaitu perkalian sebelum penjumlahan. Jadi, 5 * 2 = 10, kemudian 10 + 3 = 13.
+
+====================================================================================================
+
+[SOAL #48]
+ID: 150
+Topik: Operator
+Tipe: MCQ
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Apa hasil dari ekspresi Python berikut: 5 * 3 % 2
+
+CODE TEMPLATE:
+print(5 * 3 % 2)
+
+OPSI:
+  1
+  5
+  7
+  15
+
+JAWABAN:
+A
+
+PENJELASAN:
+Karena operasi modulus memiliki presedensi lebih rendah daripada operasi perkalian, maka ekspresi tersebut dievaluasi sebagai (5 * 3) % 2. Pertama, 5 * 3 = 15, lalu 15 % 2 = 1.
+
+====================================================================================================
+
+[SOAL #49]
+ID: 149
+Topik: Operator
+Tipe: MCQ
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Apa hasil dari operator modulus (%) pada kode Python berikut: 17 % 5?
+
+CODE TEMPLATE:
+print(17 % 5)
+
+OPSI:
+  15
+  2
+  3
+  12
+
+JAWABAN:
+B
+
+PENJELASAN:
+Operator modulus (%) menghasilkan sisa dari pembagian. Pada kasus ini, 17 dibagi 5 menghasilkan sisa 2, sehingga jawaban yang benar adalah B. 2.
+
+====================================================================================================
+
+[SOAL #50]
+ID: 148
+Topik: Operator
+Tipe: MCQ
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Apa hasil dari ekspresi 5 + 3 * 2 menggunakan operator Python?
+
+CODE TEMPLATE:
+print(5 + 3 * 2)
+
+OPSI:
+  11
+  14
+  16
+  18
+
+JAWABAN:
+A
+
+PENJELASAN:
+Berikut adalah urutan operasi: 1) perkalian (3 * 2 = 6), 2) penjumlahan (5 + 6 = 11).
+
+====================================================================================================
+
+[SOAL #51]
+ID: 147
+Topik: Operator
+Tipe: FILL
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Isilah ___ untuk membuat kode yang melakukan operasi penjumlahan dua variabel
+
+CODE TEMPLATE:
+x = 5
+y = 3
+hasil = x ___ y
+print(hasil)
+
+JAWABAN:
++
+
+PENJELASAN:
+Operator '+' digunakan untuk melakukan operasi penjumlahan dua variabel
+
+====================================================================================================
+
+[SOAL #52]
+ID: 146
+Topik: Operator
+Tipe: CODING
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Buatlah fungsi yang mengembalikan hasil dari ekspresi 2 * (3 + 4) menggunakan operator aritmatika dan tanda kurung untuk mengatur urutan operasi.
+
+CODE TEMPLATE:
+def solution():
+    # Write your code here
+    pass
+
+JAWABAN:
+def solution():
+    hasil = 2 * (3 + 4)
+    return hasil
+
+PENJELASAN:
+Penjelasan solusi: Fungsi solution() menggunakan operator aritmatika '*'' untuk mengalikan dan '+' untuk menjumlahkan. Tanda kurung digunakan untuk mengatur urutan operasi sehingga 3 + 4 dihitung terlebih dahulu sebelum dikalikan dengan 2.
+
+TEST CASES:
+[{'input': '', 'expected_output': '14'}, {'input': '', 'expected_output': '14'}, {'input': '', 'expected_output': '14'}]
+
+====================================================================================================
+
+[SOAL #53]
+ID: 145
+Topik: Operator
+Tipe: CODING
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Buatlah fungsi yang mengembalikan True jika dua variabel memiliki nilai yang sama dan salah satu variabel tersebut dioperasikan dengan operator logika AND (&) untuk memeriksa apakah keduanya memiliki bit yang sama.
+
+CODE TEMPLATE:
+def solution(var1, var2):
+    # Write your code here
+    pass
+
+JAWABAN:
+def solution(var1, var2):
+    return var1 == var2 and (var1 & var2) == var1
+
+PENJELASAN:
+Fungsi solution menggunakan operator logika AND (&) untuk memeriksa apakah kedua variabel memiliki bit yang sama. Jika hasil operasi AND (&) sama dengan salah satu variabel, maka kedua variabel tersebut memiliki bit yang sama.
+
+TEST CASES:
+[{'input': '5, 5', 'expected_output': 'True'}, {'input': '0, 0', 'expected_output': 'True'}, {'input': '5, 3', 'expected_output': 'False'}, {'input': '-5, -5', 'expected_output': 'True'}, {'input': '10, 8', 'expected_output': 'False'}]
+
+====================================================================================================
+
+[SOAL #54]
+ID: 144
+Topik: Operator
+Tipe: MCQ
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Apa hasil dari ekspresi berikut: 5 * 2 % 3?
+
+CODE TEMPLATE:
+print(5 * 2 % 3)
+
+OPSI:
+  8
+  7
+  1
+  10
+
+JAWABAN:
+C
+
+PENJELASAN:
+Ekspresi 5 * 2 % 3 dievaluasi sebagai berikut: (5 * 2) % 3 = 10 % 3 = 1
+
+====================================================================================================
+
+[SOAL #55]
+ID: 190
+Topik: Percabangan
+Tipe: MCQ
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Apa yang akan terjadi jika kita menggunakan pernyataan elif pada kode Python berikut?
+
+CODE TEMPLATE:
+x = 5
+if x > 10:
+    print('x lebih besar dari 10')
+elif x == 5:
+    print('x sama dengan 5')
+
+OPSI:
+  Kode akan mencetak 'x lebih besar dari 10' dan 'x sama dengan 5'
+  Kode akan mencetak 'x sama dengan 5'
+  Kode tidak akan mencetak apa-apa
+  Kode akan menghasilkan error
+
+JAWABAN:
+B
+
+PENJELASAN:
+Pernyataan elif akan dijalankan jika kondisi pada pernyataan if sebelumnya tidak terpenuhi. Dalam contoh ini, karena x tidak lebih besar dari 10, maka kondisi pada pernyataan if tidak terpenuhi dan kode akan melanjutkan ke pernyataan elif. Karena x sama dengan 5, maka kode akan mencetak 'x sama dengan 5'.
+
+====================================================================================================
+
+[SOAL #56]
+ID: 187
+Topik: Percabangan
+Tipe: MCQ
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Apa output dari kode Python berikut jika x = 5 dan y = 3?
+
+CODE TEMPLATE:
+x = 5
+y = 3
+if x > y:
+    print("x lebih besar")
+elif x == y:
+    print("x sama dengan y")
+else:
+    print("x lebih kecil")
+
+OPSI:
+  x sama dengan y
+  x lebih besar
+  x lebih kecil
+  Tidak ada output
+
+JAWABAN:
+B
+
+PENJELASAN:
+Karena dalam kode Python tersebut, jika x lebih besar dari y maka akan mengeluarkan output 'x lebih besar'. Dalam kasus ini, x = 5 dan y = 3, sehingga x memang lebih besar dari y.
+
+====================================================================================================
+
+[SOAL #57]
+ID: 186
+Topik: Percabangan
+Tipe: MCQ
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Apa yang akan terjadi jika kita menggunakan percabangan if-elif-else dalam Python untuk mengecek nilai dari sebuah variabel, dan variabel tersebut tidak memenuhi kondisi if maupun elif?
+
+CODE TEMPLATE:
+x = 5
+if x > 10:
+    print('x lebih besar dari 10')
+elif x == 5:
+    print('x sama dengan 5')
+else:
+    print('x tidak memenuhi kondisi')
+
+OPSI:
+  Program akan berhenti dan mengeluarkan error
+  Program akan mengeksekusi blok else
+  Program tidak akan melakukan apa-apa
+  Program akan mengulangi pengecekan kondisi
+
+JAWABAN:
+B
+
+PENJELASAN:
+Percabangan if-elif-else dalam Python digunakan untuk mengecek kondisi tertentu. Jika kondisi if tidak terpenuhi, maka program akan memeriksa kondisi elif. Jika kondisi elif juga tidak terpenuhi, maka program akan mengeksekusi blok else.
+
+====================================================================================================
+
+[SOAL #58]
+ID: 185
+Topik: Percabangan
+Tipe: MCQ
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Apa yang akan terjadi jika kita menjalankan kode Python berikut: x = 5; if x > 10: print('Lebih besar dari 10'); elif x == 5: print('Sama dengan 5'); else: print('Kurang dari 5')?
+
+CODE TEMPLATE:
+x = 5
+if x > 10:
+    print('Lebih besar dari 10')
+elif x == 5:
+    print('Sama dengan 5')
+else:
+    print('Kurang dari 5')
+
+OPSI:
+  Program akan mencetak 'Lebih besar dari 10'
+  Program akan mencetak 'Sama dengan 5'
+  Program akan mencetak 'Kurang dari 5'
+  Program tidak akan mencetak apa-apa
+
+JAWABAN:
+B
+
+PENJELASAN:
+Karena nilai x adalah 5, maka kondisi x > 10 adalah salah dan kondisi x == 5 adalah benar. Oleh karena itu, program akan mencetak 'Sama dengan 5' karena itu adalah kondisi yang pertama kali terpenuhi dalam struktur percabangan.
+
+====================================================================================================
+
+[SOAL #59]
+ID: 184
+Topik: Percabangan
+Tipe: CODING
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Buatlah fungsi yang mengambil satu argumen berupa nilai integer dan mengembalikan 'positif' jika nilai tersebut lebih besar dari 0, 'negatif' jika nilai tersebut kurang dari 0, dan 'nol' jika nilai tersebut sama dengan 0.
+
+CODE TEMPLATE:
+def tentukan_nilai(n):
+    # Write your code here
+    pass
+
+JAWABAN:
+def tentukan_nilai(n):
+    if n > 0:
+        return 'positif'
+    elif n < 0:
+        return 'negatif'
+    else:
+        return 'nol'
+
+PENJELASAN:
+Penggunaan kondisi if-elif-else digunakan untuk memeriksa nilai input. Jika n lebih besar dari 0, maka fungsi mengembalikan 'positif'. Jika n kurang dari 0, maka fungsi mengembalikan 'negatif'. Jika n sama dengan 0, maka fungsi mengembalikan 'nol'.
+
+TEST CASES:
+[{'input': '5', 'expected_output': 'positif'}, {'input': '0', 'expected_output': 'nol'}, {'input': '-3', 'expected_output': 'negatif'}]
+
+====================================================================================================
+
+[SOAL #60]
+ID: 183
+Topik: Percabangan
+Tipe: FILL
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Isilah ___ untuk membuat kode yang menampilkan 'Benar' jika x lebih besar dari 5
+
+CODE TEMPLATE:
+x = 10
+if x > ___:
+    print('Benar')
+
+JAWABAN:
+5
+
+PENJELASAN:
+Percabangan digunakan untuk membuat keputusan berdasarkan kondisi. Dalam contoh ini, kita menggunakan if statement untuk membandingkan nilai x dengan nilai yang diisi, kemudian menampilkan 'Benar' jika kondisi terpenuhi.
+
+====================================================================================================
+
+[SOAL #61]
+ID: 181
+Topik: Percabangan
+Tipe: FILL
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Isilah ___ untuk membuat kode yang mengeprint 'Lebih besar' jika x lebih besar dari 5
+
+CODE TEMPLATE:
+x = 10
+if x > ___:
+    print('Lebih besar')
+
+JAWABAN:
+5
+
+PENJELASAN:
+Percabangan digunakan untuk membuat keputusan berdasarkan kondisi, dalam hal ini kita menggunakan if untuk membandingkan nilai x dengan 5
+
+====================================================================================================
+
+[SOAL #62]
+ID: 160
+Topik: Percabangan
+Tipe: FILL
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Isilah ___ untuk membuat kode yang melakukan percabangan jika nilai x lebih besar dari 5
+
+CODE TEMPLATE:
+x = 10
+if x ___ 5:
+    print('x lebih besar dari 5')
+
+JAWABAN:
+>
+
+PENJELASAN:
+Percabangan dilakukan menggunakan if statement, dan operator '>' digunakan untuk membandingkan nilai x dengan 5
+
+====================================================================================================
+
+[SOAL #63]
+ID: 159
+Topik: Percabangan
+Tipe: CODING
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Buatlah fungsi yang mengambil dua buah nilai integer sebagai input dan mengembalikan nilai yang lebih besar dengan menggunakan percabangan if-else.
+
+CODE TEMPLATE:
+def cari_bilangan_terbesar(a, b):
+    # Write your code here
+    pass
+
+JAWABAN:
+def cari_bilangan_terbesar(a, b):
+    if a > b:
+        return a
+    else:
+        return b
+
+PENJELASAN:
+Fungsi cari_bilangan_terbesar(a, b) menggunakan percabangan if-else untuk membandingkan nilai dari a dan b. Jika a lebih besar dari b, maka fungsi akan mengembalikan nilai a. Jika tidak, maka fungsi akan mengembalikan nilai b.
+
+TEST CASES:
+[{'input': '5, 3', 'expected_output': '5'}, {'input': '0, 0', 'expected_output': '0'}, {'input': '-5, 5', 'expected_output': '5'}, {'input': '-10, -5', 'expected_output': '-5'}, {'input': '1000, 500', 'expected_output': '1000'}]
+
+====================================================================================================
+
+[SOAL #64]
+ID: 158
+Topik: Percabangan
+Tipe: MCQ
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Apa yang terjadi jika kita menggunakan elif untuk mengecek kondisi lain pada percabangan?
+
+CODE TEMPLATE:
+if x > 5: 
+    print('x lebih besar dari 5') 
+elif x == 5: 
+    print('x sama dengan 5')
+
+OPSI:
+  Program akan mengeksekusi kedua kondisi tersebut secara bersamaan
+  Program akan mengeksekusi kondisi pertama jika benar, jika tidak maka akan mengeksekusi kondisi kedua
+  Program akan mengeksekusi kondisi kedua terlebih dahulu sebelum mengeksekusi kondisi pertama
+  Program akan mengabaikan kondisi pertama dan langsung mengeksekusi kondisi kedua
+
+JAWABAN:
+B
+
+PENJELASAN:
+Pada percabangan, elif digunakan untuk mengecek kondisi lain jika kondisi pertama tidak terpenuhi. Jika kondisi pertama terpenuhi, maka program tidak akan mengeksekusi kondisi elif. Sehingga, jawaban B adalah yang benar karena program akan mengeksekusi kondisi pertama jika benar, jika tidak maka akan mengeksekusi kondisi kedua.
+
+====================================================================================================
+
+[SOAL #65]
+ID: 157
+Topik: Percabangan
+Tipe: MCQ
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Apa hasil dari kode Python berikut jika inputnya adalah 5?
+
+CODE TEMPLATE:
+x = 5
+if x > 10:
+    print('Lebih besar dari 10')
+elif x == 5:
+    print('Sama dengan 5')
+else:
+    print('Lebih kecil dari 5')
+
+OPSI:
+  Lebih besar dari 10
+  Sama dengan 5
+  Lebih kecil dari 5
+  Tidak ada output
+
+JAWABAN:
+B
+
+PENJELASAN:
+Karena nilai x adalah 5, maka kondisi pertama (x > 10) tidak terpenuhi. Kondisi kedua (x == 5) terpenuhi, sehingga kode akan mencetak 'Sama dengan 5'.
+
+====================================================================================================
+
+[SOAL #66]
+ID: 156
+Topik: Percabangan
+Tipe: MCQ
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Apa yang akan menjadi output dari kode Python berikut jika x = 5 dan y = 3?
+
+CODE TEMPLATE:
+x = 5
+y = 3
+if x > y:
+    print('x lebih besar dari y')
+elif x == y:
+    print('x sama dengan y')
+else:
+    print('x lebih kecil dari y')
+
+OPSI:
+  x lebih kecil dari y
+  x sama dengan y
+  x lebih besar dari y
+  Tidak ada output
+
+JAWABAN:
+C
+
+PENJELASAN:
+Karena x (5) memang lebih besar dari y (3), maka kondisi if x > y akan terpenuhi dan menghasilkan output 'x lebih besar dari y'.
+
+====================================================================================================
+
+[SOAL #67]
+ID: 155
+Topik: Percabangan
+Tipe: MCQ
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Apa yang akan dicetak oleh kode Python berikut jika x = 5?
+
+CODE TEMPLATE:
+x = 5
+if x > 10:
+    print('x lebih besar dari 10')
+elif x == 5:
+    print('x sama dengan 5')
+else:
+    print('x kurang dari 5')
+
+OPSI:
+  x lebih besar dari 10
+  x sama dengan 5
+  x kurang dari 5
+  Tidak ada output
+
+JAWABAN:
+B
+
+PENJELASAN:
+Karena x = 5, maka kondisi x > 10 adalah False, dan kondisi x == 5 adalah True. Oleh karena itu, yang akan dicetak adalah 'x sama dengan 5'.
+
+====================================================================================================
+
+[SOAL #68]
+ID: 154
+Topik: Percabangan
+Tipe: FILL
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Isilah ___ untuk membuat kode yang mencetak 'Benar' jika x lebih besar dari 5 dan 'Salah' jika tidak
+
+CODE TEMPLATE:
+x = 10
+if x > ___:
+    print('Benar')
+elif x <= ___:
+    print('Salah')
+
+JAWABAN:
+5
+
+PENJELASAN:
+Percabangan digunakan untuk membuat keputusan berdasarkan kondisi. Dalam contoh ini, jika x lebih besar dari 5, maka 'Benar' akan dicetak, jika tidak maka 'Salah' akan dicetak.
+
+====================================================================================================
+
+[SOAL #69]
+ID: 219
+Topik: Perulangan
+Tipe: MCQ
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Apa yang akan terjadi jika kita menggunakan perintah break di dalam perulangan for dalam Python?
+
+CODE TEMPLATE:
+for i in range(5): 
+  if i == 3: 
+    break 
+  print(i)
+
+OPSI:
+  Perulangan akan diulang dari awal
+  Perulangan akan berhenti saat kondisi break terpenuhi
+  Perulangan akan melewati iterasi saat ini dan melanjutkan ke iterasi berikutnya
+  Perulangan akan menghasilkan error
+
+JAWABAN:
+B
+
+PENJELASAN:
+Perintah break digunakan untuk menghentikan perulangan saat kondisi tertentu terpenuhi. Dalam kode contoh, perulangan for akan berhenti saat i == 3, sehingga hanya nilai 0, 1, dan 2 yang akan dicetak.
+
+====================================================================================================
+
+[SOAL #70]
+ID: 218
+Topik: Perulangan
+Tipe: MCQ
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Apa yang terjadi ketika kode Python menggunakan perintah break di dalam perulangan for?
+
+CODE TEMPLATE:
+for i in range(5): 
+    if i == 3: 
+        break 
+    print(i)
+
+OPSI:
+  Perulangan akan dilanjutkan setelah kondisi break
+  Perulangan akan berhenti saat kondisi break terpenuhi
+  Perulangan akan diulang dari awal
+  Perulangan akan melompat ke iterasi berikutnya
+
+JAWABAN:
+B
+
+PENJELASAN:
+Perintah break di dalam perulangan for memaksa perulangan berhenti saat kondisi break terpenuhi, sehingga tidak akan melanjutkan eksekusi kode di dalam perulangan untuk iterasi berikutnya.
+
+====================================================================================================
+
+[SOAL #71]
+ID: 217
+Topik: Perulangan
+Tipe: FILL
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Isilah ___ untuk membuat kode yang mengulangi penampilan angka 1-5 menggunakan perulangan for
+
+CODE TEMPLATE:
+for i in ___:
+    print(i)
+
+JAWABAN:
+range(1, 6)
+
+PENJELASAN:
+Perulangan for digunakan untuk mengulangi penampilan angka 1-5 dengan menggunakan fungsi range(1, 6) yang menghasilkan angka dari 1 hingga 5.
+
+====================================================================================================
+
+[SOAL #72]
+ID: 216
+Topik: Perulangan
+Tipe: FILL
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Isilah ___ untuk membuat kode yang mencetak angka 1 sampai 5 menggunakan perulangan for
+
+CODE TEMPLATE:
+for i in ___:
+    print(i)
+
+JAWABAN:
+range(1, 6)
+
+PENJELASAN:
+Perulangan for digunakan untuk mengulangi instruksi berdasarkan rentang nilai. Dalam kasus ini, kita menggunakan range(1, 6) untuk mencetak angka 1 sampai 5.
+
+====================================================================================================
+
+[SOAL #73]
+ID: 198
+Topik: Perulangan
+Tipe: MCQ
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Apa yang akan terjadi jika kamu menggunakan perintah break di dalam perulangan for?
+
+CODE TEMPLATE:
+for i in range(5): 
+    print(i) 
+    if i == 3: 
+        break
+
+OPSI:
+  Perulangan akan mengulang dari awal
+  Perulangan akan berhenti saat kondisi break terpenuhi
+  Perulangan akan melompat ke iterasi berikutnya
+  Perulangan akan menghasilkan error
+
+JAWABAN:
+B
+
+PENJELASAN:
+Perintah break digunakan untuk menghentikan perulangan saat kondisi tertentu terpenuhi. Jika break digunakan di dalam perulangan for, maka perulangan akan berhenti saat kondisi break terpenuhi.
+
+====================================================================================================
+
+[SOAL #74]
+ID: 196
+Topik: Perulangan
+Tipe: MCQ
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Apa yang terjadi jika kita menggunakan perulangan while dengan kondisi yang selalu benar?
+
+CODE TEMPLATE:
+while True: print('Hello World')
+
+OPSI:
+  Perulangan akan berhenti setelah 1 iterasi
+  Perulangan akan berhenti setelah 10 iterasi
+  Perulangan akan berjalan terus menerus
+  Perulangan akan menghasilkan error
+
+JAWABAN:
+C
+
+PENJELASAN:
+Perulangan while dengan kondisi yang selalu benar (True) akan berjalan terus menerus karena kondisi tidak pernah menjadi salah
+
+====================================================================================================
+
+[SOAL #75]
+ID: 195
+Topik: Perulangan
+Tipe: CODING
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Buatlah fungsi yang mencetak deret angka dari 1 hingga n menggunakan perulangan for. Contoh: jika inputnya 5, maka fungsi harus mencetak 1, 2, 3, 4, 5.
+
+CODE TEMPLATE:
+def cetak_deret(n):
+    # Write your code here
+    pass
+
+JAWABAN:
+def cetak_deret(n):
+    for i in range(1, n+1):
+        print(i, end=', ')
+
+PENJELASAN:
+Fungsi 'cetak_deret' menggunakan perulangan for untuk mencetak deret angka dari 1 hingga n. Perulangan for dilakukan dengan menggunakan fungsi 'range' yang menghasilkan angka dari 1 hingga n (inklusif). Kemudian, pada setiap iterasi, angka 'i' akan dicetak dengan diikuti koma dan spasi.
+
+TEST CASES:
+[{'input': '5', 'expected_output': '1, 2, 3, 4, 5, '}, {'input': '1', 'expected_output': '1, '}, {'input': '0', 'expected_output': ''}, {'input': '-5', 'expected_output': ''}, {'input': '10', 'expected_output': '1, 2, 3, 4, 5, 6, 7, 8, 9, 10, '}]
+
+====================================================================================================
+
+[SOAL #76]
+ID: 194
+Topik: Perulangan
+Tipe: MCQ
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Apa yang akan terjadi jika kita menggunakan perulangan for dengan range(5) untuk mencetak angka dari 0 hingga 4?
+
+CODE TEMPLATE:
+for i in range(5): print(i)
+
+OPSI:
+  Program akan mencetak angka dari 1 hingga 5
+  Program akan mencetak angka dari 0 hingga 4
+  Program akan mencetak angka dari -1 hingga 3
+  Program akan mencetak angka dari 5 hingga 9
+
+JAWABAN:
+B
+
+PENJELASAN:
+Perulangan for dengan range(5) akan menghasilkan nilai dari 0 hingga 4 karena range() secara default dimulai dari 0 dan berhenti sebelum nilai yang ditentukan. Oleh karena itu, program akan mencetak angka dari 0 hingga 4.
+
+====================================================================================================
+
+[SOAL #77]
+ID: 193
+Topik: Perulangan
+Tipe: MCQ
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Apa yang akan dicetak oleh kode Python berikut: for i in range(5): print(i)?
+
+CODE TEMPLATE:
+for i in range(5): print(i)
+
+OPSI:
+  1, 2, 3, 4, 5
+  0, 1, 2, 3, 4
+  6, 7, 8, 9, 10
+  10, 9, 8, 7, 6
+
+JAWABAN:
+B
+
+PENJELASAN:
+Fungsi range(5) akan menghasilkan angka dari 0 hingga 4, sehingga perulangan for akan mencetak angka 0, 1, 2, 3, dan 4.
+
+====================================================================================================
+
+[SOAL #78]
+ID: 192
+Topik: Perulangan
+Tipe: CODING
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Buatlah fungsi yang menghitung jumlah bilangan genap dari 1 hingga n menggunakan perulangan for.
+
+CODE TEMPLATE:
+def hitung_bilangan_genap(n):
+    # Write your code here
+    pass
+
+JAWABAN:
+def hitung_bilangan_genap(n):
+    count = 0
+    for i in range(1, n+1):
+        if i % 2 == 0:
+            count += 1
+    return count
+
+PENJELASAN:
+Dalam fungsi ini, kita menggunakan perulangan for untuk mengiterasi dari 1 hingga n. Kemudian, kita menggunakan kondisi if untuk memeriksa apakah bilangan saat ini adalah genap (i % 2 == 0). Jika genap, kita menambahkan 1 ke variabel count. Setelah perulangan selesai, kita mengembalikan nilai count yang merupakan jumlah bilangan genap dari 1 hingga n.
+
+TEST CASES:
+[{'input': '10', 'expected_output': '5'}, {'input': '0', 'expected_output': '0'}, {'input': '1', 'expected_output': '0'}, {'input': '20', 'expected_output': '10'}, {'input': '-5', 'expected_output': '0'}]
+
+====================================================================================================
+
+[SOAL #79]
+ID: 191
+Topik: Perulangan
+Tipe: CODING
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Buatlah fungsi yang menghitung jumlah bilangan genap dari 1 hingga n menggunakan perulangan for dan return hasilnya.
+
+CODE TEMPLATE:
+def hitung_bilangan_genap(n):
+    # Write your code here
+    pass
+
+JAWABAN:
+def hitung_bilangan_genap(n):
+    count = 0
+    for i in range(1, n+1):
+        if i % 2 == 0:
+            count += 1
+    return count
+
+PENJELASAN:
+Penjelasan solusi dan konsep Perulangan: Fungsi hitung_bilangan_genap(n) mengambil satu argumen n, kemudian menggunakan perulangan for untuk mengiterasi dari 1 hingga n. Di dalam loop, kita memeriksa setiap bilangan jika genap (i % 2 == 0), jika iya, maka kita tambahkan 1 ke variabel count. Setelah loop selesai, fungsi return nilai count yang merepresentasikan jumlah bilangan genap dari 1 hingga n.
+
+TEST CASES:
+[{'input': '10', 'expected_output': '5'}, {'input': '0', 'expected_output': '0'}, {'input': '1', 'expected_output': '0'}, {'input': '20', 'expected_output': '10'}, {'input': '-5', 'expected_output': '0'}]
+
+====================================================================================================
+
+[SOAL #80]
+ID: 224
+Topik: Pengurutan
+Tipe: CODING
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Buatlah fungsi yang mengurutkan daftar bilangan bulat dalam urutan menaik menggunakan algoritma pengurutan bubble sort.
+
+CODE TEMPLATE:
+def bubble_sort(arr):
+    # Write your code here
+    pass
+
+JAWABAN:
+def bubble_sort(arr):
+    n = len(arr)
+    for i in range(n):
+        for j in range(0, n-i-1):
+            if arr[j] > arr[j+1] :
+                arr[j], arr[j+1] = arr[j+1], arr[j]
+    return arr
+
+PENJELASAN:
+Penjelasan solusi dan konsep Pengurutan: Algoritma bubble sort bekerja dengan membandingkan setiap pasang elemen yang berdekatan dan menukar mereka jika mereka tidak dalam urutan yang benar. Proses ini diulangi sampai tidak ada lagi perubahan yang diperlukan, yang menunjukkan bahwa daftar sudah terurut.
+
+TEST CASES:
+[{'input': '[5, 3, 8, 4, 2]', 'expected_output': '[2, 3, 4, 5, 8]'}, {'input': '[10, 7, 8, 9, 1, 5]', 'expected_output': '[1, 5, 7, 8, 9, 10]'}, {'input': '[]', 'expected_output': '[]'}, {'input': '[0, 0, 0, 0]', 'expected_output': '[0, 0, 0, 0]'}, {'input': '[-5, -2, 0, 2, 5]', 'expected_output': '[-5, -2, 0, 2, 5]'}]
+
+====================================================================================================
+
+[SOAL #81]
+ID: 223
+Topik: Pengurutan
+Tipe: MCQ
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Urutan kode Python berikut ini akan menghasilkan apa?
+
+CODE TEMPLATE:
+list_data = [64, 34, 25, 12, 22, 11, 90]
+list_data.sort()
+print(list_data)
+
+OPSI:
+  [12, 11, 22, 25, 34, 64, 90]
+  [64, 34, 25, 12, 22, 11, 90]
+  [90, 64, 34, 25, 22, 12, 11]
+  [11, 12, 22, 25, 34, 64, 90]
+
+JAWABAN:
+D
+
+PENJELASAN:
+Karena metode sort() pada Python akan mengurutkan list secara ascending atau menaik.
+
+====================================================================================================
+
+[SOAL #82]
+ID: 222
+Topik: Pengurutan
+Tipe: MCQ
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Urutan kode berikut ini untuk mengurutkan list secara ascending menggunakan metode bubble sort adalah...
+
+CODE TEMPLATE:
+def bubble_sort(arr):
+  n = len(arr)
+  for i in range(n):
+    # kode urutan
+  return arr
+
+OPSI:
+  for j in range(0, n-i-1): if arr[j] > arr[j+1]: arr[j], arr[j+1] = arr[j+1], arr[j]
+  for j in range(n-i-1, 0, -1): if arr[j] < arr[j-1]: arr[j], arr[j-1] = arr[j-1], arr[j]
+  for j in range(n, i, -1): if arr[j] < arr[j-1]: arr[j], arr[j-1] = arr[j-1], arr[j]
+  for j in range(0, n, 1): if arr[j] > arr[j+1]: arr[j], arr[j+1] = arr[j+1], arr[j]
+
+JAWABAN:
+A
+
+PENJELASAN:
+Kode yang benar untuk mengurutkan list secara ascending menggunakan metode bubble sort adalah dengan membandingkan setiap elemen dan melakukan swap jika elemen sebelumnya lebih besar dari elemen berikutnya.
+
+====================================================================================================
+
+[SOAL #83]
+ID: 221
+Topik: Pengurutan
+Tipe: MCQ
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Urutan apa yang dihasilkan oleh kode sorting berikut: sorted([5, 2, 9, 1, 7], reverse=True)?
+
+CODE TEMPLATE:
+Python code example: sorted([5, 2, 9, 1, 7], reverse=True)
+
+OPSI:
+  [1, 2, 5, 7, 9]
+  [1, 5, 2, 9, 7]
+  [9, 7, 5, 2, 1]
+  [5, 2, 9, 1, 7]
+
+JAWABAN:
+C
+
+PENJELASAN:
+Karena parameter reverse=True, maka sorting dilakukan dalam urutan descending (dari besar ke kecil). Sehingga hasilnya adalah [9, 7, 5, 2, 1].
+
+====================================================================================================
+
+[SOAL #84]
+ID: 220
+Topik: Pengurutan
+Tipe: FILL
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Isilah ___ untuk membuat kode yang mengurutkan daftar angka dengan benar
+
+CODE TEMPLATE:
+angka = [5, 2, 8, 1]
+angka.___()
+print(angka)
+
+JAWABAN:
+sort
+
+PENJELASAN:
+Metode sort() digunakan untuk mengurutkan elemen-elemen dalam daftar
+
+====================================================================================================
+
+[SOAL #85]
+ID: 206
+Topik: Pengurutan
+Tipe: MCQ
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Urutan array [5, 2, 8, 1, 9] setelah diurutkan menggunakan metode Bubble Sort adalah?
+
+CODE TEMPLATE:
+arr = [5, 2, 8, 1, 9] 
+n = len(arr) 
+for i in range(n): 
+    for j in range(0, n-i-1): 
+        if arr[j] > arr[j+1] : 
+            arr[j], arr[j+1] = arr[j+1], arr[j] 
+print(arr)
+
+OPSI:
+  [1, 2, 5, 8, 10]
+  [1, 2, 5, 8, 9]
+  [1, 5, 2, 8, 9]
+  [5, 2, 8, 1, 9]
+
+JAWABAN:
+B
+
+PENJELASAN:
+Metode Bubble Sort bekerja dengan membandingkan setiap pasang elemen yang berdekatan dan menukar mereka jika mereka dalam urutan yang salah. Proses ini diulangi sampai tidak ada lagi pertukaran yang diperlukan, yang berarti array telah diurutkan. Dalam contoh ini, array [5, 2, 8, 1, 9] akan diurutkan menjadi [1, 2, 5, 8, 9].
+
+====================================================================================================
+
+[SOAL #86]
+ID: 205
+Topik: Pengurutan
+Tipe: FILL
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Isilah ___ untuk mengurutkan daftar angka dalam urutan menaik
+
+CODE TEMPLATE:
+angka = [64, 34, 25, 12, 22, 11, 90]
+angka.sort(___)
+print(angka)
+
+JAWABAN:
+None
+
+PENJELASAN:
+Penjelasan singkat tentang jawaban dan topik Pengurutan: Fungsi sort() digunakan untuk mengurutkan daftar. Untuk mengurutkan dalam urutan menaik, kita bisa membiarkannya kosong atau memasukkan None karena secara default, sort() mengurutkan dalam urutan menaik.
+
+====================================================================================================
+
+[SOAL #87]
+ID: 204
+Topik: Pengurutan
+Tipe: FILL
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Isilah ___ untuk membuat kode yang mengurutkan daftar angka
+
+CODE TEMPLATE:
+angka = [64, 34, 25, 12, 22, 11, 90]
+angka.sort()
+print(angka)
+
+JAWABAN:
+angka.sort()
+
+PENJELASAN:
+Metode sort() digunakan untuk mengurutkan daftar dalam urutan ascending atau descending
+
+====================================================================================================
+
+[SOAL #88]
+ID: 203
+Topik: Pengurutan
+Tipe: CODING
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Buatlah fungsi yang dapat mengurutkan daftar bilangan bulat secara ascending menggunakan metode QuickSort.
+
+CODE TEMPLATE:
+def quicksort(arr):
+    # Write your code here
+    pass
+
+JAWABAN:
+def quicksort(arr):
+    if len(arr) <= 1:
+        return arr
+    pivot = arr[len(arr) // 2]
+    left = [x for x in arr if x < pivot]
+    middle = [x for x in arr if x == pivot]
+    right = [x for x in arr if x > pivot]
+    return quicksort(left) + middle + quicksort(right)
+
+PENJELASAN:
+Fungsi quicksort menggunakan metode QuickSort untuk mengurutkan daftar bilangan bulat. QuickSort memilih sebuah pivot dan membagi daftar menjadi tiga bagian: elemen yang lebih kecil dari pivot, elemen yang sama dengan pivot, dan elemen yang lebih besar dari pivot. Lalu, fungsi tersebut merekur secara terpisah pada bagian kiri dan kanan sampai seluruh daftar terurut.
+
+TEST CASES:
+[{'input': '[5, 2, 9, 1, 7]', 'expected_output': '[1, 2, 5, 7, 9]'}, {'input': '[10, 7, 8, 9, 1, 5]', 'expected_output': '[1, 5, 7, 8, 9, 10]'}, {'input': '[]', 'expected_output': '[]'}, {'input': '[1]', 'expected_output': '[1]'}, {'input': '[-5, -2, 0, 2, 5]', 'expected_output': '[-5, -2, 0, 2, 5]'}]
+
+====================================================================================================
+
+[SOAL #89]
+ID: 202
+Topik: Pengurutan
+Tipe: MCQ
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Urutan angka berikut setelah diurutkan menggunakan metode bubble sort adalah...
+
+CODE TEMPLATE:
+angka = [64, 34, 25, 12, 22, 11, 90];
+for i in range(len(angka)):
+    for j in range(len(angka) - 1):
+        if angka[j] > angka[j + 1]:
+            angka[j], angka[j + 1] = angka[j + 1], angka[j]
+print(angka)
+
+OPSI:
+  [11, 12, 22, 25, 34, 64, 90]
+  [90, 64, 34, 25, 22, 12, 11]
+  [12, 22, 25, 34, 64, 90, 11]
+  [11, 90, 12, 22, 25, 34, 64]
+
+JAWABAN:
+A
+
+PENJELASAN:
+Metode bubble sort bekerja dengan membandingkan setiap pasang elemen berdekatan dan menukar mereka jika mereka dalam urutan yang salah. Proses ini diulangi sampai tidak ada lagi pertukaran yang diperlukan, menandakan bahwa daftar telah diurutkan.
+
+====================================================================================================
+
+[SOAL #90]
+ID: 201
+Topik: Pengurutan
+Tipe: MCQ
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Urutan apa yang dihasilkan oleh kode Python berikut: `numbers = [64, 34, 25, 12, 22, 11, 90]; numbers.sort(); print(numbers)`?
+
+CODE TEMPLATE:
+Python code example: numbers = [64, 34, 25, 12, 22, 11, 90]; numbers.sort(); print(numbers)
+
+OPSI:
+  [90, 64, 34, 25, 22, 12, 11]
+  [11, 12, 22, 25, 34, 64, 90]
+  [64, 34, 25, 12, 22, 11, 90]
+  [11, 12, 22, 25, 34, 64, 100]
+
+JAWABAN:
+B
+
+PENJELASAN:
+Karena metode `sort()` pada Python mengurutkan list secara ascending, sehingga angka terkecil ada di awal dan angka terbesar ada di akhir.
+
+====================================================================================================
+
+[SOAL #91]
+ID: 200
+Topik: Pengurutan
+Tipe: MCQ
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Urutan apa yang dihasilkan oleh kode Python berikut: sorted([3, 2, 5, 1, 4], reverse=True)?
+
+CODE TEMPLATE:
+sorted([3, 2, 5, 1, 4], reverse=True)
+
+OPSI:
+  [1, 2, 3, 4, 5]
+  [5, 4, 3, 2, 1]
+  [3, 2, 5, 1, 4]
+  [1, 5, 2, 4, 3]
+
+JAWABAN:
+B
+
+PENJELASAN:
+Karena parameter reverse=True, maka fungsi sorted() akan mengurutkan daftar dalam urutan menurun (descending).
+
+====================================================================================================
+
+[SOAL #92]
+ID: 199
+Topik: Pengurutan
+Tipe: CODING
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Buatlah fungsi yang mengurutkan daftar bilangan bulat dengan menggunakan algoritma pengurutan QuickSort.
+
+CODE TEMPLATE:
+def quicksort(arr):
+    # Write your code here
+    pass
+
+JAWABAN:
+def quicksort(arr):
+    if len(arr) <= 1:
+        return arr
+    pivot = arr[len(arr) // 2]
+    left = [x for x in arr if x < pivot]
+    middle = [x for x in arr if x == pivot]
+    right = [x for x in arr if x > pivot]
+    return quicksort(left) + middle + quicksort(right)
+
+PENJELASAN:
+Fungsi quicksort bekerja dengan memilih sebuah pivot dari daftar, lalu membagi daftar menjadi tiga bagian: elemen-elemen yang lebih kecil dari pivot, elemen-elemen yang sama dengan pivot, dan elemen-elemen yang lebih besar dari pivot. Lalu, fungsi ini mengurutkan bagian kiri dan kanan secara rekursif.
+
+TEST CASES:
+[{'input': '[5, 2, 9, 1, 7]', 'expected_output': '[1, 2, 5, 7, 9]'}, {'input': '[0, 0, 0, 0]', 'expected_output': '[0, 0, 0, 0]'}, {'input': '[-5, -2, -9, -1, -7]', 'expected_output': '[-9, -7, -5, -2, -1]'}, {'input': '[10, 7, 8, 9, 1, 5]', 'expected_output': '[1, 5, 7, 8, 9, 10]'}, {'input': '[]', 'expected_output': '[]'}]
+
+====================================================================================================
+
+[SOAL #93]
+ID: 228
+Topik: Pencarian
+Tipe: MCQ
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Apa yang dimaksud dengan binary search dalam Pemrograman Python?
+
+CODE TEMPLATE:
+None
+
+OPSI:
+  Pencarian secara berurutan dengan membandingkan setiap elemen
+  Pencarian dengan membagi daftar menjadi dua bagian dan mencari elemen di salah satu bagian
+  Pencarian dengan menggunakan fungsi built-in Python
+  Pencarian dengan melakukan iterasi terbalik pada daftar
+
+JAWABAN:
+B
+
+PENJELASAN:
+Binary search adalah metode pencarian yang membagi daftar menjadi dua bagian dan mencari elemen di salah satu bagian. Metode ini memerlukan daftar yang terurut sebelumnya dan memiliki waktu eksekusi yang lebih cepat daripada linear search.
+
+====================================================================================================
+
+[SOAL #94]
+ID: 227
+Topik: Pencarian
+Tipe: CODING
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Buatlah fungsi yang melakukan pencarian linear pada sebuah daftar untuk menemukan indeks elemen tertentu. Fungsi ini harus menerima dua parameter: daftar dan target. Jika target ditemukan, fungsi harus mengembalikan indeks elemen tersebut. Jika target tidak ditemukan, fungsi harus mengembalikan -1.
+
+CODE TEMPLATE:
+def linear_search(daftar, target):
+    # Write your code here
+    pass
+
+JAWABAN:
+def linear_search(daftar, target):
+    for i in range(len(daftar)):
+        if daftar[i] == target:
+            return i
+    return -1
+
+PENJELASAN:
+Pencarian linear adalah metode pencarian yang paling sederhana. Fungsi linear_search bekerja dengan melakukan iterasi pada setiap elemen dalam daftar. Jika elemen yang sedang diperiksa sama dengan target, fungsi akan mengembalikan indeks elemen tersebut. Jika fungsi telah memeriksa semua elemen dan tidak menemukan target, maka fungsi akan mengembalikan -1 untuk menunjukkan bahwa target tidak ditemukan dalam daftar.
+
+TEST CASES:
+[{'input': '[1, 2, 3, 4, 5], 3', 'expected_output': '2'}, {'input': '[1, 2, 3, 4, 5], 6', 'expected_output': '-1'}, {'input': '[], 5', 'expected_output': '-1'}, {'input': '[0, 0, 0], 0', 'expected_output': '0'}, {'input': '[-1, -2, -3], -2', 'expected_output': '1'}]
+
+====================================================================================================
+
+[SOAL #95]
+ID: 226
+Topik: Pencarian
+Tipe: CODING
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Buatlah fungsi yang dapat melakukan pencarian nilai maksimum dalam sebuah daftar angka menggunakan algoritma pencarian liner (linear search).
+
+CODE TEMPLATE:
+def find_max(nums):
+    # Write your code here
+    pass
+
+JAWABAN:
+def find_max(nums):
+    max_num = nums[0]
+    for num in nums:
+        if num > max_num:
+            max_num = num
+    return max_num
+
+PENJELASAN:
+Fungsi find_max melakukan pencarian nilai maksimum dalam daftar angka dengan membandingkan setiap elemen dalam daftar. Awalnya, nilai maksimum diasumsikan sebagai elemen pertama dalam daftar. Lalu, fungsi tersebut iterasi melalui daftar dan memperbarui nilai maksimum jika menemukan elemen yang lebih besar.
+
+TEST CASES:
+[{'input': '[1, 2, 3, 4, 5]', 'expected_output': '5'}, {'input': '[-10, -20, -30]', 'expected_output': '-10'}, {'input': '[0, 0, 0]', 'expected_output': '0'}, {'input': '[100, 200, 300, 400, 500]', 'expected_output': '500'}, {'input': '[]', 'expected_output': 'Error: List is empty'}]
+
+====================================================================================================
+
+[SOAL #96]
+ID: 225
+Topik: Pencarian
+Tipe: MCQ
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Apa yang dilakukan oleh algoritma linear search dalam pencarian?
+
+CODE TEMPLATE:
+None
+
+OPSI:
+  Mencari elemen target dengan membandingkan elemen tengah terlebih dahulu
+  Mencari elemen target dengan membandingkan setiap elemen dalam daftar secara berurutan
+  Mencari elemen target dengan membagi daftar menjadi dua bagian secara berulang
+  Mencari elemen target dengan mengurutkan daftar terlebih dahulu
+
+JAWABAN:
+B
+
+PENJELASAN:
+Linear search bekerja dengan membandingkan setiap elemen dalam daftar secara berurutan untuk menemukan elemen target, sehingga pilihan B adalah jawaban yang benar.
+
+====================================================================================================
+
+[SOAL #97]
+ID: 215
+Topik: Pencarian
+Tipe: MCQ
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Apa yang dilakukan oleh fungsi binary_search() dalam daftar yang sudah terurut?
+
+CODE TEMPLATE:
+def binary_search(arr, target): 
+  low, high = 0, len(arr) - 1 
+  while low <= high: 
+    mid = (low + high) // 2 
+    if arr[mid] == target: 
+      return mid 
+    elif arr[mid] < target: 
+      low = mid + 1 
+    else: 
+      high = mid - 1 
+  return -1
+
+OPSI:
+  Mengembalikan indeks elemen terakhir dalam daftar
+  Mengembalikan indeks target dalam daftar jika ditemukan, atau -1 jika tidak ditemukan
+  Mengembalikan panjang daftar
+  Mengembalikan nilai True jika target ada dalam daftar, dan False jika tidak
+
+JAWABAN:
+B
+
+PENJELASAN:
+Fungsi binary_search() menggunakan algoritma pencarian biner untuk menemukan target dalam daftar yang sudah terurut. Jika target ditemukan, fungsi mengembalikan indeks target tersebut. Jika target tidak ditemukan, fungsi mengembalikan -1.
+
+====================================================================================================
+
+[SOAL #98]
+ID: 214
+Topik: Pencarian
+Tipe: MCQ
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Apakah yang dimaksud dengan Binary Search dalam Pemrograman Python?
+
+CODE TEMPLATE:
+def binary_search(arr, target): 
+  low, high = 0, len(arr) - 1 
+  while low <= high: 
+    mid = (low + high) // 2 
+    if arr[mid] == target: 
+      return mid 
+    elif arr[mid] < target: 
+      low = mid + 1 
+    else: 
+      high = mid - 1 
+  return -1
+
+OPSI:
+  Algoritma pencarian yang memerlukan data yang tidak terurut
+  Algoritma pencarian yang memerlukan data yang terurut dan membagi ruang pencarian menjadi dua bagian
+  Algoritma pencarian yang memerlukan data yang terurut dan hanya memeriksa elemen pertama dan terakhir
+  Algoritma pencarian yang memerlukan data yang tidak terurut dan memeriksa semua elemen secara berurutan
+
+JAWABAN:
+B
+
+PENJELASAN:
+Binary Search adalah algoritma pencarian yang memerlukan data yang terurut dan membagi ruang pencarian menjadi dua bagian. Algoritma ini bekerja dengan membandingkan target dengan elemen tengah dari array, jika target lebih besar maka pencarian dilanjutkan di bagian kanan, jika target lebih kecil maka pencarian dilanjutkan di bagian kiri. Hal ini memungkinkan Binary Search untuk menemukan target dengan waktu yang lebih singkat dibandingkan dengan algoritma pencarian lainnya.
+
+====================================================================================================
+
+[SOAL #99]
+ID: 213
+Topik: Pencarian
+Tipe: FILL
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Isilah ___ untuk membuat fungsi pencarian linear yang benar.
+
+CODE TEMPLATE:
+def pencarian_linear(data, target):
+    for i in range(len(data)):
+        if data[i] == target:
+            return i
+    return ___
+
+JAWABAN:
+-1
+
+PENJELASAN:
+Fungsi pencarian linear digunakan untuk mencari elemen dalam daftar. Jika elemen target tidak ditemukan, fungsi harus mengembalikan nilai -1 untuk menunjukkan bahwa elemen tidak ada dalam daftar.
+
+====================================================================================================
+
+[SOAL #100]
+ID: 211
+Topik: Pencarian
+Tipe: MCQ
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Apa itu Binary Search?
+
+CODE TEMPLATE:
+def binary_search(arr, target): 
+  low, high = 0, len(arr) - 1 
+  while low <= high: 
+    mid = (low + high) // 2 
+    if arr[mid] == target: 
+      return mid 
+    elif arr[mid] < target: 
+      low = mid + 1 
+    else: 
+      high = mid - 1 
+  return -1
+
+OPSI:
+  Algoritma pencarian yang memerlukan data terkait dalam array untuk menemukan elemen
+  Algoritma pencarian yang memerlukan data terurut dalam array untuk menemukan elemen
+  Algoritma pencarian yang memerlukan data acak dalam array untuk menemukan elemen
+  Algoritma pencarian yang memerlukan data kosong dalam array untuk menemukan elemen
+
+JAWABAN:
+B
+
+PENJELASAN:
+Binary Search adalah algoritma pencarian yang memerlukan data terurut dalam array untuk menemukan elemen. Algoritma ini bekerja dengan membagi array menjadi dua bagian dan membandingkan elemen tengah dengan target. Jika elemen tengah lebih kecil dari target, maka pencarian dilanjutkan di bagian kanan, dan jika elemen tengah lebih besar dari target, maka pencarian dilanjutkan di bagian kiri.
+
+====================================================================================================
+
+[SOAL #101]
+ID: 210
+Topik: Pencarian
+Tipe: FILL
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Isilah ___ untuk membuat kode yang dapat melakukan pencarian nilai maksimum pada daftar
+
+CODE TEMPLATE:
+def cari_maksimal(daftar):
+  maksimal = ___
+  for nilai in daftar:
+    if nilai > maksimal:
+      maksimal = nilai
+  return maksimal
+
+JAWABAN:
+daftar[0]
+
+PENJELASAN:
+Pencarian nilai maksimum dilakukan dengan memulai dari nilai pertama pada daftar sebagai acuan awal untuk kemudian dibandingkan dengan nilai-nilai lainnya.
+
+====================================================================================================
+
+[SOAL #102]
+ID: 209
+Topik: Pencarian
+Tipe: FILL
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Isilah ___ untuk membuat kode yang melakukan pencarian nilai maksimum dalam sebuah daftar
+
+CODE TEMPLATE:
+def cari_maksimum(daftar):
+  maksimum = ___
+  for nilai in daftar:
+    if nilai > maksimum:
+      maksimum = nilai
+  return maksimum
+
+JAWABAN:
+daftar[0]
+
+PENJELASAN:
+Dalam konteks Pencarian, mencari nilai maksimum dalam daftar memerlukan inisialisasi awal untuk membandingkan nilai-nilai lainnya. Dengan menginisialisasi maksimum sebagai nilai pertama dalam daftar (daftar[0]), kita dapat memulai proses pencarian dengan membandingkan setiap nilai dalam daftar untuk menentukan yang terbesar.
+
+====================================================================================================
+
+[SOAL #103]
+ID: 208
+Topik: Pencarian
+Tipe: MCQ
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Apa kelebihan algoritma Binary Search dibandingkan dengan Linear Search?
+
+CODE TEMPLATE:
+def binary_search(arr, target): 
+  low, high = 0, len(arr) - 1 
+  while low <= high: 
+    mid = (low + high) // 2 
+    if arr[mid] == target: 
+      return mid 
+    elif arr[mid] < target: 
+      low = mid + 1 
+    else: 
+      high = mid - 1 
+  return -1
+
+OPSI:
+  Kompleksitas waktu yang lebih tinggi
+  Dapat mencari elemen pada array yang tidak terurut
+  Lebih cocok untuk array dengan jumlah elemen yang kecil
+  Memiliki kompleksitas waktu yang lebih rendah (O(log n))
+
+JAWABAN:
+D
+
+PENJELASAN:
+Binary Search memiliki kelebihan kompleksitas waktu yang lebih rendah (O(log n)) dibandingkan dengan Linear Search (O(n)) karena Binary Search dapat membagi ruang pencarian menjadi dua bagian pada setiap iterasi.
+
+====================================================================================================
+
+[SOAL #104]
+ID: 207
+Topik: Pencarian
+Tipe: CODING
+Difficulty: 2/5
+Status: Aktif
+----------------------------------------------------------------------------------------------------
+SOAL:
+Buatlah fungsi yang melakukan pencarian nilai maksimum dalam sebuah daftar bilangan bulat dan mengembalikan indeks nilai maksimum tersebut.
+
+CODE TEMPLATE:
+def cari_maksimum(daftar):
+    # Write your code here
+    pass
+
+JAWABAN:
+def cari_maksimum(daftar):
+    if len(daftar) == 0:
+        return None
+    maksimum = daftar[0]
+    indeks_maksimum = 0
+    for i in range(1, len(daftar)):
+        if daftar[i] > maksimum:
+            maksimum = daftar[i]
+            indeks_maksimum = i
+    return indeks_maksimum
+
+PENJELASAN:
+Fungsi pencarian nilai maksimum bekerja dengan membandingkan setiap elemen dalam daftar dan mengupdate nilai maksimum jika ditemukan nilai yang lebih besar. Proses ini berlanjut hingga semua elemen dalam daftar telah diperiksa, dan kemudian fungsi mengembalikan indeks nilai maksimum.
+
+TEST CASES:
+[{'input': '[1, 2, 3, 4, 5]', 'expected_output': '4'}, {'input': '[]', 'expected_output': 'None'}, {'input': '[10, -5, 3, 7, 1]', 'expected_output': '0'}, {'input': '[5, 5, 5, 5, 5]', 'expected_output': '0'}, {'input': '[-10, -20, -30, -40, -50]', 'expected_output': '0'}]
+
+====================================================================================================

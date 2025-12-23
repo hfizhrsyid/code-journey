@@ -41,64 +41,32 @@ class BadgeService:
     @staticmethod
     def _check_topic_100_badge(user: User, topic: Topic) -> dict | None:
         """
-        Check apakah user mencapai 100% accuracy pada suatu topic
+        Check if user completed a topic (10 correct answers)
         
-        User harus:
-        1. Attempt semua soal yang tersedia di topic tersebut
-        2. Semua jawaban harus benar (100% accuracy)
+        User gets badge when:
+        - Answer 10 different questions correctly in this topic
         
         Returns:
-            Dict dengan badge info atau None jika tidak unlock
+            Dict with badge info or None if not unlocked
         """
-        # Get total available questions in this topic
-        total_questions_in_topic = Question.objects.filter(
-            topic=topic,
-            is_active=True
-        ).count()
-        
-        if total_questions_in_topic == 0:
-            return None
-        
-        # Get user's attempts for this topic (only count latest attempt per question)
-        attempts = QuestionAttempt.objects.filter(
+        # Get user's correct attempts for this topic
+        correct_attempts = QuestionAttempt.objects.filter(
             user=user,
-            question__topic=topic
-        ).exclude(
-            answer__isnull=True
-        ).exclude(
-            answer__exact=''
-        )
+            question__topic=topic,
+            is_correct=True
+        ).values('question_id').distinct()
         
-        if attempts.count() == 0:
-            return None
+        unique_correct_count = correct_attempts.count()
         
-        # Count unique questions attempted
-        unique_questions_attempted = attempts.values('question_id').distinct().count()
-        
-        # User must attempt ALL questions in the topic
-        if unique_questions_attempted < total_questions_in_topic:
-            return None
-        
-        # Count correct answers (only latest attempt per question)
-        correct_count = 0
-        for question_id in attempts.values_list('question_id', flat=True).distinct():
-            # Get latest attempt for this question
-            latest_attempt = attempts.filter(question_id=question_id).order_by('-created_at').first()
-            if latest_attempt and latest_attempt.is_correct:
-                correct_count += 1
-        
-        # Calculate accuracy based on unique questions
-        accuracy = (correct_count / unique_questions_attempted) * 100
-        
-        # Must have 100% accuracy (all questions correct)
-        if accuracy == 100:
+        # Award badge if user answered 10 questions correctly
+        if unique_correct_count >= 10:
             try:
                 badge = Badge.objects.get(
                     badge_type='topic_100',
                     topic=topic
                 )
                 
-                # Check apakah sudah unlock
+                # Check if already unlocked
                 existing = UserBadge.objects.filter(
                     user=user,
                     badge=badge

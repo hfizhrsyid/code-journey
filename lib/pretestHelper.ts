@@ -113,3 +113,28 @@ export async function getSkippableTopics(): Promise<number[]> {
     return [];
   }
 }
+
+/**
+ * Get starting level for a topic based on pretest score
+ * - score >= 80%: start at level 8 (skip first 7 levels)
+ * - score 60-79%: start at level 5 (skip first 4 levels)
+ * - score 40-59%: start at level 3 (skip first 2 levels)
+ * - score < 40%: start at level 1 (no skip)
+ */
+export async function getStartingLevel(topicId: number): Promise<number> {
+  try {
+    const recommendations = await getPretestRecommendations();
+    const rec = recommendations.find((r) => r.topic_id === topicId);
+    
+    if (!rec) return 1; // No pretest data, start from beginning
+    
+    const score = rec.score;
+    
+    if (score >= 80) return 8;
+    if (score >= 60) return 5;
+    if (score >= 40) return 3;
+    return 1;
+  } catch {
+    return 1;
+  }
+}

@@ -9,6 +9,12 @@ export const styles = StyleSheet.create({
     paddingBottom: 90,
     paddingTop: 50,
   },
+  innerContainer: {
+    flex: 1,
+    paddingHorizontal: 16,
+    paddingTop: 10,
+    paddingBottom: 80,
+  },
   header: {
     flexDirection: "row",
     alignItems: "center",
@@ -75,8 +81,8 @@ export const styles = StyleSheet.create({
     borderColor: "#1f2f4a",
     padding: 10,
     gap: 10,
-    marginTop: 12,
-    marginBottom: 10,
+    marginTop: 8,
+    marginBottom: 5,
   },
   input: {
     flex: 1,

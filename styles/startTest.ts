@@ -34,6 +34,7 @@ export const styles = StyleSheet.create({
 
     buttonText:{
         color: '#FFFFFF',
-        fontSize: 1,
+        fontSize: 16,
+        fontWeight: '600',
     },
 })

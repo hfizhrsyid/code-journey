@@ -33,7 +33,7 @@ DEBUG = os.getenv('DEBUG', 'True') == 'True'
 if DEBUG:
     ALLOWED_HOSTS = ["*"]
 else:
-    ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1,192.168.1.8,192.168.1.12,0.0.0.0,10.0.2.2').split(',')
+    ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1,192.168.1.8,192.168.1.12,0.0.0.0,10.0.2.2,192.168.0.52').split(',')
 
 # Application definition
 
@@ -205,6 +205,7 @@ CSRF_TRUSTED_ORIGINS = os.getenv('CSRF_TRUSTED_ORIGINS', '').split(',') if os.ge
     "http://192.168.1.8:3000",
     "http://192.168.1.8:8081", 
     "http://192.168.1.3:8081", 
+    "http://192.168.0.52:8081", 
     "http://192.168.1.8:19006",
     "http://192.168.1.8:19000",
 ]

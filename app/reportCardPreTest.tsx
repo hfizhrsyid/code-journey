@@ -110,8 +110,8 @@ const ReportCardPreTest = () => {
             
             // Mark topics as skippable if user scored high enough (>=80%)
             const topicsToSkip = recs
-                .filter(rec => rec.score >= 80)
-                .map(rec => rec.topic_id);
+                .filter((rec: TopicRecommendation) => rec.score >= 80)
+                .map((rec: TopicRecommendation) => rec.topic_id);
             await AsyncStorage.setItem("topics_to_skip", JSON.stringify(topicsToSkip));
             
             console.log("📊 Pretest results loaded:", { 
@@ -188,7 +188,7 @@ const ReportCardPreTest = () => {
                 <Text style={styles.descText}>Berdasarkan hasil pretest, ini rekomendasi topik untuk kamu:</Text>
 
                 {/* Topic Recommendations */}
-                {recommendations.map((rec, index) => (
+                {recommendations.map((rec: TopicRecommendation, index) => (
                     <View
                         key={index}
                         style={{
