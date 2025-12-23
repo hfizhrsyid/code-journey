@@ -22,6 +22,8 @@ const PretestQuestion = () => {
   const [answers, setAnswers] = useState<Map<number, string>>(new Map());
   const [submitting, setSubmitting] = useState(false);
   const [showAnswerModal, setShowAnswerModal] = useState(false);
+  const [currentTopicId, setCurrentTopicId] = useState<number | null>(null);
+  const [questionsPerTopic, setQuestionsPerTopic] = useState<number>(2); // 2 soal per topik
 
   const emojiCorrectSource = require("../assets/images/emoji-correct-answer.png");
 
@@ -41,6 +43,10 @@ const PretestQuestion = () => {
       }
 
       setQuestions(pretestQuestions);
+      // Set current topic ID from first question
+      if (pretestQuestions[0]?.topic_id) {
+        setCurrentTopicId(pretestQuestions[0].topic_id);
+      }
     } catch (error) {
       console.error("Failed to load pretest:", error);
       Alert.alert("Error", "Gagal memuat soal pretest");
@@ -77,8 +83,35 @@ const PretestQuestion = () => {
   const moveToNextQuestion = () => {
     setShowAnswerModal(false);
     
+    // Check jika sudah 2 soal dari topik yang sama dijawab
+    const currentTopic = currentQuestion?.topic_id;
+    const answeredInCurrentTopic = questions
+      .slice(0, currentIndex + 1)
+      .filter(q => q.topic_id === currentTopic && answers.has(q.question_id))
+      .length;
+    
+    // Jika sudah 2 soal, cek apakah keduanya benar
+    if (answeredInCurrentTopic >= 2) {
+      const topicQuestions = questions
+        .slice(0, currentIndex + 1)
+        .filter(q => q.topic_id === currentTopic);
+      
+      // Check if any answer is wrong - jika ada yang salah, stop pretest
+      const hasWrongAnswer = topicQuestions.some(q => {
+        const userAnswer = answers.get(q.question_id);
+        // Note: Kita tidak tahu jawabannya benar/salah di frontend
+        // Jadi kita tetap lanjut ke soal berikutnya sampai semua topic dikumpulkan
+        // Backend akan handle logika mana topik pertama yang salah
+        return false; // Continue for now
+      });
+    }
+    
     if (currentIndex < questions.length - 1) {
       setCurrentIndex(currentIndex + 1);
+      // Update current topic ID
+      if (questions[currentIndex + 1]?.topic_id) {
+        setCurrentTopicId(questions[currentIndex + 1].topic_id);
+      }
     } else {
       handleSubmit();
     }
@@ -126,6 +159,8 @@ const PretestQuestion = () => {
           total_correct: result.total_correct.toString(),
           total_questions: result.total_questions.toString(),
           recommendations: JSON.stringify(result.topic_recommendations),
+          starting_topic_id: result.starting_topic_id ? result.starting_topic_id.toString() : "",
+          perfect_topics: JSON.stringify(result.perfect_topics),
         },
       } as any);
     } catch (error) {

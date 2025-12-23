@@ -319,13 +319,17 @@ class QuizAPI {
     overall_score: number;
     total_correct: number;
     total_questions: number;
+    starting_topic_id: number | null;
+    perfect_topics: number[];
     topic_recommendations: Array<{
       topic_id: number;
       topic_name: string;
+      topic_order: number;
       correct: number;
       total: number;
       score: number;
       recommended_difficulty: number;
+      is_perfect: boolean;
     }>;
   }> {
     try {

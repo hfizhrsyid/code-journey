@@ -9,10 +9,12 @@ import Svg, { Circle, Defs, LinearGradient, Stop } from "react-native-svg";
 interface TopicRecommendation {
     topic_id: number;
     topic_name: string;
+    topic_order: number;
     correct: number;
     total: number;
     score: number;
     recommended_difficulty: number;
+    is_perfect: boolean;
 }
 
 const CircleProgress = ({ percent }: { percent: number }) => {
@@ -83,6 +85,8 @@ const ReportCardPreTest = () => {
     const [overallScore, setOverallScore] = useState(0);
     const [totalCorrect, setTotalCorrect] = useState(0);
     const [totalQuestions, setTotalQuestions] = useState(0);
+    const [startingTopicId, setStartingTopicId] = useState<number | null>(null);
+    const [startingTopicName, setStartingTopicName] = useState<string>("");
 
     useEffect(() => {
         loadResults();
@@ -97,16 +101,27 @@ const ReportCardPreTest = () => {
             const correct = parseInt(params.total_correct as string) || 0;
             const total = parseInt(params.total_questions as string) || 0;
             const recs = JSON.parse((params.recommendations as string) || "[]");
+            const startingTopic = params.starting_topic_id ? parseInt(params.starting_topic_id as string) : null;
+            const perfectTopics = JSON.parse((params.perfect_topics as string) || "[]");
             
             setOverallScore(score);
             setTotalCorrect(correct);
             setTotalQuestions(total);
             setRecommendations(recs);
+            setStartingTopicId(startingTopic);
+            
+            // Find starting topic name
+            if (startingTopic) {
+                const startTopic = recs.find((r: TopicRecommendation) => r.topic_id === startingTopic);
+                setStartingTopicName(startTopic?.topic_name || "");
+            }
 
             // Save recommendations to AsyncStorage for later use
             await AsyncStorage.setItem("pretest_recommendations", JSON.stringify(recs));
             await AsyncStorage.setItem("pretest_completed", "true");
             await AsyncStorage.setItem("pretest_overall_score", score.toString());
+            await AsyncStorage.setItem("pretest_starting_topic_id", startingTopic ? startingTopic.toString() : "");
+            await AsyncStorage.setItem("pretest_perfect_topics", JSON.stringify(perfectTopics));
             
             // Mark topics as skippable if user scored high enough (>=80%)
             const topicsToSkip = recs
@@ -119,7 +134,9 @@ const ReportCardPreTest = () => {
                 correct, 
                 total, 
                 recommendations: recs.length,
-                topicsToSkip: topicsToSkip.length 
+                topicsToSkip: topicsToSkip.length,
+                startingTopic,
+                perfectTopics: perfectTopics.length
             });
         } catch (error) {
             console.error("Failed to load pretest results:", error);
@@ -184,8 +201,24 @@ const ReportCardPreTest = () => {
                 </View>
 
                 {/* HASIL */}
-                <Text style={styles.sectionTitle}>Rekomendasi Pembelajaran</Text>
-                <Text style={styles.descText}>Berdasarkan hasil pretest, ini rekomendasi topik untuk kamu:</Text>
+                <Text style={styles.sectionTitle}>Hasil Pretest</Text>
+                {startingTopicName ? (
+                    <View style={{ backgroundColor: "#FFF3CD", padding: 12, borderRadius: 8, marginBottom: 16, borderLeftWidth: 4, borderLeftColor: "#FFA726" }}>
+                        <Text style={{ color: "#856404", fontSize: 14, fontWeight: "600" }}>
+                            🎯 Kamu akan mulai belajar dari topik:
+                        </Text>
+                        <Text style={{ color: "#856404", fontSize: 16, fontWeight: "bold", marginTop: 4 }}>
+                            {startingTopicName}
+                        </Text>
+                        <Text style={{ color: "#856404", fontSize: 12, marginTop: 4 }}>
+                            Topik-topik sebelumnya sudah dikuasai!
+                        </Text>
+                    </View>
+                ) : (
+                    <Text style={styles.descText}>Selamat! Kamu sudah menguasai semua topik pretest!</Text>
+                )}
+                
+                <Text style={styles.sectionTitle}>Detail per Topik</Text>
 
                 {/* Topic Recommendations */}
                 {recommendations.map((rec: TopicRecommendation, index) => (

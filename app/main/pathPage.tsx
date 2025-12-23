@@ -227,25 +227,40 @@ export default function PathPage() {
         // ✅ TOPIK BARU
         console.log(`📭 No attempts for topicId ${currentTopicId}`);
         
-        // Check if user has pretest results for this topic
-        const startingLevel = await getStartingLevel(currentTopicId);
-        console.log(`🎯 Pretest starting level for topic ${currentTopicId}: ${startingLevel}`);
+        // Check if this topic is in perfect topics (benar semua di pretest)
+        const perfectTopics = await getPerfectTopics();
+        const isPerfectTopic = perfectTopics.includes(currentTopicId);
         
-        setLevels((prev) =>
-          prev.map((level, idx) => {
-            const levelNum = idx + 1;
-            if (levelNum < startingLevel) {
-              // Mark previous levels as done (skipped by pretest)
-              return { ...level, status: "done" as LevelStatus };
-            } else if (levelNum === startingLevel) {
-              // Open the starting level
-              return { ...level, status: "open" as LevelStatus };
-            } else {
-              // Lock subsequent levels
-              return { ...level, status: "locked" as LevelStatus };
-            }
-          })
-        );
+        if (isPerfectTopic) {
+          // Topik ini sudah dikuasai di pretest - buka semua level tapi tidak terceklis
+          console.log(`✅ Topic ${currentTopicId} is perfect - opening all levels without checkmarks`);
+          setLevels((prev) =>
+            prev.map((level) => ({
+              ...level,
+              status: "open" as LevelStatus  // Semua level terbuka
+            }))
+          );
+        } else {
+          // Check if user has pretest results for this topic
+          const startingLevel = await getStartingLevel(currentTopicId);
+          console.log(`🎯 Pretest starting level for topic ${currentTopicId}: ${startingLevel}`);
+          
+          setLevels((prev) =>
+            prev.map((level, idx) => {
+              const levelNum = idx + 1;
+              if (levelNum < startingLevel) {
+                // Mark previous levels as done (skipped by pretest)
+                return { ...level, status: "done" as LevelStatus };
+              } else if (levelNum === startingLevel) {
+                // Open the starting level
+                return { ...level, status: "open" as LevelStatus };
+              } else {
+                // Lock subsequent levels
+                return { ...level, status: "locked" as LevelStatus };
+              }
+            })
+          );
+        }
       }
     } catch (error) {
       console.error(`Failed to load progress for topicId ${topicId}:`, error);

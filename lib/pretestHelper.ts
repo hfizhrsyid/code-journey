@@ -138,3 +138,27 @@ export async function getStartingLevel(topicId: number): Promise<number> {
     return 1;
   }
 }
+
+/**
+ * Get starting topic ID (topik pertama yang user salah)
+ */
+export async function getStartingTopicId(): Promise<number | null> {
+  try {
+    const startingTopicId = await AsyncStorage.getItem("pretest_starting_topic_id");
+    return startingTopicId ? parseInt(startingTopicId, 10) : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Get perfect topics (topik yang user jawab benar semua)
+ */
+export async function getPerfectTopics(): Promise<number[]> {
+  try {
+    const data = await AsyncStorage.getItem("pretest_perfect_topics");
+    return data ? JSON.parse(data) : [];
+  } catch {
+    return [];
+  }
+}

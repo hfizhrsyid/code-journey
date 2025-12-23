@@ -924,6 +924,8 @@ def submit_pretest(request):
         
         user = request.user
         topic_results = {}  # {topic_id: {"correct": 0, "total": 0, "topic_name": ""}}
+        topic_order = {}  # {topic_id: order}
+        starting_topic_id = None  # ID topik pertama yang ada kesalahan
         
         # Process each answer
         for answer_data in answers:
@@ -959,21 +961,33 @@ def submit_pretest(request):
                     topic_results[topic_id] = {
                         "topic_id": topic_id,
                         "topic_name": question.topic.name,
+                        "topic_order": question.topic.order,
                         "correct": 0,
                         "total": 0,
                         "score": 0,
-                        "recommended_difficulty": 1
+                        "recommended_difficulty": 1,
+                        "is_perfect": True  # Track if all answers are correct
                     }
+                    topic_order[topic_id] = question.topic.order
                 
                 topic_results[topic_id]["total"] += 1
                 if is_correct:
                     topic_results[topic_id]["correct"] += 1
+                else:
+                    topic_results[topic_id]["is_perfect"] = False
+                    # Set starting topic jika belum di-set dan ini topik pertama dengan kesalahan
+                    if starting_topic_id is None:
+                        starting_topic_id = topic_id
         
         # Calculate scores and recommendations
+        perfect_topics = []  # Topik yang dijawab benar semua
         for topic_id, data in topic_results.items():
             if data["total"] > 0:
                 score = round((data["correct"] / data["total"]) * 100)
                 data["score"] = score
+                
+                if data["is_perfect"]:
+                    perfect_topics.append(topic_id)
                 
                 # Recommend difficulty based on score
                 if score >= 80:
@@ -988,11 +1002,16 @@ def submit_pretest(request):
         total_questions = sum(d["total"] for d in topic_results.values())
         overall_score = round((total_correct / total_questions) * 100) if total_questions > 0 else 0
         
+        # Sort topics by order
+        sorted_topics = sorted(topic_results.values(), key=lambda x: x["topic_order"])
+        
         return Response({
             "overall_score": overall_score,
             "total_correct": total_correct,
             "total_questions": total_questions,
-            "topic_recommendations": list(topic_results.values())
+            "topic_recommendations": sorted_topics,
+            "starting_topic_id": starting_topic_id,  # Topik pertama yang salah
+            "perfect_topics": perfect_topics  # Topik yang dijawab benar semua
         })
         
     except Exception as e:
