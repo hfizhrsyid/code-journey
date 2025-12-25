@@ -11,13 +11,11 @@ export default function Splash() {
   const logoTranslate = useRef(new Animated.Value(20)).current;
 
   useEffect(() => {
-    // Animasi progress bar
     Animated.timing(progress, {
       toValue: 1,
       duration: 3500,
       useNativeDriver: false,
     }).start(() => {
-      // Check auth after animation
       if (!isLoading) {
         if (isAuthenticated) {
           router.replace("/main/dashboard");
@@ -27,7 +25,6 @@ export default function Splash() {
       }
     });
 
-    // Animasi teks Code Journey
     Animated.parallel([
       Animated.timing(logoOpacity, {
         toValue: 1,

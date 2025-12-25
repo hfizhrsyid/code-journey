@@ -45,7 +45,6 @@ export default function Login() {
         setIsLoading(true);
         try {
             await login(username, password);
-            // Login successful, AuthContext is updated, navigate to dashboard
             router.replace("/main/dashboard");
         } catch (error: any) {
             const errorMsg = error?.message || error?.error || error?.detail || "Login failed";

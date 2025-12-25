@@ -26,7 +26,6 @@ const CircleProgress = ({ percent }: { percent: number }) => {
     return (
         <View style={{ justifyContent: "center", alignItems: "center" }}>
             <Svg width={100} height={100}>
-                {/* Definisi gradasi */}
                 <Defs>
                     <LinearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
                         <Stop offset="0%" stopColor="#608699" stopOpacity="1" />
@@ -34,7 +33,6 @@ const CircleProgress = ({ percent }: { percent: number }) => {
                     </LinearGradient>
                 </Defs>
 
-                {/* Background putih */}
                 <Circle
                     cx="50"
                     cy="50"
@@ -44,7 +42,6 @@ const CircleProgress = ({ percent }: { percent: number }) => {
                     fill="none"
                 />
 
-                {/* Progress gradasi */}
                 <Circle
                     cx="50"
                     cy="50"
@@ -60,7 +57,6 @@ const CircleProgress = ({ percent }: { percent: number }) => {
                 />
             </Svg>
 
-            {/* Persentase */}
             <Text
                 style={{
                     position: "absolute",
@@ -95,8 +91,6 @@ const ReportCardPreTest = () => {
     const loadResults = async () => {
         try {
             setLoading(true);
-            
-            // Get results from navigation params
             const score = parseInt(params.overall_score as string) || 0;
             const correct = parseInt(params.total_correct as string) || 0;
             const total = parseInt(params.total_questions as string) || 0;
@@ -109,21 +103,16 @@ const ReportCardPreTest = () => {
             setTotalQuestions(total);
             setRecommendations(recs);
             setStartingTopicId(startingTopic);
-            
-            // Find starting topic name
             if (startingTopic) {
                 const startTopic = recs.find((r: TopicRecommendation) => r.topic_id === startingTopic);
                 setStartingTopicName(startTopic?.topic_name || "");
             }
 
-            // Save recommendations to AsyncStorage for later use
             await AsyncStorage.setItem("pretest_recommendations", JSON.stringify(recs));
             await AsyncStorage.setItem("pretest_completed", "true");
             await AsyncStorage.setItem("pretest_overall_score", score.toString());
             await AsyncStorage.setItem("pretest_starting_topic_id", startingTopic ? startingTopic.toString() : "");
             await AsyncStorage.setItem("pretest_perfect_topics", JSON.stringify(perfectTopics));
-            
-            // Mark topics as skippable if user scored high enough (>=80%)
             const topicsToSkip = recs
                 .filter((rec: TopicRecommendation) => rec.score >= 80)
                 .map((rec: TopicRecommendation) => rec.topic_id);
@@ -145,24 +134,6 @@ const ReportCardPreTest = () => {
         }
     };
 
-    const getDifficultyLabel = (difficulty: number) => {
-        switch (difficulty) {
-            case 1: return "Mudah";
-            case 2: return "Sedang";
-            case 3: return "Sulit";
-            default: return "Sedang";
-        }
-    };
-
-    const getDifficultyColor = (difficulty: number) => {
-        switch (difficulty) {
-            case 1: return "#4CAF50"; // Green
-            case 2: return "#FFA726"; // Orange
-            case 3: return "#EF5350"; // Red
-            default: return "#FFA726";
-        }
-    };
-
     if (loading) {
         return (
             <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#1A233A" }}>
@@ -174,7 +145,6 @@ const ReportCardPreTest = () => {
 
     return (
         <ScrollView style={styles.container}>
-            {/* HEADER */}
             <View style={styles.headerRow}>
                 <Image
                     source={require("../assets/images/hasil.png")}
@@ -184,23 +154,19 @@ const ReportCardPreTest = () => {
                 <Text style={styles.headerTitle}>Good Job!</Text>
             </View>
 
-            {/* CARD */}
             <View style={styles.card}>
                 <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-                    {/* Informasi kiri */}
                     <View>
                         <Text style={styles.name}>{user?.username || "User"}</Text>
                         <Text style={styles.smallText}>Skor      {totalCorrect} / {totalQuestions}</Text>
                         <Text style={styles.smallText}>Akurasi   {overallScore}%</Text>
                     </View>
 
-                    {/* Circle Progress */}
                     <View style={styles.circleContainer}>
                         <CircleProgress percent={overallScore} />
                     </View>
                 </View>
 
-                {/* HASIL */}
                 <Text style={styles.sectionTitle}>Hasil Pretest</Text>
                 {startingTopicName ? (
                     <View style={{ backgroundColor: "#FFF3CD", padding: 12, borderRadius: 8, marginBottom: 16, borderLeftWidth: 4, borderLeftColor: "#FFA726" }}>
@@ -220,7 +186,6 @@ const ReportCardPreTest = () => {
                 
                 <Text style={styles.sectionTitle}>Detail per Topik</Text>
 
-                {/* Topic Recommendations */}
                 {recommendations.map((rec: TopicRecommendation, index) => (
                     <View
                         key={index}
@@ -235,31 +200,21 @@ const ReportCardPreTest = () => {
                             <Text style={{ color: "#fff", fontSize: 16, fontWeight: "bold", flex: 1 }}>
                                 {rec.topic_name}
                             </Text>
-                            <Text style={{ color: "#9FDFFF", fontSize: 14 }}>
-                                {rec.score}%
-                            </Text>
-                        </View>
-                        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-                            <Text style={{ color: "#B8C5D6", fontSize: 13 }}>
-                                Benar: {rec.correct}/{rec.total}
-                            </Text>
-                            <View
-                                style={{
-                                    backgroundColor: getDifficultyColor(rec.recommended_difficulty),
-                                    paddingHorizontal: 12,
-                                    paddingVertical: 4,
-                                    borderRadius: 12,
-                                }}
-                            >
-                                <Text style={{ color: "#fff", fontSize: 12, fontWeight: "600" }}>
-                                    Mulai dari: {getDifficultyLabel(rec.recommended_difficulty)}
+                            <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                                <Text style={{ color: "#9FDFFF", fontSize: 14 }}>
+                                    {rec.score}%
                                 </Text>
+                                {rec.is_perfect && (
+                                    <Text style={{ color: "#4CAF50", fontSize: 12 }}>✓</Text>
+                                )}
                             </View>
                         </View>
+                        <Text style={{ color: "#B8C5D6", fontSize: 13 }}>
+                            Benar: {rec.correct}/{rec.total}
+                        </Text>
                     </View>
                 ))}
 
-                {/* BUTTON */}
                 <View style={styles.buttonContainer}>
                     <TouchableOpacity
                         style={styles.outlineButton}

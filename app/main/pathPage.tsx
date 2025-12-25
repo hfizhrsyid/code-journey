@@ -10,6 +10,7 @@ import Svg, { Circle, Path } from "react-native-svg";
 
 import { quizAPI } from "@/lib/api";
 import { useAuth } from "@/lib/AuthContext";
+import { getPerfectTopics, getStartingLevel, getStartingTopicId } from "@/lib/pretestHelper";
 import { useQuestions } from "../../lib/QuestionContext";
 
 import { radius, SCREEN_W, spacing, timeline } from "@/app/main/constants";
@@ -64,10 +65,8 @@ export default function PathPage() {
   const { isAuthenticated } = useAuth();
   const { questionSet, setQuestionSet, setCurrentIndex, setTopic, setTopicId, setDifficulty } = useQuestions();
 
-  // Determine if we're showing all topics or a specific topic
   const showAllTopics = !topicId || topicId === 0;
 
-  // Store topic info in context
   useEffect(() => {
     if (!showAllTopics) {
       setTopic(topic);
@@ -92,12 +91,10 @@ export default function PathPage() {
   const [topics, setTopics] = useState<Topic[]>([]);
   const [loadingTopicId, setLoadingTopicId] = useState<number | null>(null);
 
-  // TAMBAH: Reset levels ke initial state ketika topicId berubah
   useEffect(() => {
     if (!showAllTopics && topicId) {
       console.log(`🔄 TopicId changed to ${topicId}, resetting levels to initial state`);
 
-      // Reset ke initial levels (hanya level 1 open)
       const newInitialLevels = Array.from({ length: 10 }).map((_, i) => ({
         id: i + 1,
         title: `Soal ${i + 1}`,
@@ -109,81 +106,105 @@ export default function PathPage() {
       }));
 
       setLevels(newInitialLevels);
-      setLoadingProgress(true); // Set loading true saat reset
+      setLoadingProgress(true);
     }
   }, [topicId, showAllTopics]);
-
-  // Reload progress when screen comes into focus
-  useFocusEffect(
-    React.useCallback(() => {
-      if (showAllTopics) {
-        loadAllTopics();
-      } else {
-        loadUserProgress();
-      }
-    }, [topicId, isAuthenticated, showAllTopics])
-  );
 
   const loadAllTopics = async () => {
     try {
       setLoadingProgress(true);
       const data = await quizAPI.getTopics();
 
-      // ✅ Ensure data is an array before sorting
-      const topicsArray = Array.isArray(data) ? data : [];
+      const topicsArray: Topic[] = Array.isArray(data)
+        ? (data as Topic[])
+        : ((data as any)?.topics as Topic[]) || [];
 
-      if (topicsArray.length === 0) {
-        console.warn("⚠️ No topics returned from API");
-        setTopics([]);
-        setLevels([]);
-        return;
-      }
-
-      // ✅ SORT BY ORDER!
       const sortedData = topicsArray.sort((a: Topic, b: Topic) => (a.order || 0) - (b.order || 0));
       setTopics(sortedData);
+      
+      const startingTopicId = await getStartingTopicId();
+      const perfectTopics = await getPerfectTopics();
 
-      // Create levels based on sorted topics
-      const topicLevels: LevelItem[] = sortedData.map((t: Topic, i: number) => ({
+      const startingTopicOrder = startingTopicId
+        ? sortedData.find((t) => t.id === startingTopicId)?.order || null
+        : null;
+
+      console.log("========== DEBUG PRETEST ==========");
+      console.log("📍 Starting Topic ID:", startingTopicId);
+      console.log("✅ Perfect Topics:", perfectTopics);
+      console.log("📋 Topics from backend:", sortedData.map(t => ({
         id: t.id,
-        title: t.name,
-        status: t.is_locked ? "locked" : ((t.completion_percentage === 100 ? "done" : "open") as LevelStatus),
-        imgLeft: imageLeft[i % imageLeft.length],
-        imgRight: imageRight[i % imageRight.length],
-        imgLeftSize: { width: 110, height: 70 },
-        imgRightSize: { width: 90, height: 90 },
-      }));
+        name: t.name,
+        is_locked: t.is_locked,
+        completion: t.completion_percentage
+      })));
+      console.log("===================================");
+
+      const topicLevels: LevelItem[] = sortedData.map((t: Topic, i: number) => {
+        let status: LevelStatus;
+
+        console.log(`\n🔍 Topic ${t.id} (${t.name}):`);
+        console.log(`  - Backend is_locked: ${t.is_locked}`);
+        console.log(`  - Completion: ${t.completion_percentage}%`);
+        console.log(`  - In perfectTopics: ${perfectTopics.includes(t.id)}`);
+        console.log(`  - Is startingTopic: ${t.id === startingTopicId}`);
+        console.log(`  - Fallback startingTopicOrder: ${startingTopicOrder}`);
+
+        const unlockedByPretestOrder = startingTopicOrder
+          ? (t.order || 0) <= startingTopicOrder
+          : false;
+
+        if (t.completion_percentage === 100) {
+          console.log(`  ✓ DECISION: DONE (100% complete)`);
+          status = "done";
+        }
+        else if (unlockedByPretestOrder) {
+          console.log(`  ✅ DECISION: OPEN (fallback: order <= startingTopicOrder)`);
+          status = "open";
+        }
+        else if (t.is_locked) {
+          console.log(`  🔒 DECISION: LOCKED`);
+          status = "locked";
+        }
+        else {
+          console.log(`  ✅ DECISION: OPEN`);
+          status = "open";
+        }
+
+        return {
+          id: t.id,
+          title: t.name,
+          status,
+          imgLeft: imageLeft[i % imageLeft.length],
+          imgRight: imageRight[i % imageRight.length],
+          imgLeftSize: { width: 110, height: 70 },
+          imgRightSize: { width: 90, height: 90 },
+        };
+      });
 
       setLevels(topicLevels);
     } catch (error) {
-      console.error("Failed to load topics:", error);
-      Alert.alert("Error", "Failed to load topics. Please try again.");
+      console.error("❌ Error in loadAllTopics:", error);
     } finally {
       setLoadingProgress(false);
     }
   };
 
-  /**
-   * Muat posisi terakhir dari AsyncStorage (jangan set state)
-   */
   const loadSavedPosition = async (topicId: number): Promise<number | null> => {
     const savedSession = await sessionStorage.loadPosition(topicId);
     if (savedSession) {
-      // Hanya return, jangan set state
       return savedSession.currentIndex;
     }
     return null;
   };
 
-  // Jika jumlah soal bisa lebih dari 10, sesuaikan jumlah level
   const loadUserProgress = async () => {
     if (!isAuthenticated || !topicId) {
       console.log("⚠️ Not authenticated or no topicId");
       setLoadingProgress(false);
       return;
     }
-
-    const currentTopicId = topicId; // ✅ Capture current topicId
+  const currentTopicId = topicId;
     setLoadingTopicId(currentTopicId);
 
     try {
@@ -192,7 +213,6 @@ export default function PathPage() {
 
       const attempts = await quizAPI.getUserAttempts(currentTopicId);
 
-      // ✅ IGNORE if topicId has changed during loading
       if (currentTopicId !== topicId) {
         console.log(`🚫 TopicId changed during loading (${currentTopicId} → ${topicId}), ignoring old response`);
         setLoadingTopicId(null);
@@ -202,14 +222,12 @@ export default function PathPage() {
       console.log(`📊 User attempts loaded for topicId ${currentTopicId}: ${attempts?.length || 0} attempts`);
 
       if (attempts && attempts.length > 0) {
-        // Hitung soal yang sudah dijawab BENAR
         const correctAttempts = attempts.filter((a: any) => a.is_correct);
         const correctQuestionIds = new Set(correctAttempts.map((a: any) => a.question_id));
         const completedCount = correctQuestionIds.size;
 
         console.log(`✅ Completed (correct answers): ${completedCount}`);
 
-        // Update level status - BATASI completed count ke total levels
         const safeCompletedCount = Math.min(completedCount, 10);
 
         setLevels((prev) =>
@@ -224,24 +242,20 @@ export default function PathPage() {
           })
         );
       } else {
-        // ✅ TOPIK BARU
         console.log(`📭 No attempts for topicId ${currentTopicId}`);
-        
-        // Check if this topic is in perfect topics (benar semua di pretest)
+
         const perfectTopics = await getPerfectTopics();
         const isPerfectTopic = perfectTopics.includes(currentTopicId);
         
         if (isPerfectTopic) {
-          // Topik ini sudah dikuasai di pretest - buka semua level tapi tidak terceklis
           console.log(`✅ Topic ${currentTopicId} is perfect - opening all levels without checkmarks`);
           setLevels((prev) =>
             prev.map((level) => ({
               ...level,
-              status: "open" as LevelStatus  // Semua level terbuka
+              status: "open" as LevelStatus
             }))
           );
         } else {
-          // Check if user has pretest results for this topic
           const startingLevel = await getStartingLevel(currentTopicId);
           console.log(`🎯 Pretest starting level for topic ${currentTopicId}: ${startingLevel}`);
           
@@ -249,13 +263,10 @@ export default function PathPage() {
             prev.map((level, idx) => {
               const levelNum = idx + 1;
               if (levelNum < startingLevel) {
-                // Mark previous levels as done (skipped by pretest)
                 return { ...level, status: "done" as LevelStatus };
               } else if (levelNum === startingLevel) {
-                // Open the starting level
                 return { ...level, status: "open" as LevelStatus };
               } else {
-                // Lock subsequent levels
                 return { ...level, status: "locked" as LevelStatus };
               }
             })
@@ -265,7 +276,6 @@ export default function PathPage() {
     } catch (error) {
       console.error(`Failed to load progress for topicId ${topicId}:`, error);
 
-      // ✅ Only reset if still loading same topicId
       if (currentTopicId === topicId) {
         setLevels((prev) =>
           prev.map((level, idx) => ({
@@ -275,13 +285,22 @@ export default function PathPage() {
         );
       }
     } finally {
-      // ✅ Only clear if this is still the current loading topicId
       if (currentTopicId === topicId) {
         setLoadingProgress(false);
       }
       setLoadingTopicId(null);
     }
   };
+
+  useFocusEffect(
+    React.useCallback(() => {
+      if (showAllTopics) {
+        loadAllTopics();
+      } else {
+        loadUserProgress();
+      }
+    }, [showAllTopics])
+  );
 
   const totalHeight = useMemo(() => spacing * levels.length + 100 + CONTENT_TOP, [levels.length]);
 
@@ -321,7 +340,6 @@ export default function PathPage() {
   const handlePress = async (node: LevelItem) => {
     if (showAllTopics) {
       if (node.status === "locked") {
-        // ✅ Find by order, not by index
         const nodeTopic = topics.find((t) => t.id === node.id);
         const nodeOrder = nodeTopic?.order || 999;
         const previousTopic = topics.find((t) => t.order === nodeOrder - 1);
@@ -334,12 +352,10 @@ export default function PathPage() {
 
       const selectedTopic = topics.find((t) => t.id === node.id);
       if (selectedTopic) {
-        // ✅ SET CONTEXT BEFORE NAVIGATE!
         setTopic(selectedTopic.name);
         setTopicId(selectedTopic.id);
         setDifficulty(2);
 
-        // THEN navigate
         router.push({
           pathname: "./pathPage",
           params: {
@@ -352,19 +368,16 @@ export default function PathPage() {
       return;
     }
 
-    // Original logic for specific topic
     if (node.status === "locked") {
       Alert.alert("Terkunci", "Selesaikan level sebelumnya terlebih dahulu");
       return;
     }
 
-    // Load questions from database if not already loaded
     if (questionSet.length === 0) {
       setLoading(true);
       try {
         let questions: any[] = [];
 
-        // Try to load from database first
         try {
           questions = await quizAPI.getQuestions(topicId, difficulty);
           console.log(
@@ -372,11 +385,9 @@ export default function PathPage() {
             questions.map((q) => q.question_id)
           );
 
-          // ✅ LOAD SAVED POSITION FIRST
           const savedIndex = await sessionStorage.loadPosition(topicId);
           let indexToUse = savedIndex?.currentIndex ?? 0;
 
-          // ✅ VALIDATE INDEX - tidak boleh melebihi panjang questions
           if (indexToUse >= questions.length) {
             console.warn(`⚠️ Saved index ${indexToUse} melebihi questions length ${questions.length}, reset ke 0`);
             indexToUse = 0;
@@ -384,13 +395,10 @@ export default function PathPage() {
 
           console.log(`📂 Using index: ${indexToUse + 1}/${questions.length}`);
 
-          // Set context with loaded questions and position
           setQuestionSet(questions);
           setCurrentIndex(indexToUse);
 
-          // Wait for state to update, then navigate
           setTimeout(() => {
-            // ✅ DOUBLE CHECK index validity
             const safeIndex = Math.min(indexToUse, questions.length - 1);
             if (safeIndex >= 0 && questions[safeIndex]) {
               const screenPath = getQuestionScreenPath(questions[safeIndex].question_type);
@@ -403,7 +411,6 @@ export default function PathPage() {
         } catch (dbError) {
           console.warn("⚠️ Database questions not available, trying AI generation:", dbError);
 
-          // Fallback: Generate questions using AI
           try {
             questions = await quizAPI.generateQuestionSet(topic, difficulty);
             console.log("✅ Generated questions using AI:", questions.length);
@@ -433,7 +440,6 @@ export default function PathPage() {
       return;
     }
 
-    // If questions already loaded, navigate to the selected level
     if (node.id <= questionSet.length) {
       const q = questionSet[node.id - 1];
       setCurrentIndex(node.id - 1);
@@ -457,7 +463,6 @@ export default function PathPage() {
         },
       } as any);
     } else {
-      // Jika tidak ada topik berikutnya, kembali ke dashboard
       router.push("/main/dashboard");
     }
   };

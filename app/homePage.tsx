@@ -5,13 +5,11 @@ import { Text, TouchableOpacity, View } from 'react-native';
 
 const homePage = () => {
     const handleYes = async () => {
-        // User has prior experience - go to pretest
         await AsyncStorage.setItem('has_prior_experience', 'true');
         router.push('/startTest');
     };
 
     const handleNo = async () => {
-        // User is a beginner - start from scratch
         await AsyncStorage.setItem('has_prior_experience', 'false');
         await AsyncStorage.setItem('pretest_completed', 'false');
         router.push('/main/dashboard');

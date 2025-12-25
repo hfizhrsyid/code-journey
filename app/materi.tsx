@@ -1,9 +1,9 @@
+import { useQuestions } from "@/lib/QuestionContext";
 import { styles } from "@/styles/materi";
 import Slider from "@react-native-community/slider";
-import { useState } from "react";
-import { Text, View, TouchableOpacity } from "react-native";
 import { router } from "expo-router";
-import { useQuestions } from "@/lib/QuestionContext";
+import { useState } from "react";
+import { Text, TouchableOpacity, View } from "react-native";
 
 const Materi = () => {
   const [value, setValue] = useState(2);
@@ -14,15 +14,12 @@ const Materi = () => {
   const currentMateri = materiList[value];
 
   const handleStart = () => {
-    // Reset previous question set
     reset();
 
-    // Set topic dan difficulty
-    const calculatedDifficulty = Math.ceil((value + 1) / 2); // 1-3
+    const calculatedDifficulty = Math.ceil((value + 1) / 2);
     setTopic(currentMateri);
     setDifficulty(calculatedDifficulty);
 
-    // Navigasi ke pathPage
     router.push({
       pathname: "/main/pathPage",
       params: { topic: currentMateri, difficulty: calculatedDifficulty },

@@ -38,7 +38,6 @@ export default function CompletionQuestion() {
       console.log(`📋 Loading Q${currentIndex}: ID=${currentQuestion.question_id}, Topic=${topic || "N/A"}`);
       currentQuestion = normalizeQuestion(currentQuestion);
 
-      // Validate question
       const validation = validateQuestion(currentQuestion);
       if (!validation.valid) {
         setError(validation.error || "Soal tidak valid");
@@ -60,7 +59,6 @@ export default function CompletionQuestion() {
   const prevTopicIdRef = useRef(topicId);
 
   useEffect(() => {
-    // Only reset if topicId actually changed (not on initial mount)
     if (prevTopicIdRef.current !== topicId && prevTopicIdRef.current !== 0) {
       console.log(`🔄 TopicId changed from ${prevTopicIdRef.current} to ${topicId}, resetting state`);
       setQuestion(null);
@@ -122,7 +120,6 @@ export default function CompletionQuestion() {
 
     if (nextIndex >= 10) {
       console.log("✅ Selesai 10 soal");
-      // Check if we've completed 10 questions - redirect to reportCard
       router.push({
         pathname: "/reportCard",
         params: {
@@ -177,7 +174,6 @@ export default function CompletionQuestion() {
       console.warn("Gagal generate soal berikutnya (completion):", err);
     }
 
-    // Navigate to results screen
     router.push({
       pathname: "/reportCard",
       params: {
@@ -190,14 +186,12 @@ export default function CompletionQuestion() {
   const emojiWrongSource = require("../../assets/images/emoji-wrong-answer.png");
   const emojiCorrectSource = require("../../assets/images/emoji-correct-answer.png");
 
-  // helper to coerce options into an array
   const normalizeQuestion = (q: any) => {
     if (!q) return q;
     try {
       if (q.options && typeof q.options === "string") {
         try {
           q.options = JSON.parse(q.options);
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
         } catch (e) {
           const s = String(q.options)
             .replace(/^\[|\]$/g, "")
@@ -214,11 +208,9 @@ export default function CompletionQuestion() {
     return q;
   };
 
-  // ✅ SIMPAN POSISI SAAT KELUAR SCREEN
   useFocusEffect(
     React.useCallback(() => {
       return () => {
-        // Ini dipanggil saat screen kehilangan focus (user keluar)
         savePosition();
       };
     }, [topicId, currentIndex, topic, difficulty, savePosition])
@@ -296,8 +288,6 @@ export default function CompletionQuestion() {
           <Text style={styles.submitText}>{submitting ? "Memeriksa..." : "Submit"}</Text>
         </TouchableOpacity>
       </View>
-
-      {/* Feedback Modal - Wrong */}
       <Modal transparent visible={feedbackStatus === "wrong"} animationType="fade">
         <View style={styles.modalOverlay}>
           <View style={styles.modalPositionWrapper}>
@@ -329,8 +319,6 @@ export default function CompletionQuestion() {
           </View>
         </View>
       </Modal>
-
-      {/* Feedback Modal - Correct */}
       <Modal transparent visible={feedbackStatus === "correct"} animationType="fade">
         <View style={styles.modalOverlay}>
           <View style={styles.modalPositionWrapper}>

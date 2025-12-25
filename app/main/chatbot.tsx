@@ -78,7 +78,6 @@ export default function ChatbotScreen() {
     const userMsg: ChatMessage = { id: `u-${Date.now()}`, from: "user", text: prompt };
     pushMessage(userMsg);
 
-    // Domain guard to avoid wasting tokens on out-of-scope prompts
     if (!isCodingQuestion(prompt)) {
       pushMessage({
         id: `b-${Date.now()}`,

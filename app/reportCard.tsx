@@ -30,12 +30,11 @@ const CircleProgress = ({ percent }: { percent: number }) => {
   const clamped = Math.max(0, Math.min(100, Math.round(percent || 0)));
   const progress = circumference - (clamped / 100) * circumference;
   const percentLabel = `${clamped}%`;
-  const labelSize = percentLabel.length >= 4 ? 22 : 26; // keep text inside the circle on small screens
+  const labelSize = percentLabel.length >= 4 ? 22 : 26;
 
   return (
     <View style={{ justifyContent: "center", alignItems: "center", position: "relative" }}>
       <Svg width={120} height={120} viewBox="0 0 120 120">
-        {/* Definisi gradasi */}
         <Defs>
           <LinearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
             <Stop offset="0%" stopColor="#608699" stopOpacity="1" />
@@ -43,10 +42,8 @@ const CircleProgress = ({ percent }: { percent: number }) => {
           </LinearGradient>
         </Defs>
 
-        {/* Background circle */}
         <Circle cx="60" cy="60" r={radius} stroke="#E0E0E0" strokeWidth={strokeWidth} fill="none" />
 
-        {/* Progress gradasi */}
         <Circle
           cx="60"
           cy="60"
@@ -61,7 +58,6 @@ const CircleProgress = ({ percent }: { percent: number }) => {
           origin="60,60"
         />
 
-        {/* Angka persentase */}
         <SvgText x="60" y="60" textAnchor="middle" alignmentBaseline="middle" fontSize={labelSize} fontWeight="bold" fill="#286292">
           {percentLabel}
         </SvgText>
@@ -96,7 +92,6 @@ const ReportCard = () => {
 
   const checkForBadges = async () => {
     try {
-      // Check if user completed 10 questions (full topic)
       const attempts = await quizAPI.getUserAttempts(topicId);
       const uniqueQuestions = new Set(attempts.map((a: any) => a.question_id));
       const correctCount = Array.from(uniqueQuestions).filter((qId) => {
@@ -105,7 +100,6 @@ const ReportCard = () => {
         return latest?.is_correct;
       }).length;
 
-      // If completed 10 questions, show badge notification
       if (correctCount >= 10) {
         setTimeout(() => {
           Alert.alert(
@@ -113,7 +107,7 @@ const ReportCard = () => {
             `Selamat! Anda menyelesaikan topik ${topicName} dan mendapatkan badge!`,
             [{ text: "Lihat Badge", onPress: () => router.push("/main/profile") }]
           );
-        }, 1000); // Delay 1 second untuk UX yang lebih baik
+        }, 1000);
       }
     } catch (error) {
       console.error("Failed to check badges:", error);
@@ -125,11 +119,9 @@ const ReportCard = () => {
       setLoading(true);
       const attempts = await quizAPI.getUserAttempts(topicId);
 
-      // Get unique questions attempted
       const uniqueQuestions = new Set(attempts.map((a: any) => a.question_id));
       const totalQuestions = uniqueQuestions.size;
 
-      // Count correct answers (latest attempt per question)
       const correctCount = Array.from(uniqueQuestions).filter((qId) => {
         const questionAttempts = attempts.filter((a: any) => a.question_id === qId);
         const latest = questionAttempts[questionAttempts.length - 1];
@@ -152,7 +144,6 @@ const ReportCard = () => {
       const durationMs = timestamps.length ? timestamps[timestamps.length - 1] - timestamps[0] : 0;
       setDurationText(timestamps.length ? formatDuration(durationMs) : "-");
 
-      // Rekap dinamis
       const totalAttempts = attempts.length;
       const avgSecondsPerQuestion = totalQuestions && durationMs > 0 ? durationMs / 1000 / totalQuestions : 0;
 
@@ -171,7 +162,6 @@ const ReportCard = () => {
 
   const loadNextTopic = async () => {
     try {
-      // Ambil semua topik dan cari yang berikutnya
       const topics = await quizAPI.getTopics();
       const currentIndex = topics.findIndex((t: any) => t.id === topicId);
 
@@ -196,7 +186,6 @@ const ReportCard = () => {
 
       console.log(`📍 Navigating to ${pathname}`, params);
 
-      // Coba push dulu
       try {
         router.push({
           pathname,
@@ -204,7 +193,6 @@ const ReportCard = () => {
         } as any);
       } catch (error) {
         console.error("❌ Navigation error:", error);
-        // Fallback ke dashboard
         router.replace("/main/dashboard");
       }
     } else {
@@ -224,15 +212,12 @@ const ReportCard = () => {
 
   return (
     <ScrollView style={styles.container}>
-      {/* HEADER - Good Job! */}
       <View style={styles.headerRow}>
         <Image source={require("../assets/images/hasil.png")} style={styles.headerImage} resizeMode="contain" />
         <Text style={styles.headerTitle}>Good Job!</Text>
       </View>
 
-      {/* MAIN CARD */}
       <View style={styles.card}>
-        {/* SECTION 1: Mingyuuuu - Accuracy */}
         <View style={styles.section}>
           <Text style={styles.sectionLabel}>Mingyuuuu</Text>
           <View style={styles.accuracyRow}>
@@ -249,10 +234,8 @@ const ReportCard = () => {
           </View>
         </View>
 
-        {/* DIVIDER */}
         <View style={styles.divider} />
 
-        {/* SECTION 2: Hasil - Menampilkan materi berikutnya */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Hasil</Text>
           <Text style={styles.resultMessage}>Hore! Kamu telah menyelesaikan materi ini.</Text>
@@ -269,16 +252,13 @@ const ReportCard = () => {
           )}
         </View>
 
-        {/* DIVIDER */}
         <View style={styles.divider} />
 
-        {/* SECTION 3: Rekapitulasi */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Rekapitulasi</Text>
           <Text style={styles.recapText}>{recapText || "Memuat data..."}</Text>
         </View>
 
-        {/* BUTTON */}
         <TouchableOpacity style={styles.nextLevelButton} onPress={handleNextLevel}>
           <Text style={styles.nextLevelText}>{nextTopic ? "Topik Selanjutnya" : "Kembali ke Dashboard"}</Text>
         </TouchableOpacity>

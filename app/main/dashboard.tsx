@@ -16,7 +16,6 @@ interface Materi {
   is_locked: boolean;
 }
 
-// Simple circular progress dengan background circle
 const CircularProgressDisplay = ({ percentage }: { percentage: number }) => {
   const size = 60;
   const strokeWidth = 6;
@@ -66,16 +65,13 @@ export default function Dashboard() {
       setLoading(true);
       const data = await quizAPI.getTopics();
       
-      // Don't mark topics as 100% - let pretest unlock starting levels instead
       const sortedTopics = [...data].sort((a, b) => a.order - b.order);
       
       let allPreviousComplete = true;
       const enrichedTopics = sortedTopics.map((topic: Materi) => {
-        // Topic is only unlocked if all previous topics are complete
         const isComplete = topic.completion_percentage >= 100;
         const shouldUnlock = allPreviousComplete;
         
-        // Update for next iteration
         if (!isComplete) {
           allPreviousComplete = false;
         }
@@ -146,7 +142,6 @@ export default function Dashboard() {
                 </View>
               </View>
 
-              {/* Right side - Progress indicator atau Report Card */}
               {item.completion_percentage > 0 && item.completion_percentage < 100 && !item.is_locked && <CircularProgressDisplay percentage={item.completion_percentage} />}
 
               {item.completion_percentage === 100 && !item.is_locked && (

@@ -1,12 +1,12 @@
+import { BadgeCard, BadgeItem } from "@/components/BadgeCard";
 import { useAuth } from "@/lib/AuthContext";
 import { quizAPI } from "@/lib/api";
 import { styles } from "@/styles/profile";
-import { BadgeCard, BadgeItem } from "@/components/BadgeCard";
 import { MaterialIcons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { router, useFocusEffect } from "expo-router";
-import { useEffect, useState, useCallback } from "react";
-import { ActivityIndicator, Alert, Image, Pressable, ScrollView, Text, View, TouchableOpacity } from "react-native";
+import { useCallback, useEffect, useState } from "react";
+import { ActivityIndicator, Alert, Image, Pressable, ScrollView, Text, TouchableOpacity, View } from "react-native";
 
 export default function Profile() {
   const { user, logout, isAuthenticated, isLoading: authLoading } = useAuth();
@@ -48,18 +48,14 @@ export default function Profile() {
 
   const loadUserStats = async () => {
     try {
-      // Get all user attempts across all topics
       const response = await quizAPI.getUserAttempts(0);
 
-      // API returns attempts array or wrapped in response object
       const attempts = Array.isArray(response) ? response : response.attempts || [];
 
       const totalAttempts = attempts.length;
       const correctAnswers = attempts.filter((a: any) => a.is_correct).length;
       const accuracy = totalAttempts > 0 ? Math.round((correctAnswers / totalAttempts) * 100) : 0;
 
-      // Count unique topics - API response tidak include topic_id langsung
-      // Jadi kita hitung dari structure yang ada
       const uniqueTopics = new Set(attempts.map((a: any) => a.question?.topic_id || a.topic_id).filter((topicId: any) => topicId && topicId > 0)).size;
 
       console.log("📊 Stats Debug:", {
@@ -79,7 +75,6 @@ export default function Profile() {
       });
     } catch (error) {
       console.error("Failed to load stats:", error);
-      // Set default values on error
       setStats({
         totalAttempts: 0,
         correctAnswers: 0,
@@ -96,7 +91,6 @@ export default function Profile() {
 
       const earnedBadgesMap = new Map((earnedResponse.earned || []).map((b: any) => [b.id, b]));
 
-      // Filter hanya badge tipe topic_100 (Master badges)
       const formattedBadges: BadgeItem[] = (allBadgesResponse || [])
         .filter((badge: any) => badge.badge_type === "topic_100")
         .map((badge: any) => {
@@ -111,10 +105,8 @@ export default function Profile() {
           };
         });
 
-      // Sort: earned badges first (sorted by earned_at), then locked badges
       const sortedBadges = formattedBadges.sort((a, b) => {
         if (a.is_earned && b.is_earned) {
-          // Sort earned badges by date (newest first)
           if (a.earned_at && b.earned_at) {
             return new Date(b.earned_at).getTime() - new Date(a.earned_at).getTime();
           }
@@ -123,7 +115,6 @@ export default function Profile() {
         if (!a.is_earned && !b.is_earned) {
           return 0;
         }
-        // Earned badges come first
         return a.is_earned ? -1 : 1;
       });
 
@@ -203,7 +194,6 @@ export default function Profile() {
       </View>
 
       <ScrollView style={{ flex: 1, width: "100%" }} contentContainerStyle={{ paddingBottom: 50, flexGrow: 1, paddingTop: 10 }} showsVerticalScrollIndicator={false}>
-        {/* Stats Cards */}
         <View
           style={{
             flexDirection: "row",
@@ -227,7 +217,6 @@ export default function Profile() {
           </View>
         </View>
 
-        {/* Badges Section */}
         {badges.length > 0 && (
           <View style={{ paddingHorizontal: 20, marginBottom: 20 }}>
             <Text style={[styles.progressLabel, { marginBottom: 15 }]}>
@@ -248,7 +237,6 @@ export default function Profile() {
           </View>
         )}
 
-        {/* Logout Button */}
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout} activeOpacity={0.8}>
           <MaterialIcons name="logout" size={20} color="#fff" />
           <Text style={styles.textButton}>Logout</Text>

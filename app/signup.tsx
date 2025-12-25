@@ -8,7 +8,6 @@ import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollVie
 
 export default function Signup() {
     const { signup } = useAuth();
-    // username
     const [username, setUsername] = useState("");
     const [usernameError, setUsernameError] = useState("");
 
@@ -25,7 +24,6 @@ export default function Signup() {
         return true;
     };
 
-    // email
     const [email, setEmail] = useState("");
     const [emailError, setEmailError] = useState("");
     
@@ -41,7 +39,6 @@ export default function Signup() {
         return true;
     };
 
-    // password
     const [password, setPassword] = useState("");
     const [passwordError, setPasswordError] = useState("");
 
@@ -58,7 +55,6 @@ export default function Signup() {
         return true;
     };
 
-    // confirm password
     const [confirmPassword, setConfirmPassword] = useState("");
     const [confirmPasswordError, setConfirmPasswordError] = useState("");
 
@@ -71,7 +67,6 @@ export default function Signup() {
         return true;
     };
 
-    // show password
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [signupError, setSignupError] = useState("");
@@ -90,10 +85,9 @@ export default function Signup() {
                 username,
                 email,
                 password,
-                username, // firstName
-                ""        // lastName
+                username,
+                ""
             );
-            // Signup successful, navigate to homePage to ask about prior experience
             router.replace("/homePage");
         } catch (error: any) {
             const errorMsg = error?.message || error?.error || error?.detail || "Signup failed";
@@ -121,7 +115,6 @@ export default function Signup() {
                         <Text style={styles.welcome}>Start Your Journey!</Text>
                         <Text style={styles.subtitle}>Sign up for your account</Text>
 
-                        {/* input username */}
                         <TextInput
                             placeholder="Username"
                             style={styles.inputName}
@@ -137,7 +130,6 @@ export default function Signup() {
                             </Text>
                         ) : null}
 
-                        {/* input email */}
                         <TextInput
                             placeholder="Email"
                             style={styles.inputEmail}
@@ -153,7 +145,6 @@ export default function Signup() {
                             </Text>
                         ) : null}
 
-                        {/* input password */}
                         <View style={styles.passwordWrapper}>
                             <TextInput
                                 placeholder="Password"
@@ -186,7 +177,6 @@ export default function Signup() {
                             </Text>
                         ) : null}
 
-                        {/* input confirm password */}
                         <View style={styles.confirmPasswordWrapper}>
                             <TextInput
                                 placeholder="Confirm Password"

@@ -6,15 +6,12 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Alert, Image, Modal, SafeAreaView, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { useQuestions } from "../../lib/QuestionContext";
 
-
-// helper: pastikan options selalu berupa array (toleran terhadap string JSON atau comma-list)
 const normalizeQuestion = (q: any) => {
   if (!q) return q;
   try {
     if (q.options && typeof q.options === "string") {
       try {
         q.options = JSON.parse(q.options);
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (e) {
         const s = String(q.options)
           .replace(/^\[|\]$/g, "")
@@ -52,12 +49,10 @@ export default function CodingQuestion() {
       setFeedbackMessage("");
       setTestResults([]);
 
-      // If we have a question set and the index exists, use it
       if (questionSet.length > 0 && currentIndex < questionSet.length) {
         let currentQuestion = questionSet[currentIndex];
         currentQuestion = normalizeQuestion(currentQuestion);
 
-        // Validate question
         const validation = validateQuestion(currentQuestion);
         if (!validation.valid) {
           setError(validation.error || "Soal tidak valid");
@@ -71,13 +66,11 @@ export default function CodingQuestion() {
         return;
       }
 
-      // Fallback: request a single coding question from backend and populate context
       try {
         const q = await quizAPI.generateQuestion(difficulty || 2, "coding");
         if (q) {
           const nq = normalizeQuestion(q);
 
-          // Validate generated question
           const validation = validateQuestion(nq);
           if (!validation.valid) {
             setError(validation.error || "Soal yang dihasilkan tidak valid");
@@ -96,7 +89,6 @@ export default function CodingQuestion() {
         console.warn("Fallback single-question generate failed:", genErr);
       }
 
-      // If still not available, create a local mock single question
       console.warn("Using local mock coding question for UI because backend generation failed.");
       const mock = {
         question_id: 9998,
@@ -118,9 +110,7 @@ export default function CodingQuestion() {
 
   const prevTopicIdRef = useRef(topicId);
 
-  // Load question on component mount and when dependencies change
   useEffect(() => {
-    // Only reset if topicId actually changed (not on initial mount)
     if (prevTopicIdRef.current !== topicId && prevTopicIdRef.current !== 0) {
       console.log(`🔄 TopicId changed from ${prevTopicIdRef.current} to ${topicId}, resetting state`);
       setQuestion(null);
@@ -144,18 +134,15 @@ export default function CodingQuestion() {
     setSubmitting(true);
     setTestResults([]);
     try {
-      // Try to run code with test cases first
       try {
         const result = await quizAPI.runCode(question.question_id, answer);
         setTestResults(result.test_results);
         setFeedbackMessage(`${result.passed}/${result.total} test cases passed`);
         setFeedbackStatus(result.all_passed ? "correct" : "wrong");
       } catch (runError: any) {
-        // If runCode fails (e.g., no test cases), fall back to simple submit
         console.error("❌ runCode failed:", runError);
         console.error("Error response:", runError.response?.data);
         
-        // Show the actual error message if available
         if (runError.response?.data?.error) {
           console.log(`⚠️ Backend error: ${runError.response.data.error}`);
         }
@@ -187,7 +174,6 @@ export default function CodingQuestion() {
   };
 
   const handleNextQuestion = async () => {
-    // reset per-question UI state
     setFeedbackStatus(null);
     setFeedbackMessage("");
     setTestResults([]);
@@ -196,7 +182,6 @@ export default function CodingQuestion() {
 
     const nextIndex = currentIndex + 1;
 
-    // Check if we've completed 10 questions - redirect to reportCard
     if (nextIndex >= 10) {
       console.log("✅ Completed 10 questions, navigating to reportCard");
       router.push({
@@ -209,7 +194,6 @@ export default function CodingQuestion() {
       return;
     }
 
-    // Jika ada soal berikutnya dalam questionSet, pindah index dan navigasi bila tipe berbeda
     if (nextIndex < questionSet.length) {
       const nextQ = normalizeQuestion(questionSet[nextIndex]);
       const copy = [...questionSet];
@@ -224,7 +208,6 @@ export default function CodingQuestion() {
       return;
     }
 
-    // Jika belum ada soal berikutnya, coba generate 1 soal lagi dari backend
     try {
       const nextType = (() => {
         if (questionSet.length > 0) {
@@ -253,7 +236,6 @@ export default function CodingQuestion() {
       console.warn("Gagal generate soal berikutnya (coding):", err);
     }
 
-    // Navigate to results screen
     router.push({
       pathname: "/reportCard",
       params: {
@@ -263,11 +245,9 @@ export default function CodingQuestion() {
     } as any);
   };
 
-  // ✅ SIMPAN POSISI SAAT KELUAR SCREEN
   useFocusEffect(
     React.useCallback(() => {
       return () => {
-        // Ini dipanggil saat screen kehilangan focus (user keluar)
         savePosition();
       };
     }, [topicId, currentIndex, topic, difficulty, savePosition])
@@ -318,12 +298,9 @@ export default function CodingQuestion() {
               <Text style={styles.primaryButtonText}>Coding</Text>
             </TouchableOpacity>
           </View>
-
-          {/* Question Card */}
           <View style={styles.card}>
             <Text style={styles.cardText}>{question.question_text}</Text>
 
-            {/* Code Template - Read Only Reference */}
             {question.code_template && (
               <View style={{ marginTop: 16 }}>
                 <Text style={styles.sectionLabel}>Template Kode</Text>
@@ -342,8 +319,6 @@ export default function CodingQuestion() {
               </View>
             )}
           </View>
-
-          {/* Code Input Area */}
           <View style={styles.inputCard}>
             <Text style={styles.sectionLabel}>Solusi Anda</Text>
             <TextInput
@@ -367,8 +342,6 @@ export default function CodingQuestion() {
           </TouchableOpacity>
         </View>
       </View>
-
-      {/* Feedback Modal - Wrong */}
       <Modal transparent visible={feedbackStatus === "wrong"} animationType="fade">
         <View style={styles.modalOverlay}>
           <View style={styles.modalPositionWrapper}>
@@ -388,8 +361,6 @@ export default function CodingQuestion() {
 
               <ScrollView style={{ maxHeight: 300 }}>
                 <Text style={styles.modalSubtitle}>{feedbackMessage || "Coba cek lagi kode Anda."}</Text>
-
-                {/* Test Results Display in Modal */}
                 {testResults.length > 0 && (
                   <View style={{ marginTop: 10 }}>
                     <Text style={{ fontWeight: "600", marginBottom: 8, color: "#374151" }}>Hasil Test:</Text>
@@ -421,8 +392,6 @@ export default function CodingQuestion() {
           </View>
         </View>
       </Modal>
-
-      {/* Feedback Modal - Correct */}
       <Modal transparent visible={feedbackStatus === "correct"} animationType="fade">
         <View style={styles.modalOverlay}>
           <View style={styles.modalPositionWrapper}>
@@ -440,8 +409,6 @@ export default function CodingQuestion() {
               </TouchableOpacity>
               <Text style={styles.modalTitle}>Sempurna! 🎉</Text>
               <Text style={styles.modalSubtitle}>{feedbackMessage}</Text>
-
-              {/* Test Results Display in Modal */}
               {testResults.length > 0 && (
                 <View style={{ marginTop: 10 }}>
                   <Text style={{ fontWeight: "600", marginBottom: 8, color: "#374151" }}>Hasil Test:</Text>

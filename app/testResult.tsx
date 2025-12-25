@@ -56,9 +56,9 @@ const TestResult = () => {
 
     const getDifficultyColor = (difficulty: number) => {
         switch (difficulty) {
-            case 1: return "#4CAF50"; // Green
-            case 2: return "#FFA726"; // Orange
-            case 3: return "#EF5350"; // Red
+            case 1: return "#4CAF50";
+            case 2: return "#FFA726";
+            case 3: return "#EF5350";
             default: return "#FFA726";
         }
     };
@@ -95,7 +95,6 @@ const TestResult = () => {
         );
     }
 
-    // Find first topic that needs learning (score < 80%)
     const firstTopicToLearn = recommendations.find(rec => !skippableTopics.includes(rec.topic_id));
 
     return (
@@ -105,7 +104,6 @@ const TestResult = () => {
             </View>
 
             <ScrollView contentContainerStyle={{ paddingBottom: 200, padding: 20 }}>
-                {/* Overall Score Card */}
                 <View style={{
                     backgroundColor: "#2C3E50",
                     padding: 20,
@@ -124,7 +122,6 @@ const TestResult = () => {
                     </Text>
                 </View>
 
-                {/* Recommendation: Where to start */}
                 {firstTopicToLearn && (
                     <View style={{
                         backgroundColor: "#1A4D7A",
@@ -146,7 +143,6 @@ const TestResult = () => {
                     </View>
                 )}
 
-                {/* Topic Results */}
                 <Text style={{ color: "#fff", fontSize: 18, fontWeight: "bold", marginBottom: 15 }}>
                     Hasil Per Topik
                 </Text>
@@ -166,7 +162,6 @@ const TestResult = () => {
                                 borderColor: isSkippable ? "#4CAF50" : "transparent"
                             }}
                         >
-                            {/* Topic Name & Score */}
                             <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 8 }}>
                                 <Text style={{ color: "#fff", fontSize: 16, fontWeight: "bold", flex: 1 }}>
                                     {rec.topic_name}
@@ -179,8 +174,6 @@ const TestResult = () => {
                                     {rec.score}%
                                 </Text>
                             </View>
-
-                            {/* Details */}
                             <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
                                 <View>
                                     <Text style={{ color: "#B8C5D6", fontSize: 13 }}>
@@ -212,7 +205,6 @@ const TestResult = () => {
                     );
                 })}
 
-                {/* Legend */}
                 <View style={{ 
                     marginTop: 20, 
                     padding: 15, 

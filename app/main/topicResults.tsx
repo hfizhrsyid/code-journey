@@ -42,10 +42,8 @@ export default function TopicResults() {
   const percentage = Math.round((correct / total) * 100);
   const isComplete = percentage === 100;
 
-  // Calculate unique questions attempted
   const uniqueQuestions = new Set(attempts.map((a) => a.question_id)).size;
 
-  // Calculate average attempts per question
   const avgAttempts = (total / uniqueQuestions).toFixed(1);
 
   return (

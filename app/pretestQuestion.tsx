@@ -23,7 +23,8 @@ const PretestQuestion = () => {
   const [submitting, setSubmitting] = useState(false);
   const [showAnswerModal, setShowAnswerModal] = useState(false);
   const [currentTopicId, setCurrentTopicId] = useState<number | null>(null);
-  const [questionsPerTopic, setQuestionsPerTopic] = useState<number>(2); // 2 soal per topik
+  const [questionsPerTopic, setQuestionsPerTopic] = useState<number>(2);
+  const [answerResults, setAnswerResults] = useState<Map<number, boolean>>(new Map());
 
   const emojiCorrectSource = require("../assets/images/emoji-correct-answer.png");
 
@@ -43,7 +44,6 @@ const PretestQuestion = () => {
       }
 
       setQuestions(pretestQuestions);
-      // Set current topic ID from first question
       if (pretestQuestions[0]?.topic_id) {
         setCurrentTopicId(pretestQuestions[0].topic_id);
       }
@@ -66,8 +66,7 @@ const PretestQuestion = () => {
     setAnswers(newAnswers);
   };
 
-  const handleNext = () => {
-    // Check if current question is answered
+  const handleNext = async () => {
     if (!currentQuestion) return;
     
     const currentAnswer = answers.get(currentQuestion.question_id);
@@ -76,39 +75,45 @@ const PretestQuestion = () => {
       return;
     }
 
-    // Show success modal before moving to next
-    setShowAnswerModal(true);
+    try {
+      const result = await quizAPI.checkAnswer(currentQuestion.question_id, currentAnswer);
+      
+      const newResults = new Map(answerResults);
+      newResults.set(currentQuestion.question_id, result.correct);
+      setAnswerResults(newResults);
+
+      setShowAnswerModal(true);
+    } catch (error) {
+      console.error("Failed to check answer:", error);
+      Alert.alert("Error", "Gagal memeriksa jawaban");
+    }
   };
 
   const moveToNextQuestion = () => {
     setShowAnswerModal(false);
     
-    // Check jika sudah 2 soal dari topik yang sama dijawab
     const currentTopic = currentQuestion?.topic_id;
-    const answeredInCurrentTopic = questions
-      .slice(0, currentIndex + 1)
-      .filter(q => q.topic_id === currentTopic && answers.has(q.question_id))
-      .length;
+    const topicQuestions = questions.filter(q => q.topic_id === currentTopic);
+    const answeredInCurrentTopic = topicQuestions.filter(q => answers.has(q.question_id)).length;
     
-    // Jika sudah 2 soal, cek apakah keduanya benar
     if (answeredInCurrentTopic >= 2) {
-      const topicQuestions = questions
-        .slice(0, currentIndex + 1)
-        .filter(q => q.topic_id === currentTopic);
-      
-      // Check if any answer is wrong - jika ada yang salah, stop pretest
       const hasWrongAnswer = topicQuestions.some(q => {
-        const userAnswer = answers.get(q.question_id);
-        // Note: Kita tidak tahu jawabannya benar/salah di frontend
-        // Jadi kita tetap lanjut ke soal berikutnya sampai semua topic dikumpulkan
-        // Backend akan handle logika mana topik pertama yang salah
-        return false; // Continue for now
+        const isCorrect = answerResults.get(q.question_id);
+        return isCorrect === false;
       });
+      
+      if (hasWrongAnswer) {
+        Alert.alert(
+          "Pretest Selesai",
+          "Kamu akan mulai belajar dari topik ini. Mari lihat hasilnya!",
+          [{ text: "OK", onPress: () => handleSubmit() }]
+        );
+        return;
+      }
     }
     
     if (currentIndex < questions.length - 1) {
       setCurrentIndex(currentIndex + 1);
-      // Update current topic ID
       if (questions[currentIndex + 1]?.topic_id) {
         setCurrentTopicId(questions[currentIndex + 1].topic_id);
       }
@@ -124,7 +129,6 @@ const PretestQuestion = () => {
   };
 
   const handleSubmit = async () => {
-    // Check if all questions answered
     const unanswered = questions.filter(q => !answers.has(q.question_id));
     if (unanswered.length > 0) {
       Alert.alert(
@@ -151,7 +155,6 @@ const PretestQuestion = () => {
 
       const result = await quizAPI.submitPretest(answersArray);
       
-      // Navigate to result page with data
       router.push({
         pathname: "/reportCardPreTest",
         params: {
@@ -194,7 +197,6 @@ const PretestQuestion = () => {
 
   const currentAnswer = answers.get(currentQuestion.question_id) || "";
 
-  // Determine question type label
   const questionTypeLabel = currentQuestion.question_type === "mcq" 
     ? "Pilihan Ganda" 
     : currentQuestion.question_type === "coding" 
@@ -223,7 +225,6 @@ const PretestQuestion = () => {
           )}
         </View>
 
-        {/* MCQ Options */}
         {currentQuestion.question_type === "mcq" && currentQuestion.options && (
           <View style={{ paddingHorizontal: 20, gap: 12, marginTop: 20 }}>
             {currentQuestion.options.map((option, index) => {
@@ -255,7 +256,6 @@ const PretestQuestion = () => {
           </View>
         )}
 
-        {/* Fill/Coding Input */}
         {(currentQuestion.question_type === "fill" || currentQuestion.question_type === "coding") && (
           <View style={styles.inputContainer}>
             <TextInput
@@ -284,7 +284,6 @@ const PretestQuestion = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Answer Confirmation Modal */}
       <Modal transparent visible={showAnswerModal} animationType="fade">
         <View style={styles.modalOverlay}>
           <View style={styles.modalPositionWrapper}>
@@ -319,7 +318,6 @@ const PretestQuestion = () => {
         </View>
       </Modal>
 
-      {/* Progress Bar */}
       <View style={{ height: 6, backgroundColor: "#E0E0E0" }}>
         <View
           style={{

@@ -4,7 +4,6 @@ import { Image, Text, TouchableOpacity, View } from 'react-native';
 
 const Test = () => {
     const handleStart = () => {
-        // Navigate to pretest question flow
         router.push('/pretestQuestion');
     };
 

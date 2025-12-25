@@ -30,12 +30,10 @@ export default function MultipleChoicesQuestion() {
       setExplanation("");
       setCorrectAnswerInfo(null);
 
-      // If we have a question set and the index exists, use it
       if (questionSet.length > 0 && currentIndex < questionSet.length) {
         let currentQuestion = questionSet[currentIndex];
         currentQuestion = normalizeQuestion(currentQuestion);
 
-        // Validate question
         const validation = validateQuestion(currentQuestion);
         if (!validation.valid) {
           setError(validation.error || "Soal tidak valid");
@@ -50,13 +48,11 @@ export default function MultipleChoicesQuestion() {
         return;
       }
 
-      // Fallback: request a single MCQ from backend and populate context
       try {
         const q = await quizAPI.generateQuestion(difficulty || 2, "mcq");
         if (q) {
           const nq = normalizeQuestion(q);
 
-          // Validate generated question
           const validation = validateQuestion(nq);
           if (!validation.valid) {
             setError(validation.error || "Soal yang dihasilkan tidak valid");
@@ -75,7 +71,6 @@ export default function MultipleChoicesQuestion() {
         console.warn("Fallback single-question generate failed:", genErr);
       }
 
-      // If still not available, create a local mock single question so UI can continue
       console.warn("Using local mock MCQ for UI because backend generation failed.");
       const mock = {
         question_id: 9999,
@@ -100,7 +95,6 @@ export default function MultipleChoicesQuestion() {
   const prevTopicIdRef = useRef(topicId);
 
   useEffect(() => {
-    // Only reset if topicId actually changed (not on initial mount)
     if (prevTopicIdRef.current !== topicId && prevTopicIdRef.current !== 0) {
       console.log(`🔄 TopicId changed from ${prevTopicIdRef.current} to ${topicId}, resetting state`);
       setQuestion(null);
@@ -123,13 +117,11 @@ export default function MultipleChoicesQuestion() {
     try {
       const result = await quizAPI.submitAnswer(question.question_id, optionId);
 
-      // Show badge notification if any new badges unlocked
       if (result.newly_unlocked_badges && result.newly_unlocked_badges.length > 0) {
         const badgeNames = result.newly_unlocked_badges.map((b) => b.badge_name).join("\n");
         Alert.alert("🏆 Badge Baru!", `Selamat! Anda mendapatkan badge:\n\n${badgeNames}`, [{ text: "OK" }]);
       }
 
-      // Check if attempt was saved
       if (result.saved === false) {
         console.warn("⚠️ Attempt was not saved! User may not be authenticated.");
         if (!result.authenticated) {
@@ -181,7 +173,6 @@ export default function MultipleChoicesQuestion() {
     const nextIndex = currentIndex + 1;
     console.log("handleNextQuestion: currentIndex=", currentIndex, "nextIndex=", nextIndex, "questionSet.length=", questionSet.length);
 
-    // Check if we've completed 10 questions - redirect to reportCard
     if (nextIndex >= 10) {
       console.log("✅ Completed 10 questions, navigating to reportCard");
       router.push({
@@ -194,14 +185,12 @@ export default function MultipleChoicesQuestion() {
       return;
     }
 
-    // Jika ada soal berikutnya dalam questionSet, pindah index dan navigasi bila tipe berbeda
     if (nextIndex < questionSet.length) {
       const nextQ = normalizeQuestion(questionSet[nextIndex]);
       console.log("Advancing to existing question at index", nextIndex, nextQ);
       const copy = [...questionSet];
       copy[nextIndex] = nextQ;
       setQuestionSet(copy);
-      // set local question immediately to avoid relying on batched state updates
       setQuestion(nextQ);
       setCurrentIndex(nextIndex);
 
@@ -212,7 +201,6 @@ export default function MultipleChoicesQuestion() {
       return;
     }
 
-    // Jika belum ada soal berikutnya, coba generate 1 soal lagi dari backend
     try {
       const nextType = (() => {
         if (questionSet.length > 0) {
@@ -229,7 +217,6 @@ export default function MultipleChoicesQuestion() {
         const nq = normalizeQuestion(newQuestion);
         const updated = [...questionSet, nq];
         setQuestionSet(updated);
-        // set local question immediately to avoid waiting for context propagation
         setQuestion(nq);
         setCurrentIndex(nextIndex);
 
@@ -243,7 +230,6 @@ export default function MultipleChoicesQuestion() {
       console.warn("Gagal generate soal berikutnya:", err);
     }
 
-    // Jika tidak bisa generate soal lagi, anggap selesai
     router.push({
       pathname: "/reportCard",
       params: {
@@ -256,7 +242,6 @@ export default function MultipleChoicesQuestion() {
   const emojiWrongSource = require("../../assets/images/emoji-wrong-answer.png");
   const emojiCorrectSource = require("../../assets/images/emoji-correct-answer.png");
 
-  // helper: pastikan options selalu berupa array (toleran terhadap string JSON atau comma-list)
   const normalizeQuestion = (q: any) => {
     if (!q) return q;
     try {
@@ -279,11 +264,9 @@ export default function MultipleChoicesQuestion() {
     return q;
   };
 
-  // ✅ SIMPAN POSISI SAAT KELUAR SCREEN
   useFocusEffect(
     React.useCallback(() => {
       return () => {
-        // Ini dipanggil saat screen kehilangan focus (user keluar)
         savePosition();
       };
     }, [topicId, currentIndex, topic, difficulty, savePosition])
@@ -366,8 +349,6 @@ export default function MultipleChoicesQuestion() {
           })}
         </View>
       </ScrollView>
-
-      {/* Feedback Modal - Wrong */}
       <Modal transparent visible={answerStatus === "wrong"} animationType="fade">
         <View style={styles.modalOverlay}>
           <View style={styles.modalPositionWrapper}>
@@ -408,8 +389,6 @@ export default function MultipleChoicesQuestion() {
           </View>
         </View>
       </Modal>
-
-      {/* Feedback Modal - Correct */}
       <Modal transparent visible={answerStatus === "correct"} animationType="fade">
         <View style={styles.modalOverlay}>
           <View style={styles.modalPositionWrapper}>

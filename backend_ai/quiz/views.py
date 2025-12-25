@@ -615,8 +615,39 @@ def get_topics(request):
     try:
         user = request.user if request.user.is_authenticated else None
         topics = Topic.objects.all().values('id', 'name', 'description', 'order')
-                # Include question count, completion percentage, and lock status per topic
+        
         result = []
+        
+        # Get starting_topic_id from user's pretest if exists
+        starting_topic_id = None
+        if user:
+            # Find the starting topic from pretest results
+            # Look for the first topic where user got at least one wrong answer
+            user_pretest_attempts = QuestionAttempt.objects.filter(
+                user=user,
+                question__is_pretest=True
+            ).select_related('question__topic').order_by('question__topic__order', 'created_at')
+            
+            topic_attempts = {}
+            for attempt in user_pretest_attempts:
+                if attempt.question.topic:
+                    topic_id = attempt.question.topic.id
+                    if topic_id not in topic_attempts:
+                        topic_attempts[topic_id] = {
+                            'order': attempt.question.topic.order,
+                            'has_wrong': False
+                        }
+                    if not attempt.is_correct:
+                        topic_attempts[topic_id]['has_wrong'] = True
+            
+            # Find first topic with wrong answer
+            for tid, data in sorted(topic_attempts.items(), key=lambda x: x[1]['order']):
+                if data['has_wrong']:
+                    starting_topic_id = tid
+                    break
+            
+            logger.info(f"🎯 User {user.username} starting_topic_id from pretest: {starting_topic_id}")
+        
         for topic in topics:
             # Get question count
             count = Question.objects.filter(topic_id=topic['id'], is_active=True).count()
@@ -634,7 +665,6 @@ def get_topics(request):
                 # Count correct attempts (only the most recent attempt per question)
                 correct_count = 0
                 for question in topic_questions:
-                    # Get latest attempt for this question
                     latest_attempt = QuestionAttempt.objects.filter(
                         user=user,
                         question=question
@@ -643,40 +673,79 @@ def get_topics(request):
                     if latest_attempt and latest_attempt.is_correct:
                         correct_count += 1
                 
-                # Calculate completion based on 10 questions max (not total in database)
-                # This ensures users can unlock next topic after completing 10 questions
                 completed_count = min(correct_count, 10)
                 completion_percentage = int((completed_count / 10) * 100)
                 
-                # Check if topic is locked (previous topic must be completed)
-                if topic['order'] > 1:
-                    # Get previous topic
-                    previous_topic = Topic.objects.filter(order=topic['order'] - 1).first()
-                    if previous_topic:
-                        # Check if previous topic is completed (10 questions correct)
-                        prev_questions = Question.objects.filter(topic_id=previous_topic.id, is_active=True)
-                        
-                        prev_correct = 0
-                        for question in prev_questions:
-                            latest_attempt = QuestionAttempt.objects.filter(
-                                user=user,
-                                question=question
-                            ).order_by('-created_at').first()
-                            
-                            if latest_attempt and latest_attempt.is_correct:
-                                prev_correct += 1
-                        
-                        # Previous topic must have at least 10 correct answers to unlock
-                        prev_completed = min(prev_correct, 10)
-                        is_locked = prev_completed < 10  # Lock if previous topic has less than 10 correct
+                # ✅ NEW LOGIC: Check if topic should be unlocked based on pretest
+                if starting_topic_id:
+                    # Get starting topic order
+                    starting_topic = Topic.objects.filter(id=starting_topic_id).first()
+                    if starting_topic:
+                        # Unlock ALL topics up to and including the starting topic
+                        if topic['order'] <= starting_topic.order:
+                            is_locked = False
+                            logger.info(f"  ✅ Topic {topic['id']} ({topic['name']}) UNLOCKED by pretest (order {topic['order']} <= {starting_topic.order})")
+                        else:
+                            # Topics after starting topic follow normal progression
+                            previous_topic = Topic.objects.filter(order=topic['order'] - 1).first()
+                            if previous_topic:
+                                prev_questions = Question.objects.filter(topic_id=previous_topic.id, is_active=True)
+                                prev_correct = sum(
+                                    1 for q in prev_questions
+                                    if QuestionAttempt.objects.filter(
+                                        user=user, question=q
+                                    ).order_by('-created_at').first() and
+                                    QuestionAttempt.objects.filter(
+                                        user=user, question=q
+                                    ).order_by('-created_at').first().is_correct
+                                )
+                                is_locked = min(prev_correct, 10) < 10
+                            else:
+                                is_locked = True
                     else:
-                        is_locked = True  # Lock if previous topic doesn't exist
+                        # If starting_topic not found, fall back to normal logic
+                        if topic['order'] > 1:
+                            previous_topic = Topic.objects.filter(order=topic['order'] - 1).first()
+                            if previous_topic:
+                                prev_questions = Question.objects.filter(topic_id=previous_topic.id, is_active=True)
+                                prev_correct = sum(
+                                    1 for q in prev_questions
+                                    if QuestionAttempt.objects.filter(
+                                        user=user, question=q
+                                    ).order_by('-created_at').first() and
+                                    QuestionAttempt.objects.filter(
+                                        user=user, question=q
+                                    ).order_by('-created_at').first().is_correct
+                                )
+                                is_locked = min(prev_correct, 10) < 10
+                            else:
+                                is_locked = True
+                        else:
+                            is_locked = False
+                else:
+                    # No pretest data, use normal progression
+                    if topic['order'] > 1:
+                        previous_topic = Topic.objects.filter(order=topic['order'] - 1).first()
+                        if previous_topic:
+                            prev_questions = Question.objects.filter(topic_id=previous_topic.id, is_active=True)
+                            prev_correct = sum(
+                                1 for q in prev_questions
+                                if QuestionAttempt.objects.filter(
+                                    user=user, question=q
+                                ).order_by('-created_at').first() and
+                                QuestionAttempt.objects.filter(
+                                    user=user, question=q
+                                ).order_by('-created_at').first().is_correct
+                            )
+                            is_locked = min(prev_correct, 10) < 10
+                        else:
+                            is_locked = True
             else:
                 # Not authenticated - lock all topics except the first one
                 is_locked = topic['order'] > 1
             
             topic['completion_percentage'] = completion_percentage
-            topic['completed_count'] = completed_count  # Add completed count (X/10)
+            topic['completed_count'] = completed_count
             topic['is_locked'] = is_locked
             result.append(topic)
         
@@ -923,6 +992,10 @@ def submit_pretest(request):
             )
         
         user = request.user
+
+        # ✅ Hapus attempt pretest lama agar penilaian hanya berdasarkan pretest terakhir
+        QuestionAttempt.objects.filter(user=user, question__is_pretest=True).delete()
+
         topic_results = {}  # {topic_id: {"correct": 0, "total": 0, "topic_name": ""}}
         topic_order = {}  # {topic_id: order}
         starting_topic_id = None  # ID topik pertama yang ada kesalahan
